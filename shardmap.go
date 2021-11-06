@@ -34,22 +34,22 @@ type shardMap struct {
 }
 
 func (m *shardMap) Set(key interface{}, value interface{}) {
-	if exists := m.shardList[Index(key)].set(key, value); !exists {
+	if exists := m.shardList[Index4Uint8(key)].set(key, value); !exists {
 		m.length.Add(1)
 	}
 }
 
 func (m *shardMap) Get(key interface{}) (value interface{}, exists bool) {
-	return m.shardList[Index(key)].get(key)
+	return m.shardList[Index4Uint8(key)].get(key)
 }
 
 func (m *shardMap) Exists(key interface{}) (exists bool) {
-	return m.shardList[Index(key)].exists(key)
+	return m.shardList[Index4Uint8(key)].exists(key)
 }
 
 func (m *shardMap) Delete(keys ...interface{}) {
 	for _, key := range keys {
-		if exists := m.shardList[Index(key)].delete(key); exists {
+		if exists := m.shardList[Index4Uint8(key)].delete(key); exists {
 			m.length.Sub(1)
 		}
 	}

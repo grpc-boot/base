@@ -28,10 +28,17 @@ func init() {
 	btm = NewBitmap(nil)
 }
 
+func TestHashValue(t *testing.T) {
+	dd := &Data{
+		id: "sfafd",
+	}
+
+	t.Fatal(dd.HashCode())
+}
+
 func TestMap(t *testing.T) {
 	d := Data{
-		CanHash: nil,
-		id:      "cc",
+		id: "cc",
 	}
 
 	keyValue := map[interface{}]interface{}{
@@ -169,5 +176,5 @@ func TestBitmap_AddTag(t *testing.T) {
 	t.Logf("hasBit:%t bitCount:%d binary:%s", btm.HasBit(), btm.BitCount(), btm.SprinfBinary())
 
 	btm.DelTag(0)
-	t.Fatalf("hasBit:%t bitCount:%d binary:%s", btm.HasBit(), btm.BitCount(), btm.SprinfBinary())
+	t.Logf("hasBit:%t bitCount:%d binary:%s", btm.HasBit(), btm.BitCount(), btm.SprinfBinary())
 }

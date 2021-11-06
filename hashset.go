@@ -2,6 +2,10 @@ package base
 
 import "sync"
 
+var (
+	SetValue = struct{}{}
+)
+
 type HashSet interface {
 	Add(items ...interface{}) (newNum int)
 	Delete(items ...interface{}) (delNum int)
