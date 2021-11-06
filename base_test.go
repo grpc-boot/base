@@ -1,6 +1,9 @@
 package base
 
 import (
+	"bytes"
+	"crypto"
+	"encoding/hex"
 	"hash/crc32"
 	"testing"
 	"time"
@@ -33,7 +36,7 @@ func TestHashValue(t *testing.T) {
 		id: "sfafd",
 	}
 
-	t.Fatal(dd.HashCode())
+	t.Log(dd.HashCode())
 }
 
 func TestMap(t *testing.T) {
@@ -177,4 +180,96 @@ func TestBitmap_AddTag(t *testing.T) {
 
 	btm.DelTag(0)
 	t.Logf("hasBit:%t bitCount:%d binary:%s", btm.HasBit(), btm.BitCount(), btm.SprinfBinary())
+}
+
+func TestAes_CbcEncrypt(t *testing.T) {
+	aes128, err := NewAes("GS317MrfMqnvFcEHIbPTuQ==", "1cijdjijnji89iju")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data := []byte("sdf312e3213")
+	secretData := aes128.CbcEncrypt(data)
+	plain, err := aes128.CbcDecrypt(secretData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(data, plain) {
+		t.Fatal("want true, got false")
+	}
+
+	t.Log(hex.EncodeToString(secretData))
+
+	aes192, err := NewAes("DFSDFi8987ysdfasadf3a23f", "ji12jnchFgDejffe")
+	secretData = aes192.CbcEncrypt(data)
+	plain, err = aes192.CbcDecrypt(secretData)
+	if !bytes.Equal(data, plain) {
+		t.Fatal("want true, got false")
+	}
+
+	t.Log(hex.EncodeToString(secretData))
+
+	aes256, err := NewAes("DFSDFi8987ysdfasadf3a23fJUDH7yuG", "uh12jnchFgDejffe")
+	secretData = aes256.CbcEncrypt(data)
+	plain, err = aes256.CbcDecrypt(secretData)
+	if !bytes.Equal(data, plain) {
+		t.Fatal("want true, got false")
+	}
+
+	t.Log(hex.EncodeToString(secretData))
+}
+
+func TestCreateKeys(t *testing.T) {
+	privateKey, publicKey := CreateKeys(2048)
+	t.Logf("privateKey:%s, publicKey:%s", privateKey, publicKey)
+}
+
+func TestCreatePkcs8Keys(t *testing.T) {
+	privateKey, publicKey := CreatePkcs8Keys(2048)
+	t.Logf("privateKey:%s, publicKey:%s", privateKey, publicKey)
+}
+
+func TestRsa_Decrypt(t *testing.T) {
+	privateKey, publicKey := CreateKeys(2048)
+	rsa, _ := NewRsa(publicKey, privateKey)
+
+	data := []byte("sadfasfd")
+	secretData, err := rsa.Encrypt(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pData, err := rsa.Decrypt(secretData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("data:%s, secretData:%s, decryptData:%s", string(data), hex.EncodeToString(secretData), string(pData))
+
+	privateKey, publicKey = CreatePkcs8Keys(2048)
+	rsa, _ = NewRsa(publicKey, privateKey)
+
+	data = []byte("sadfaasdfasdfasdfsfd")
+	secretData, err = rsa.Encrypt(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pData, err = rsa.Decrypt(secretData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("data:%s, secretData:%s, decryptData:%s", string(data), hex.EncodeToString(secretData), string(pData))
+}
+
+func TestRsa_Verify(t *testing.T) {
+	privateKey, publicKey := CreateKeys(2048)
+	rsa, _ := NewRsa(publicKey, privateKey)
+	data := []byte("sadfaasdfasdfasdfsfd")
+	sign, err := rsa.Sign(data, crypto.SHA1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !rsa.Verify(data, sign, crypto.SHA1) {
+		t.Fatal("want true got false")
+	}
 }
