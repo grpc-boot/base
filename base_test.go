@@ -221,7 +221,7 @@ func TestAes_CbcEncrypt(t *testing.T) {
 }
 
 func TestCreateKeys(t *testing.T) {
-	privateKey, publicKey := CreateKeys(2048)
+	privateKey, publicKey := CreatePkcs1Keys(2048)
 	t.Logf("privateKey:%s, publicKey:%s", privateKey, publicKey)
 }
 
@@ -231,7 +231,7 @@ func TestCreatePkcs8Keys(t *testing.T) {
 }
 
 func TestRsa_Decrypt(t *testing.T) {
-	privateKey, publicKey := CreateKeys(2048)
+	privateKey, publicKey := CreatePkcs1Keys(2048)
 	rsa, _ := NewRsa(publicKey, privateKey)
 
 	data := []byte("sadfasfd")
@@ -261,7 +261,7 @@ func TestRsa_Decrypt(t *testing.T) {
 }
 
 func TestRsa_Verify(t *testing.T) {
-	privateKey, publicKey := CreateKeys(2048)
+	privateKey, publicKey := CreatePkcs1Keys(2048)
 	rsa, _ := NewRsa(publicKey, privateKey)
 	data := []byte("sadfaasdfasdfasdfsfd")
 	sign, err := rsa.Sign(data, crypto.SHA1)

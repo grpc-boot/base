@@ -4,7 +4,7 @@ import (
 	"math"
 	"sync"
 
-	"github.com/uber-go/atomic"
+	"go.uber.org/atomic"
 )
 
 type ShardMap interface {
