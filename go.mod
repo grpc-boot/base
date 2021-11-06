@@ -6,7 +6,6 @@ replace github.com/uber-go/atomic => github.com/uber-go/atomic v1.4.0
 
 require (
 	github.com/json-iterator/go v1.1.12
-	github.com/uber-go/atomic v0.0.0-00010101000000-000000000000
 	gopkg.in/yaml.v2 v2.4.0
 )
 
