@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"encoding/hex"
 	"hash/crc32"
+	"os"
 	"testing"
 	"time"
 )
@@ -272,4 +273,51 @@ func TestRsa_Verify(t *testing.T) {
 	if !rsa.Verify(data, sign, crypto.SHA1) {
 		t.Fatal("want true got false")
 	}
+}
+
+func TestSnowFlake_Id(t *testing.T) {
+	begin, _ := time.ParseInLocation("2006-01-02", `2021-01-01`, time.Local)
+	sf, err := NewSFByIp(ModeWait, begin.UnixNano()/1e6)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := sf.Id(1)
+	t.Log(id)
+	ts, machineId, logicId, index := sf.Info(id)
+	if logicId != 1 {
+		t.Fatalf("want 1, got %d", logicId)
+	}
+
+	if index != 1 {
+		t.Fatalf("want 1, got %d", index)
+	}
+	t.Log(ts, machineId, logicId, index)
+}
+
+func TestNewSFByMachineFunc(t *testing.T) {
+	os.Setenv("MNUM", "128")
+
+	begin, _ := time.ParseInLocation("2006-01-02", `2021-01-01`, time.Local)
+	sf, err := NewSFByMachineFunc(ModeWait, GetMachineIdByEnv("MNUM"), begin.UnixNano()/1e6)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id, _ := sf.Id(3)
+	t.Log(id)
+	ts, machineId, logicId, index := sf.Info(id)
+	if logicId != 3 {
+		t.Fatalf("want 3, got %d", logicId)
+	}
+
+	if index != 1 {
+		t.Fatalf("want 1, got %d", index)
+	}
+
+	if machineId != 128 {
+		t.Fatalf("want 128, got %d", machineId)
+	}
+
+	t.Log(ts, machineId, logicId, index)
 }

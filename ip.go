@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"net"
 )
 
 var (
 	ErrIpV4Address = errors.New(`invalid ip v4 address`)
+	ErrNotFoundIp  = errors.New("not found ip address")
 )
 
 func Long2Ip(ipVal uint32) string {
@@ -62,4 +64,27 @@ func Ip2Long(ip string) (ipVal uint32, err error) {
 	ipVal += val
 
 	return ipVal, nil
+}
+
+func LocalIp() (ip string, err error) {
+	netInterfaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+
+	for i := 0; i < len(netInterfaces); i++ {
+		if (netInterfaces[i].Flags & net.FlagUp) != 0 {
+			addrs, _ := netInterfaces[i].Addrs()
+
+			for _, address := range addrs {
+				if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+					if ipnet.IP.To4() != nil {
+						return ipnet.IP.String(), nil
+					}
+				}
+			}
+		}
+	}
+
+	return "", ErrNotFoundIp
 }

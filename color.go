@@ -1,6 +1,9 @@
 package base
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 func Black(format string, args ...interface{}) {
 	fmt.Printf("\033[0;30m"+format+"\033[0m\n", args...)
@@ -8,6 +11,11 @@ func Black(format string, args ...interface{}) {
 
 func Red(format string, args ...interface{}) {
 	fmt.Printf("\033[0;31m"+format+"\033[0m\n", args...)
+}
+
+func RedFatal(format string, args ...interface{}) {
+	Red(format, args...)
+	os.Exit(1)
 }
 
 func Green(format string, args ...interface{}) {
