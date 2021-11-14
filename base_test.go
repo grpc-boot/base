@@ -5,15 +5,35 @@ import (
 	"crypto"
 	"encoding/hex"
 	"hash/crc32"
+	"math"
+	"math/rand"
 	"os"
+	"strconv"
 	"testing"
 	"time"
+
+	"go.uber.org/atomic"
 )
 
 var (
 	sm  ShardMap
 	hs  HashSet
 	btm Bitmap
+)
+
+var (
+	hashGroup = &Group{}
+	hostList  = []string{
+		"192.168.1.135:3551",
+		"192.168.1.135:3552",
+		"192.168.1.135:3553",
+		"192.168.1.135:3554",
+		"192.168.1.135:3555",
+		"192.168.1.135:3556",
+		"192.168.1.135:3557",
+		"192.168.1.135:3558",
+		"192.168.1.135:3559",
+	}
 )
 
 type Data struct {
@@ -24,6 +44,10 @@ type Data struct {
 
 func (d *Data) HashCode() (hashValue uint32) {
 	return crc32.ChecksumIEEE([]byte(d.id))
+}
+
+type Group struct {
+	ring HashRing
 }
 
 func init() {
@@ -320,4 +344,50 @@ func TestNewSFByMachineFunc(t *testing.T) {
 	}
 
 	t.Log(ts, machineId, logicId, index)
+}
+
+func TestHashRing_Get(t *testing.T) {
+	serverList := make([]CanHash, 0, len(hostList))
+
+	for _, server := range hostList {
+		serverList = append(serverList, &Data{
+			id: server,
+		})
+	}
+
+	hashGroup.ring = NewHashRing(serverList...)
+
+	for end := int(rand.Int31n(math.MaxInt8)); end > 0; end-- {
+		s, err := hashGroup.ring.Get(strconv.Itoa(end))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Logf("key:%d, server:%s", end, s.(*Data).id)
+	}
+}
+
+// go test -bench=. -benchmem -v
+// BenchmarkHashRing_GetIndex-4    24148118                65.9 ns/op            16 B/op          1 allocs/op
+func BenchmarkHashRing_Get(b *testing.B) {
+	serverList := make([]CanHash, 0, len(hostList))
+
+	for _, server := range hostList {
+		serverList = append(serverList, &Data{
+			id: server,
+		})
+	}
+
+	hashGroup.ring = NewHashRing(serverList...)
+	var val atomic.Uint64
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_, err := hashGroup.ring.Get([]byte(strconv.FormatUint(val.Add(1), 10)))
+			if err != nil {
+				b.Fatal(err.Error())
+			}
+		}
+	})
 }
