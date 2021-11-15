@@ -16,6 +16,7 @@ type Bitmap interface {
 	Exists(tag int) (exists bool)
 	AddTag(tag int) Bitmap
 	DelTag(tag int) Bitmap
+	Data() (data []byte)
 	SprinfBinary() string
 }
 
@@ -96,6 +97,10 @@ func (b *bitmap) DelTag(tag int) Bitmap {
 
 	b.data[index] = b.data[index] & (^uint8(1 << (7 - (tag % 8))))
 	return b
+}
+
+func (b *bitmap) Data() (data []byte) {
+	return b.data
 }
 
 func (b *bitmap) SprinfBinary() string {
