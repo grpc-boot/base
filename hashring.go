@@ -2,6 +2,7 @@ package base
 
 import (
 	"errors"
+	"go.uber.org/atomic"
 	"math"
 	"sort"
 	"sync"
@@ -12,15 +13,17 @@ var ErrNoServer = errors.New("no server")
 type HashRing interface {
 	Store(servers ...CanHash)
 	Get(key interface{}) (server CanHash, err error)
+	Index(index int) (server CanHash, err error)
 	Add(server CanHash)
 	Remove(server CanHash)
 	Length() int
-	Range(handler func(index int, server CanHash) (handled bool))
+	Range(handler func(index int, server CanHash, hitCount uint64) (handled bool))
 }
 
 type Node struct {
 	server    CanHash
 	hashValue uint32
+	hitCount  atomic.Uint64
 }
 
 type NodeList []Node
@@ -108,6 +111,7 @@ func (hr *hashRing) Get(key interface{}) (server CanHash, err error) {
 	}
 
 	if length < 2 {
+		hr.nodes[0].hitCount.Inc()
 		return hr.nodes[0].server, nil
 	}
 
@@ -118,15 +122,37 @@ func (hr *hashRing) Get(key interface{}) (server CanHash, err error) {
 
 	if index == length || index == 0 {
 		if (value - hr.nodes[length-1].hashValue) < (math.MaxUint32 - value + hr.nodes[0].hashValue) {
+			hr.nodes[length-1].hitCount.Inc()
 			return hr.nodes[length-1].server, nil
 		}
+
+		hr.nodes[0].hitCount.Inc()
 		return hr.nodes[0].server, nil
 	}
 
 	if (hr.nodes[index].hashValue - value) > (value - hr.nodes[index-1].hashValue) {
+		hr.nodes[index-1].hitCount.Inc()
 		return hr.nodes[index-1].server, nil
 	}
 
+	hr.nodes[index].hitCount.Inc()
+	return hr.nodes[index].server, nil
+}
+
+func (hr *hashRing) Index(index int) (server CanHash, err error) {
+	hr.mutex.RLock()
+	defer hr.mutex.RUnlock()
+
+	length := len(hr.nodes)
+	if length == 0 {
+		return nil, ErrNoServer
+	}
+
+	if length <= index {
+		return nil, ErrNoServer
+	}
+
+	hr.nodes[index].hitCount.Inc()
 	return hr.nodes[index].server, nil
 }
 
@@ -136,11 +162,11 @@ func (hr *hashRing) Length() int {
 	return len(hr.nodes)
 }
 
-func (hr *hashRing) Range(handler func(index int, server CanHash) (handled bool)) {
+func (hr *hashRing) Range(handler func(index int, server CanHash, hitCount uint64) (handled bool)) {
 	hr.mutex.RLock()
 	for index, _ := range hr.nodes {
 		//标记已处理
-		if handler(index, hr.nodes[index].server) {
+		if handler(index, hr.nodes[index].server, hr.nodes[index].hitCount.Load()) {
 			break
 		}
 	}
