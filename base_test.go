@@ -96,6 +96,11 @@ func TestHashValue(t *testing.T) {
 	}
 
 	t.Log(dd.HashCode())
+
+	t.Logf("123 hash:%d\n", HashValue(123))
+
+	t.Logf("123123123123.123 hash:%d\n", HashValue(123123123123.123))
+	t.Logf("map hash:%d\n", HashValue(map[string]string{"sdfc": "sdf"}))
 }
 
 func TestMap(t *testing.T) {

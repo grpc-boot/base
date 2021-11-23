@@ -2,10 +2,11 @@ package base
 
 import (
 	"errors"
-	"go.uber.org/atomic"
 	"math"
 	"sort"
 	"sync"
+
+	"go.uber.org/atomic"
 )
 
 var ErrNoServer = errors.New("no server")

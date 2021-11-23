@@ -22,9 +22,9 @@ func HashValue(key interface{}) uint32 {
 	case uint32:
 		return key.(uint32)
 	case uint64:
-		return uint32(key.(uint64))
+		return uint32(key.(uint64) & math.MaxUint32)
 	case uint:
-		return uint32(key.(uint))
+		return uint32(key.(uint) & math.MaxUint32)
 	case int8:
 		return uint32(key.(int8))
 	case int16:
@@ -32,11 +32,11 @@ func HashValue(key interface{}) uint32 {
 	case int32:
 		return uint32(key.(int32))
 	case int64:
-		return uint32(key.(int64))
+		return uint32(key.(int64) & math.MaxUint32)
 	case int:
-		return uint32(key.(int))
+		return uint32(key.(int) & math.MaxUint32)
 	case float64:
-		return uint32(key.(float64))
+		return uint32(int64(key.(float64)) & math.MaxUint32)
 	case float32:
 		return uint32(key.(float32))
 	case string:
@@ -45,7 +45,7 @@ func HashValue(key interface{}) uint32 {
 		return crc32.ChecksumIEEE(key.([]byte))
 	}
 
-	return crc32.ChecksumIEEE([]byte(fmt.Sprintln(key)))
+	return crc32.ChecksumIEEE([]byte(fmt.Sprint(key)))
 }
 
 func Index4Bit(key interface{}, bitCount uint8) uint32 {
