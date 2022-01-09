@@ -7,17 +7,24 @@ import (
 	"go.uber.org/atomic"
 )
 
+// ShardMap 分片Map
 type ShardMap interface {
+	// Set 存储
 	Set(key interface{}, value interface{})
+	// Get 获取
 	Get(key interface{}) (value interface{}, exists bool)
+	// Exists 是否存在
 	Exists(key interface{}) (exists bool)
+	// Delete 删除
 	Delete(keys ...interface{})
+	// Length 长度
 	Length() int64
 }
 
+// NewShardMap 实例化ShardMap
 func NewShardMap() ShardMap {
 	m := &shardMap{}
-	for index := 0; index < math.MaxUint8; index++ {
+	for index := 0; index <= math.MaxUint8; index++ {
 		m.shardList[index] = shard{
 			items: make(map[interface{}]interface{}, 4),
 		}
@@ -27,8 +34,6 @@ func NewShardMap() ShardMap {
 }
 
 type shardMap struct {
-	ShardMap
-
 	shardList [256]shard
 	length    atomic.Int64
 }

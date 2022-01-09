@@ -23,10 +23,13 @@ var (
 	ErrNoJsonFiles = errors.New("there are no `.json` files in this directory")
 )
 
+// I18n 多语言接口
 type I18n interface {
+	// T 翻译
 	T(key, language string) (msg string)
 }
 
+// NewI18n 实例化多语言
 func NewI18n(defaultLanguage string, msgMap map[string]map[string]string) (i I18n, err error) {
 	if defaultLanguage == "" {
 		defaultLanguage = defaultLan
@@ -44,6 +47,7 @@ func NewI18n(defaultLanguage string, msgMap map[string]map[string]string) (i I18
 	return i, nil
 }
 
+// NewI18nFromYaml 从Yaml文件配置实例化多语言
 func NewI18nFromYaml(defaultLanguage string, dir string) (i I18n, err error) {
 	var fileList []fs.FileInfo
 	fileList, err = ioutil.ReadDir(dir)
@@ -82,6 +86,7 @@ func NewI18nFromYaml(defaultLanguage string, dir string) (i I18n, err error) {
 	return NewI18n(defaultLanguage, msgMap)
 }
 
+// NewI18nFromJson 从Json文件配置实例化多语言
 func NewI18nFromJson(defaultLanguage string, dir string) (i I18n, err error) {
 	var fileList []fs.FileInfo
 	fileList, err = ioutil.ReadDir(dir)

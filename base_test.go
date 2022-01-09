@@ -433,3 +433,47 @@ func BenchmarkHashRing_Get(b *testing.B) {
 		}
 	})
 }
+
+func TestBigCamels(t *testing.T) {
+	caseList := map[string]string{
+		"user-info": "UserInfo",
+		"user-":     "User",
+		"User-Info": "UserInfo",
+		"user-Info": "UserInfo",
+		"user":      "User",
+	}
+
+	for c, r := range caseList {
+		if r != BigCamels('-', c) {
+			t.Fatal("want true, got false")
+		}
+	}
+}
+
+func TestSmallCamels(t *testing.T) {
+	caseList := map[string]string{
+		"user-info": "userInfo",
+		"user-":     "user",
+		"User-Info": "userInfo",
+		"user-Info": "userInfo",
+		"user":      "user",
+	}
+
+	for c, r := range caseList {
+		if r != SmallCamels('-', c) {
+			t.Fatal("want true, got false")
+		}
+	}
+}
+
+func BenchmarkBigCamels(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		BigCamels('-', "user-info-api")
+	}
+}
+
+func BenchmarkSmallCamels(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		SmallCamels('-', "user-info-api")
+	}
+}

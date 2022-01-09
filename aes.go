@@ -12,11 +12,13 @@ var (
 	ErrAesDecrypt         = errors.New(`aes decrypt error`)
 )
 
+// Aes Aes加密
 type Aes struct {
 	iv    []byte
 	block cipher.Block
 }
 
+// NewAes 实例化Aes
 func NewAes(key string, iv string) (a *Aes, err error) {
 	var b cipher.Block
 	b, err = aes.NewCipher([]byte(key))
@@ -35,6 +37,7 @@ func NewAes(key string, iv string) (a *Aes, err error) {
 	return
 }
 
+// CbcEncrypt cbc加密
 func (a *Aes) CbcEncrypt(plain []byte) (secretData []byte) {
 	data := pkcs5Padding(plain, a.block.BlockSize())
 	blockMode := cipher.NewCBCEncrypter(a.block, a.iv)
@@ -43,6 +46,7 @@ func (a *Aes) CbcEncrypt(plain []byte) (secretData []byte) {
 	return
 }
 
+// CbcDecrypt cbc解密
 func (a *Aes) CbcDecrypt(secretData []byte) (data []byte, err error) {
 	blockMode := cipher.NewCBCDecrypter(a.block, a.iv)
 	data = make([]byte, len(secretData))

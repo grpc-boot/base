@@ -10,13 +10,21 @@ import (
  * 10010010 10010001
  */
 
+// Bitmap bitmap数据结构
 type Bitmap interface {
+	// HasBit 是否有值
 	HasBit() bool
+	// BitCount 值的数量
 	BitCount() int
+	// Exists 标签是否存在
 	Exists(tag int) (exists bool)
+	// AddTag 添加标签
 	AddTag(tag int) Bitmap
+	// DelTag 删除标签
 	DelTag(tag int) Bitmap
+	// Data 原始数据
 	Data() (data []byte)
+	// SprinfBinary 二进制打印
 	SprinfBinary() string
 }
 

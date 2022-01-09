@@ -6,13 +6,19 @@ var (
 	SetValue = struct{}{}
 )
 
+// HashSet 接口
 type HashSet interface {
+	// Add 添加元素
 	Add(items ...interface{}) (newNum int)
+	// Delete 删除元素
 	Delete(items ...interface{}) (delNum int)
+	// Exists 元素是否存在
 	Exists(item interface{}) (exists bool)
+	// Length 长度
 	Length() (length int)
 }
 
+// NewHashSet 实例化HashSet
 func NewHashSet(size int) HashSet {
 	return &hashSet{
 		list: make(map[interface{}]struct{}, size),

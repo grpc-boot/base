@@ -11,11 +11,13 @@ import (
 	"strings"
 )
 
+// Rsa Rsa
 type Rsa struct {
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 }
 
+// NewRsa 实例化Rsa
 func NewRsa(publicKey, privateKey string) (r *Rsa, err error) {
 	if privateKey != "" && strings.Index(privateKey, "BEGIN RSA") > 0 {
 		return NewRsaWithPkcs1(publicKey, privateKey)
@@ -23,6 +25,7 @@ func NewRsa(publicKey, privateKey string) (r *Rsa, err error) {
 	return NewRsaWithPkcs8(publicKey, privateKey)
 }
 
+// NewRsaWithPkcs8 pkcs8实例化Rsa
 func NewRsaWithPkcs8(publicKey, privateKey string) (r *Rsa, err error) {
 	var (
 		pubKey *rsa.PublicKey
@@ -55,6 +58,7 @@ func NewRsaWithPkcs8(publicKey, privateKey string) (r *Rsa, err error) {
 	}, nil
 }
 
+// NewRsaWithPkcs1 pkcs1实例化Rsa
 func NewRsaWithPkcs1(publicKey, privateKey string) (r *Rsa, err error) {
 	var (
 		pubKey *rsa.PublicKey
@@ -87,9 +91,7 @@ func NewRsaWithPkcs1(publicKey, privateKey string) (r *Rsa, err error) {
 	}, nil
 }
 
-/**
- * 加密
- */
+// Encrypt 加密
 func (r *Rsa) Encrypt(data []byte) ([]byte, error) {
 	blockLength := r.publicKey.N.BitLen()/8 - 11
 	if len(data) <= blockLength {
@@ -119,9 +121,7 @@ func (r *Rsa) Encrypt(data []byte) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-/**
- * 解密
- */
+// Decrypt 解密
 func (r *Rsa) Decrypt(secretData []byte) ([]byte, error) {
 	if r.publicKey == nil {
 		return rsa.DecryptPKCS1v15(rand.Reader, r.privateKey, secretData)
@@ -154,9 +154,7 @@ func (r *Rsa) Decrypt(secretData []byte) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-/**
- * 签名
- */
+// Sign 数据签名
 func (r *Rsa) Sign(data []byte, algorithmSign crypto.Hash) ([]byte, error) {
 	hash := algorithmSign.New()
 	hash.Write(data)
@@ -167,18 +165,14 @@ func (r *Rsa) Sign(data []byte, algorithmSign crypto.Hash) ([]byte, error) {
 	return sign, err
 }
 
-/**
- * 验签
- */
+// Verify 数据验签
 func (r *Rsa) Verify(data []byte, sign []byte, algorithmSign crypto.Hash) bool {
 	h := algorithmSign.New()
 	h.Write(data)
 	return rsa.VerifyPKCS1v15(r.publicKey, algorithmSign, h.Sum(nil), sign) == nil
 }
 
-/**
- * 生成pkcs1格式公钥私钥
- */
+// CreatePkcs1Keys 生成pkcs1格式公钥私钥
 func CreatePkcs1Keys(keyLength int) (privateKey, publicKey string) {
 	rsaPrivateKey, err := rsa.GenerateKey(rand.Reader, keyLength)
 	if err != nil {
@@ -202,9 +196,7 @@ func CreatePkcs1Keys(keyLength int) (privateKey, publicKey string) {
 	return
 }
 
-/**
- * 生成pkcs8格式公钥私钥
- */
+// CreatePkcs8Keys 生成pkcs8格式公钥私钥
 func CreatePkcs8Keys(keyLength int) (privateKey, publicKey string) {
 	rsaPrivateKey, err := rsa.GenerateKey(rand.Reader, keyLength)
 	if err != nil {
