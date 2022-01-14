@@ -11,13 +11,21 @@ import (
 
 var ErrNoServer = errors.New("no server")
 
+// HashRing Hash环
 type HashRing interface {
+	// Store 存储servers
 	Store(servers ...CanHash)
+	// Get 获取server
 	Get(key interface{}) (server CanHash, err error)
+	// Index 根据index获取server
 	Index(index int) (server CanHash, err error)
+	// Add 添加server
 	Add(server CanHash)
+	// Remove 移除server
 	Remove(server CanHash)
+	// Length 获取servers长度
 	Length() int
+	// Range 遍历servers
 	Range(handler func(index int, server CanHash, hitCount uint64) (handled bool))
 }
 

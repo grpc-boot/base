@@ -26,13 +26,18 @@ var (
 	ErrLogicId    = errors.New("illegal logic id")
 )
 
+// SnowFlake 雪花算法接口，1位0，41位毫秒时间戳，8位机器码，2位业务码，12位递增值
 type SnowFlake interface {
+	// Id 生成id
 	Id(logicId uint8) (int64, error)
+	// Info 根据id获取信息
 	Info(id int64) (timestamp int64, machineId uint8, logicId uint8, index int16)
 }
 
+// GetMachineId 获取机器Id
 type GetMachineId func() (id int64, err error)
 
+// GetMachineIdByIp 根据Ip获取机器Id
 func GetMachineIdByIp() GetMachineId {
 	return func() (id int64, err error) {
 		var (
@@ -53,6 +58,7 @@ func GetMachineIdByIp() GetMachineId {
 	}
 }
 
+// GetMachineIdByEnv 根据环境变量获取机器Id
 func GetMachineIdByEnv(key string) GetMachineId {
 	return func() (id int64, err error) {
 		if key == "" {
@@ -65,10 +71,7 @@ func GetMachineIdByEnv(key string) GetMachineId {
 
 type work func() (err error)
 
-//1位0，41位毫秒时间戳，8位机器码，2位业务码，12位递增值
 type snowFlake struct {
-	SnowFlake
-
 	mode           uint8
 	lastTimeStamp  int64
 	timeStampBegin int64
@@ -78,10 +81,12 @@ type snowFlake struct {
 	mutex          sync.Mutex
 }
 
+// NewSFByIp ip方式实例化雪花算法
 func NewSFByIp(mode uint8, timeStampBegin int64) (sfl SnowFlake, err error) {
 	return NewSFByMachineFunc(mode, GetMachineIdByIp(), timeStampBegin)
 }
 
+// NewSFByMachineFunc GetMachineId方式实例化雪花算法
 func NewSFByMachineFunc(mode uint8, machindFunc GetMachineId, timeStampBegin int64) (sfl SnowFlake, err error) {
 	id, err := machindFunc()
 	if err != nil {
@@ -91,6 +96,7 @@ func NewSFByMachineFunc(mode uint8, machindFunc GetMachineId, timeStampBegin int
 	return NewSF(mode, uint8(id&math.MaxUint8), timeStampBegin)
 }
 
+// NewSF 实例化雪花算法
 func NewSF(mode uint8, id uint8, timeStampBegin int64) (sfl SnowFlake, err error) {
 	if id > 0xff {
 		return nil, ErrMachineId

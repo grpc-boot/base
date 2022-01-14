@@ -12,10 +12,12 @@ var (
 	ErrNotFoundIp  = errors.New("not found ip address")
 )
 
+// Long2Ip uint32转换为Ip
 func Long2Ip(ipVal uint32) string {
 	return fmt.Sprintf("%d.%d.%d.%d", ipVal>>24, ipVal<<8>>24, ipVal<<16>>24, ipVal<<24>>24)
 }
 
+// Ip2Long Ip转换为uint32
 func Ip2Long(ip string) (ipVal uint32, err error) {
 	var (
 		val     uint32
@@ -66,6 +68,7 @@ func Ip2Long(ip string) (ipVal uint32, err error) {
 	return ipVal, nil
 }
 
+// LocalIp 获取本机Ip
 func LocalIp() (ip string, err error) {
 	netInterfaces, err := net.Interfaces()
 	if err != nil {

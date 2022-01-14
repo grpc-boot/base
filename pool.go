@@ -10,10 +10,12 @@ var (
 		},
 	}
 
+	// AcquireArgs 获取参数
 	AcquireArgs = func() []interface{} {
 		return argsPool.Get().([]interface{})
 	}
 
+	// ReleaseArgs 释放参数
 	ReleaseArgs = func(args *[]interface{}) {
 		if args == nil {
 			return

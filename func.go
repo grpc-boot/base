@@ -6,10 +6,13 @@ import (
 	"math"
 )
 
+// CanHash hash接口
 type CanHash interface {
+	// HashCode 计算hash值
 	HashCode() (hashValue uint32)
 }
 
+// HashValue 计算任意类型hash值
 func HashValue(key interface{}) uint32 {
 	switch key.(type) {
 	//优先使用自定义hash
@@ -48,18 +51,22 @@ func HashValue(key interface{}) uint32 {
 	return crc32.ChecksumIEEE([]byte(fmt.Sprint(key)))
 }
 
+// Index4Bit 索引路由方法，值范围为uint32
 func Index4Bit(key interface{}, bitCount uint8) uint32 {
-	return HashValue(key)&(1<<bitCount) - 1
+	return HashValue(key) & ((1 << bitCount) - 1)
 }
 
+// Index4Uint8 索引路由方法，值范围为uint8
 func Index4Uint8(key interface{}) uint8 {
 	return uint8(HashValue(key) & math.MaxUint8)
 }
 
+// Index4Int8 索引路由方法，值范围为int8
 func Index4Int8(key interface{}) int8 {
 	return int8(HashValue(key) & math.MaxInt8)
 }
 
+// Index4Int16 索引路由方法，值范围为int16
 func Index4Int16(key interface{}) int16 {
 	return int16(HashValue(key) * math.MaxInt16)
 }
