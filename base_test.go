@@ -436,11 +436,11 @@ func BenchmarkHashRing_Get(b *testing.B) {
 
 func TestBigCamels(t *testing.T) {
 	caseList := map[string]string{
-		"user-info": "UserInfo",
-		"user-":     "User",
-		"User-Info": "UserInfo",
-		"user-Info": "UserInfo",
-		"user":      "User",
+		"user-info":    "UserInfo",
+		"user-":        "User",
+		"User-ZapInfo": "UserInfo",
+		"user-ZapInfo": "UserInfo",
+		"user":         "User",
 	}
 
 	for c, r := range caseList {
@@ -452,11 +452,11 @@ func TestBigCamels(t *testing.T) {
 
 func TestSmallCamels(t *testing.T) {
 	caseList := map[string]string{
-		"user-info": "userInfo",
-		"user-":     "user",
-		"User-Info": "userInfo",
-		"user-Info": "userInfo",
-		"user":      "user",
+		"user-info":    "userInfo",
+		"user-":        "user",
+		"User-ZapInfo": "userInfo",
+		"user-ZapInfo": "userInfo",
+		"user":         "user",
 	}
 
 	for c, r := range caseList {

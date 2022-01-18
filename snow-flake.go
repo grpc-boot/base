@@ -30,7 +30,7 @@ var (
 type SnowFlake interface {
 	// Id 生成id
 	Id(logicId uint8) (int64, error)
-	// Info 根据id获取信息
+	// ZapInfo 根据id获取信息
 	Info(id int64) (timestamp int64, machineId uint8, logicId uint8, index int16)
 }
 
