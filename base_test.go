@@ -90,6 +90,18 @@ func init() {
 	btm = NewBitmap(nil)
 }
 
+func TestFileExists(t *testing.T) {
+	caseList := []string{
+		"func.go",
+		"function.go",
+	}
+
+	for _, fileName := range caseList {
+		exist := FileExists(fileName)
+		t.Logf("%s: %v", fileName, exist)
+	}
+}
+
 func TestHashValue(t *testing.T) {
 	dd := &Data{
 		id: "sfafd",
