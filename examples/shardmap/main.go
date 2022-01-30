@@ -24,9 +24,9 @@ func main() {
 			case shardmap.Create:
 				base.Green("create key:%+v value:%+v", event.Key, event.Value)
 			case shardmap.Update:
-				base.Green("update key:%+v value:%+v", event.Key, event.Value)
+				base.Green("update key:%+v value:%+v oldValue:%+v", event.Key, event.Value, event.OldValue)
 			case shardmap.Delete:
-				base.Green("delete key:%+v value:%+v", event.Key, event.Value)
+				base.Green("delete key:%+v", event.Key)
 			}
 		}
 	}()

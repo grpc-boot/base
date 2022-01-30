@@ -55,19 +55,21 @@ type shardMap struct {
 }
 
 func (m *shardMap) Set(key interface{}, value interface{}) (isCreate bool) {
-	exists := m.shardList[Index4Uint8(key)].set(key, value)
+	oldValue, exists := m.shardList[Index4Uint8(key)].set(key, value)
 	if !exists {
 		m.length.Add(1)
 	}
 
-	if cap(m.changeChan) > 0 {
-		event := shardmap.ChangeEvent{Type: shardmap.Create, Key: key, Value: value}
-		if exists {
-			event.Type = shardmap.Update
-		}
-		m.changeChan <- event
+	if cap(m.changeChan) < 1 {
+		return !exists
 	}
 
+	event := shardmap.ChangeEvent{Type: shardmap.Create, Key: key, Value: value}
+	if exists {
+		event.Type = shardmap.Update
+		event.OldValue = oldValue
+	}
+	m.changeChan <- event
 	return !exists
 }
 
@@ -103,11 +105,11 @@ type shard struct {
 	items map[interface{}]interface{}
 }
 
-func (s *shard) set(key interface{}, value interface{}) (exists bool) {
+func (s *shard) set(key interface{}, value interface{}) (oldValue interface{}, exists bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	_, exists = s.items[key]
+	oldValue, exists = s.items[key]
 	s.items[key] = value
 	return
 }

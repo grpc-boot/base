@@ -10,7 +10,8 @@ const (
 
 // ChangeEvent 修改事件
 type ChangeEvent struct {
-	Type  Event
-	Key   interface{}
-	Value interface{}
+	Type     Event
+	Key      interface{}
+	OldValue interface{}
+	Value    interface{}
 }
