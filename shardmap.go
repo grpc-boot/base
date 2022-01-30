@@ -4,19 +4,21 @@ import (
 	"math"
 	"sync"
 
+	"github.com/grpc-boot/base/core/shardmap"
+
 	"go.uber.org/atomic"
 )
 
 // ShardMap 分片Map
 type ShardMap interface {
 	// Set 存储
-	Set(key interface{}, value interface{})
+	Set(key interface{}, value interface{}) (isCreate bool)
 	// Get 获取
 	Get(key interface{}) (value interface{}, exists bool)
 	// Exists 是否存在
 	Exists(key interface{}) (exists bool)
 	// Delete 删除
-	Delete(keys ...interface{})
+	Delete(keys ...interface{}) (delNum int)
 	// Length 长度
 	Length() int64
 }
@@ -33,15 +35,40 @@ func NewShardMap() ShardMap {
 	return m
 }
 
-type shardMap struct {
-	shardList [256]shard
-	length    atomic.Int64
+// NewSharMapWithChannel 实例化ShardMap并返回changeChannel
+func NewSharMapWithChannel(size int) (sm ShardMap, ch <-chan shardmap.ChangeEvent) {
+	m := &shardMap{}
+	for index := 0; index <= math.MaxUint8; index++ {
+		m.shardList[index] = shard{
+			items: make(map[interface{}]interface{}, 4),
+		}
+	}
+
+	m.changeChan = make(chan shardmap.ChangeEvent, size)
+	return m, m.changeChan
 }
 
-func (m *shardMap) Set(key interface{}, value interface{}) {
-	if exists := m.shardList[Index4Uint8(key)].set(key, value); !exists {
+type shardMap struct {
+	shardList  [256]shard
+	length     atomic.Int64
+	changeChan chan shardmap.ChangeEvent
+}
+
+func (m *shardMap) Set(key interface{}, value interface{}) (isCreate bool) {
+	exists := m.shardList[Index4Uint8(key)].set(key, value)
+	if !exists {
 		m.length.Add(1)
 	}
+
+	if cap(m.changeChan) > 0 {
+		event := shardmap.ChangeEvent{Type: shardmap.Create, Key: key, Value: value}
+		if exists {
+			event.Type = shardmap.Update
+		}
+		m.changeChan <- event
+	}
+
+	return !exists
 }
 
 func (m *shardMap) Get(key interface{}) (value interface{}, exists bool) {
@@ -52,12 +79,19 @@ func (m *shardMap) Exists(key interface{}) (exists bool) {
 	return m.shardList[Index4Uint8(key)].exists(key)
 }
 
-func (m *shardMap) Delete(keys ...interface{}) {
+func (m *shardMap) Delete(keys ...interface{}) (delNum int) {
 	for _, key := range keys {
 		if exists := m.shardList[Index4Uint8(key)].delete(key); exists {
 			m.length.Sub(1)
+			delNum++
+
+			if cap(m.changeChan) > 0 {
+				m.changeChan <- shardmap.ChangeEvent{Type: shardmap.Delete, Key: key}
+			}
 		}
 	}
+
+	return delNum
 }
 
 func (m *shardMap) Length() int64 {
