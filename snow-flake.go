@@ -30,7 +30,9 @@ var (
 type SnowFlake interface {
 	// Id 生成id
 	Id(logicId uint8) (int64, error)
-	// ZapInfo 根据id获取信息
+	// IdTime 根据指定时间生成id
+	IdTime(current time.Time, logicId uint8) (int64, error)
+	// Info 根据id获取信息
 	Info(id int64) (timestamp int64, machineId uint8, logicId uint8, index int16)
 }
 
@@ -69,7 +71,7 @@ func GetMachineIdByEnv(key string) GetMachineId {
 	}
 }
 
-type work func() (err error)
+type work func(current time.Time) (err error)
 
 type snowFlake struct {
 	mode           uint8
@@ -121,6 +123,10 @@ func NewSF(mode uint8, id uint8, timeStampBegin int64) (sfl SnowFlake, err error
 }
 
 func (sf *snowFlake) Id(logicId uint8) (int64, error) {
+	return sf.IdTime(time.Now(), logicId)
+}
+
+func (sf *snowFlake) IdTime(current time.Time, logicId uint8) (int64, error) {
 	if logicId > 3 {
 		return 0, ErrLogicId
 	}
@@ -128,7 +134,7 @@ func (sf *snowFlake) Id(logicId uint8) (int64, error) {
 	sf.mutex.Lock()
 	defer sf.mutex.Unlock()
 
-	err := sf.step()
+	err := sf.step(current)
 	if err != nil {
 		return 0, err
 	}
@@ -144,8 +150,8 @@ func (sf *snowFlake) Info(id int64) (timestamp int64, machineId uint8, logicId u
 	return
 }
 
-func (sf *snowFlake) wait() (err error) {
-	curTimeStamp := time.Now().UnixNano() / 1e6
+func (sf *snowFlake) wait(current time.Time) (err error) {
+	curTimeStamp := current.UnixNano() / 1e6
 
 	//时钟回拨等待处理
 	for curTimeStamp < sf.lastTimeStamp {
@@ -165,8 +171,8 @@ func (sf *snowFlake) wait() (err error) {
 	return nil
 }
 
-func (sf *snowFlake) max() (err error) {
-	curTimeStamp := time.Now().UnixNano() / 1e6
+func (sf *snowFlake) max(current time.Time) (err error) {
+	curTimeStamp := current.UnixNano() / 1e6
 
 	//时钟回拨使用最大时间
 	if curTimeStamp < sf.lastTimeStamp {
@@ -185,8 +191,8 @@ func (sf *snowFlake) max() (err error) {
 	return nil
 }
 
-func (sf *snowFlake) err() (err error) {
-	curTimeStamp := time.Now().UnixNano() / 1e6
+func (sf *snowFlake) err(current time.Time) (err error) {
+	curTimeStamp := current.UnixNano() / 1e6
 	//时钟回拨直接抛出异常
 	if curTimeStamp < sf.lastTimeStamp {
 		return ErrTimeBack
