@@ -7,11 +7,11 @@ import (
 )
 
 const (
-	abortIndex = math.MaxInt8
+	abortIndex = math.MaxInt8 >> 1
 )
 
 var ctxPool = sync.Pool{
-	New: func() any {
+	New: func() interface{} {
 		return &Context{}
 	},
 }
@@ -20,7 +20,7 @@ var ctxPool = sync.Pool{
 type Context struct {
 	mutex sync.RWMutex
 
-	data     map[string]any
+	data     map[string]interface{}
 	index    int8
 	handlers []func(ctx *Context)
 }
@@ -48,19 +48,19 @@ func (c *Context) reset() {
 }
 
 // Set 存储数据
-func (c *Context) Set(key string, value any) {
+func (c *Context) Set(key string, value interface{}) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	if c.data == nil {
-		c.data = make(map[string]any)
+		c.data = make(map[string]interface{})
 	}
 
 	c.data[key] = value
 }
 
 // Get 获取数据
-func (c *Context) Get(key string) (value any, exists bool) {
+func (c *Context) Get(key string) (value interface{}, exists bool) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -70,7 +70,7 @@ func (c *Context) Get(key string) (value any, exists bool) {
 
 // GetInt64 获取int64值
 func (c *Context) GetInt64(key string) (value int64, exists bool) {
-	var val any
+	var val interface{}
 	val, ok := c.Get(key)
 	if !ok {
 		return 0, ok
@@ -83,7 +83,7 @@ func (c *Context) GetInt64(key string) (value int64, exists bool) {
 
 // GetInt 获取int值
 func (c *Context) GetInt(key string) (value int, exists bool) {
-	var val any
+	var val interface{}
 	val, ok := c.Get(key)
 	if !ok {
 		return 0, ok
@@ -96,7 +96,7 @@ func (c *Context) GetInt(key string) (value int, exists bool) {
 
 // GetInt8 获取bool值
 func (c *Context) GetInt8(key string) (value int8, exists bool) {
-	var val any
+	var val interface{}
 	val, ok := c.Get(key)
 	if !ok {
 		return 0, ok
@@ -109,7 +109,7 @@ func (c *Context) GetInt8(key string) (value int8, exists bool) {
 
 // GetBool 获取bool值
 func (c *Context) GetBool(key string) (value bool, exists bool) {
-	var val any
+	var val interface{}
 	val, ok := c.Get(key)
 	if !ok {
 		return false, ok
@@ -122,7 +122,7 @@ func (c *Context) GetBool(key string) (value bool, exists bool) {
 
 // GetString 获取string值
 func (c *Context) GetString(key string) (value string, exists bool) {
-	var val any
+	var val interface{}
 	val, ok := c.Get(key)
 	if !ok {
 		return "", ok
@@ -165,7 +165,7 @@ func (c *Context) Err() error {
 	return nil
 }
 
-func (c *Context) Value(key any) any {
+func (c *Context) Value(key interface{}) interface{} {
 	if k, ok := key.(string); ok {
 		v, exists := c.Get(k)
 		if !exists {

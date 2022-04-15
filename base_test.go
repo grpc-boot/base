@@ -478,6 +478,49 @@ func TestSmallCamels(t *testing.T) {
 	}
 }
 
+func TestContext_Next(t *testing.T) {
+	ctx := AcquireCtx([]func(ctx *Context){
+		func(ctx *Context) {
+			current := time.Now().Unix()
+			t.Logf("first run:%d\n", current)
+			ctx.Set("cc", current)
+
+			ctx.Next()
+
+			t.Logf("first done\n")
+		},
+		func(ctx *Context) {
+			current := time.Now().Unix()
+			t.Logf("second run:%d\n", current)
+
+			ccValue, _ := ctx.GetInt64("cc")
+
+			t.Logf("got cc:%d\n", ccValue)
+			ctx.Set("dd", current)
+
+			ctx.Abort()
+
+			t.Logf("second done\n")
+		},
+		func(ctx *Context) {
+			current := time.Now().Unix()
+			t.Logf("third run:%d\n", current)
+
+			ddValue, _ := ctx.GetInt64("dd")
+
+			t.Logf("got dd:%d\n", ddValue)
+			ctx.Set("ee", current)
+
+			ctx.Next()
+
+			t.Logf("third done\n")
+		},
+	})
+
+	ctx.Next()
+	ctx.Close()
+}
+
 func BenchmarkBigCamels(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		BigCamels('-', "user-info-api")
