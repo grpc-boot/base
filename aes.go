@@ -19,7 +19,7 @@ type Aes struct {
 }
 
 // NewAes 实例化Aes
-func NewAes(key string, iv string) (a *Aes, err error) {
+func NewAes(key, iv string) (a *Aes, err error) {
 	var b cipher.Block
 	b, err = aes.NewCipher([]byte(key))
 	if err != nil {
@@ -32,6 +32,21 @@ func NewAes(key string, iv string) (a *Aes, err error) {
 
 	a = &Aes{
 		iv:    []byte(iv),
+		block: b,
+	}
+	return
+}
+
+// NewAesWithBytes 实例化Aes
+func NewAesWithBytes(key, iv []byte) (a *Aes, err error) {
+	var b cipher.Block
+	b, err = aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	a = &Aes{
+		iv:    iv,
 		block: b,
 	}
 	return
