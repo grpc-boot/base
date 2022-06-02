@@ -14,38 +14,38 @@ type CanHash interface {
 
 // HashValue 计算任意类型hash值
 func HashValue(key interface{}) uint32 {
-	switch key.(type) {
+	switch v := key.(type) {
 	//优先使用自定义hash
 	case CanHash:
-		return key.(CanHash).HashCode()
+		return v.HashCode()
 	case uint8:
-		return uint32(key.(uint8))
+		return uint32(v)
 	case uint16:
-		return uint32(key.(uint16))
+		return uint32(v)
 	case uint32:
 		return key.(uint32)
 	case uint64:
-		return uint32(key.(uint64) & math.MaxUint32)
+		return uint32(v & math.MaxUint32)
 	case uint:
-		return uint32(key.(uint) & math.MaxUint32)
+		return uint32(v & math.MaxUint32)
 	case int8:
-		return uint32(key.(int8))
+		return uint32(v)
 	case int16:
-		return uint32(key.(int16))
+		return uint32(v)
 	case int32:
-		return uint32(key.(int32))
+		return uint32(v)
 	case int64:
-		return uint32(key.(int64) & math.MaxUint32)
+		return uint32(v & math.MaxUint32)
 	case int:
 		return uint32(key.(int) & math.MaxUint32)
 	case float64:
-		return uint32(int64(key.(float64)) & math.MaxUint32)
+		return uint32(int64(v) & math.MaxUint32)
 	case float32:
-		return uint32(key.(float32))
+		return uint32(v)
 	case string:
-		return crc32.ChecksumIEEE([]byte(key.(string)))
+		return crc32.ChecksumIEEE([]byte(v))
 	case []byte:
-		return crc32.ChecksumIEEE(key.([]byte))
+		return crc32.ChecksumIEEE(v)
 	}
 
 	return crc32.ChecksumIEEE([]byte(fmt.Sprint(key)))

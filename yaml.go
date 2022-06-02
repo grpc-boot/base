@@ -6,14 +6,19 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var (
+	YamlMarshal   = yaml.Marshal
+	YamlUnmarshal = yaml.Unmarshal
+)
+
 // YamlEncode ---
 func YamlEncode(v interface{}) (data []byte, err error) {
-	return yaml.Marshal(v)
+	return YamlMarshal(v)
 }
 
 // YamlDecode ---
 func YamlDecode(data []byte, v interface{}) (err error) {
-	return yaml.Unmarshal(data, v)
+	return YamlUnmarshal(data, v)
 }
 
 // YamlDecodeFile ---
@@ -23,5 +28,5 @@ func YamlDecodeFile(filePath string, v interface{}) (err error) {
 		return err
 	}
 
-	return yaml.Unmarshal(conf, v)
+	return YamlUnmarshal(conf, v)
 }

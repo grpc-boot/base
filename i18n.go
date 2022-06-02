@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	En   = `en`
-	ZhTw = `zh-tw`
 	ZhCn = `zh_CN`
 )
 
