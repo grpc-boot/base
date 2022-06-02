@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	formal()
+	normal()
 	log()
 
 	level()
@@ -40,10 +40,10 @@ func log() {
 		zap.String("filename", "logger"),
 	)
 
-	base.ZapSync()
+	_ = base.ZapSync()
 }
 
-func formal() {
+func normal() {
 	conf := zap.Config{
 		Level:    zap.NewAtomicLevelAt(zap.InfoLevel),
 		Encoding: "json",
