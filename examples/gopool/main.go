@@ -3,7 +3,7 @@ package main
 import (
 	"math"
 	"math/rand"
-	"sync"
+	"runtime"
 	"time"
 
 	"github.com/grpc-boot/base/core/gopool"
@@ -17,47 +17,60 @@ func init() {
 
 func main() {
 	pool, err := base.NewGoPool(100,
-		//gopool.WithQueueLength(50),
-		//gopool.WithSpawnSize(10),
+		gopool.WithQueueLength(50),
+		gopool.WithSpawnSize(runtime.NumCPU()),
 		gopool.WithPanicHandler(func(err interface{}) {
 			if err != nil {
-				base.Red("panic error:%+v\n", err)
+				base.Red("panic error:%+v", err)
 			}
 		}),
 	)
 
 	if err != nil {
-		base.RedFatal("new pool error:%s\n", err.Error())
+		base.RedFatal("new pool error:%s", err.Error())
 	}
 
 	go func() {
-		base.Green("workerNum:%d queueLen: %d", pool.ActiveWorkerNum(), pool.QueueLength())
+		base.Green("workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", pool.ActiveWorkerNum(), pool.QueueLength(), pool.PendingTaskTotal(), pool.SuccessTotal(), pool.FailedTotal(), pool.HandleTotal())
 
 		tick := time.NewTicker(time.Second)
 		for range tick.C {
-			base.Green("workerNum:%d queueLen: %d", pool.ActiveWorkerNum(), pool.QueueLength())
+			base.Green("workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", pool.ActiveWorkerNum(), pool.QueueLength(), pool.PendingTaskTotal(), pool.SuccessTotal(), pool.FailedTotal(), pool.HandleTotal())
 		}
 	}()
 
 	var (
-		wg  sync.WaitGroup
-		max = math.MaxUint16
+		max = math.MaxInt16
 	)
 
-	wg.Add(max)
+	for index := 0; index < 8; index++ {
+		go func() {
+			for i := 0; i < max; i++ {
+				submit(pool)
+			}
+		}()
+	}
 
-	for index := 0; index < max; index++ {
-		err = pool.Submit(func() {
-			time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
-			wg.Done()
-		})
-
-		if err != nil {
-			wg.Done()
-			base.Red("submit error:%s\n", err.Error())
+	for {
+		time.Sleep(time.Millisecond)
+		if pool.PendingTaskTotal() == 0 {
+			break
 		}
 	}
 
-	wg.Wait()
-	base.Green("done workerNum:%d queueLen: %d", pool.ActiveWorkerNum(), pool.QueueLength())
+	base.Green("done workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", pool.ActiveWorkerNum(), pool.QueueLength(), pool.PendingTaskTotal(), pool.SuccessTotal(), pool.FailedTotal(), pool.HandleTotal())
+}
+
+func submit(pool *gopool.Pool) {
+	err := pool.Submit(func() {
+		time.Sleep(time.Millisecond * time.Duration(rand.Intn(10)))
+		val := rand.Intn(10000)
+		if val < 1 {
+			panic("hit")
+		}
+	})
+
+	if err != nil {
+		base.Red("submit error:%s", err.Error())
+	}
 }
