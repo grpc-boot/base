@@ -15,9 +15,13 @@ type CanHash interface {
 // HashValue 计算任意类型hash值
 func HashValue(key interface{}) uint32 {
 	switch v := key.(type) {
-	//优先使用自定义hash
 	case CanHash:
 		return v.HashCode()
+	case bool:
+		if v {
+			return 1
+		}
+		return 0
 	case uint8:
 		return uint32(v)
 	case uint16:
