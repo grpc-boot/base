@@ -2,7 +2,6 @@ package base
 
 import (
 	"errors"
-	"io/fs"
 	"io/ioutil"
 	"strings"
 )
@@ -47,8 +46,7 @@ func NewI18n(defaultLanguage string, msgMap map[string]map[string]string) (i I18
 
 // NewI18nFromYaml 从Yaml文件配置实例化多语言
 func NewI18nFromYaml(defaultLanguage string, dir string) (i I18n, err error) {
-	var fileList []fs.FileInfo
-	fileList, err = ioutil.ReadDir(dir)
+	fileList, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +84,7 @@ func NewI18nFromYaml(defaultLanguage string, dir string) (i I18n, err error) {
 
 // NewI18nFromJson 从Json文件配置实例化多语言
 func NewI18nFromJson(defaultLanguage string, dir string) (i I18n, err error) {
-	var fileList []fs.FileInfo
-	fileList, err = ioutil.ReadDir(dir)
+	fileList, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
