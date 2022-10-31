@@ -564,3 +564,66 @@ func TestJsonParam_Get(t *testing.T) {
 		t.Logf("id:%d name:%s score:%10.2f sex:%v tags:%v hobby:%v", p.Int64("id"), p.String("name"), p.Float64("score"), p.Int("sex"), p.Uint32Slice("tags"), p.StringSlice("hobby"))
 	}
 }
+
+func TestStatusWithCode(t *testing.T) {
+	stsOk := StatusWithCode(OK)
+	defer stsOk.Close()
+
+	t.Logf("status: %s", stsOk.JsonMarshal())
+
+	stsArg := StatusWithCode(ErrInvalidArgument)
+	defer stsArg.Close()
+
+	t.Logf("status: %s", stsArg.JsonMarshal())
+
+	stsPermiss := StatusWithCode(ErrPermissionDenied)
+	stsPermiss.WithMsg("FORBIDDEN")
+	defer stsPermiss.Close()
+
+	t.Logf("status: %s", stsPermiss.JsonMarshal())
+}
+
+func TestStatusWithJsonUnmarshal(t *testing.T) {
+	sts, err := StatusWithJsonUnmarshal([]byte(`{"code": 0, "msg": "OK", "data":{}}`))
+	if err != nil {
+		t.Fatalf("unmarshal error:%s", err.Error())
+	}
+	defer sts.Close()
+
+	t.Logf("status: %s", sts.JsonMarshal())
+
+	stsCancel, err := StatusWithJsonUnmarshal([]byte(`{"code": 1, "msg": "CANCELLED", "data:{}}`))
+	if err == nil {
+		t.Fatalf("want error, got nil")
+	}
+
+	if stsCancel != nil {
+		t.Fatalf("want nil, got:%s", stsCancel.JsonMarshal())
+	}
+}
+
+func TestStatus_Is(t *testing.T) {
+	sts := StatusWithCode(ErrCanceled)
+	defer sts.Close()
+	if !sts.Is(ErrCanceled) {
+		t.Fatalf("want true, got false")
+	}
+
+	if sts.Is(OK) {
+		t.Fatalf("want false, got true")
+	}
+}
+
+func TestStatus_Error(t *testing.T) {
+	sts := StatusWithCode(ErrNotFound)
+	defer sts.Close()
+
+	t.Logf("error format: %s", sts.Error().Error())
+
+	stsOk := StatusWithCode(OK)
+	defer stsOk.Close()
+
+	if stsOk.Error() != nil {
+		t.Fatalf("want nil, got %+v", stsOk.Error())
+	}
+}
