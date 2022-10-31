@@ -168,7 +168,7 @@ func (c *Context) Err() error {
 func (c *Context) Value(key interface{}) interface{} {
 	if k, ok := key.(string); ok {
 		v, exists := c.Get(k)
-		if !exists {
+		if exists {
 			return v
 		}
 	}
