@@ -12,13 +12,18 @@ var (
 )
 
 // YamlEncode ---
-func YamlEncode(v interface{}) (data []byte, err error) {
-	return YamlMarshal(v)
+func YamlEncode(v interface{}) (data string, err error) {
+	bytes, err := YamlMarshal(v)
+	if err != nil {
+		return "", err
+	}
+
+	return Bytes2String(bytes), nil
 }
 
 // YamlDecode ---
-func YamlDecode(data []byte, v interface{}) (err error) {
-	return YamlUnmarshal(data, v)
+func YamlDecode(data string, v interface{}) (err error) {
+	return YamlUnmarshal([]byte(data), v)
 }
 
 // YamlDecodeFile ---

@@ -12,13 +12,18 @@ var (
 )
 
 // JsonEncode ---
-func JsonEncode(v interface{}) (data []byte, err error) {
-	return JsonMarshal(v)
+func JsonEncode(v interface{}) (data string, err error) {
+	bytes, err := JsonMarshal(v)
+	if err != nil {
+		return "", err
+	}
+
+	return Bytes2String(bytes), nil
 }
 
 // JsonDecode ---
-func JsonDecode(data []byte, v interface{}) (err error) {
-	return JsonUnmarshal(data, v)
+func JsonDecode(data string, v interface{}) (err error) {
+	return JsonUnmarshal([]byte(data), v)
 }
 
 // JsonDecodeFile ---

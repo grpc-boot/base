@@ -5,7 +5,7 @@ type JsonParam map[string]interface{}
 // UnmarshalJsonParam _
 func UnmarshalJsonParam(data []byte) (JsonParam, error) {
 	var jp map[string]interface{}
-	err := JsonDecode(data, &jp)
+	err := JsonUnmarshal(data, &jp)
 	return jp, err
 }
 
@@ -124,6 +124,6 @@ func (jp JsonParam) Float64(key string) float64 {
 
 // JsonMarshal _
 func (jp JsonParam) JsonMarshal() []byte {
-	data, _ := JsonEncode(jp)
+	data, _ := JsonMarshal(jp)
 	return data
 }
