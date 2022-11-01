@@ -2,8 +2,11 @@ package base
 
 import (
 	"bytes"
+	"context"
 	"crypto"
 	"encoding/hex"
+	"github.com/grpc-boot/base/core/zaplogger"
+	"go.uber.org/zap/zapcore"
 	"hash/crc32"
 	"os"
 	"strconv"
@@ -626,4 +629,75 @@ func TestStatus_Error(t *testing.T) {
 	if stsOk.Error() != nil {
 		t.Fatalf("want nil, got %+v", stsOk.Error())
 	}
+}
+
+func TestZapError(t *testing.T) {
+	opt := zaplogger.Option{
+		Level: int8(zapcore.InfoLevel),
+		Path:  "./",
+	}
+
+	opt.WithFlagFunc(func() string {
+		return time.Now().Format("2006-01-02_15_04_05")
+	})
+
+	err := InitZapWithOption(opt)
+	if err != nil {
+		t.Fatalf("want nil, got %s\n", err.Error())
+	}
+
+	res := IsLevel(zapcore.InfoLevel)
+	if !res {
+		t.Fatalf("want true, got %t\n", res)
+	}
+
+	res = IsLevel(zapcore.DebugLevel)
+	if res {
+		t.Fatalf("want false, got %t\n", res)
+	}
+
+	res = IsLevel(zapcore.ErrorLevel)
+	if !res {
+		t.Fatalf("want true, got %t\n", res)
+	}
+
+	tick := time.NewTicker(time.Millisecond * 10)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			tick.Stop()
+			return
+		case <-tick.C:
+			Debug("dddddd", zaplogger.Mid("asdfasdffasd"))
+			Info("iiiiiiiii", zaplogger.Event("Test"))
+			Warn("wwwwww", zaplogger.UpdateAt(time.Now().Unix()))
+			Error("eeeeeeee", zaplogger.Value([]interface{}{123123, "safasf"}))
+		}
+	}
+}
+
+func BenchmarkZapError(b *testing.B) {
+	opt := zaplogger.Option{
+		Level: int8(zapcore.InfoLevel),
+		Path:  "./",
+	}
+
+	opt.WithFlagFunc(func() string {
+		return time.Now().Format("2006-01-02_15_04_05")
+	})
+
+	err := InitZapWithOption(opt)
+	if err != nil {
+		b.Fatalf("want nil, got %s\n", err.Error())
+	}
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			Info("iiiii", zaplogger.Mid("asdfasfasfasfdasdfasdfasdasf"))
+		}
+	})
 }
