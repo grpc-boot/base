@@ -4,15 +4,17 @@ import (
 	"bytes"
 	"crypto"
 	"encoding/hex"
-	"github.com/grpc-boot/base/core/zaplogger"
-	"go.uber.org/zap/zapcore"
 	"hash/crc32"
+	"math"
 	"os"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/grpc-boot/base/core/zaplogger"
+
 	"go.uber.org/atomic"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -660,4 +662,138 @@ func TestZapError(t *testing.T) {
 	Info("iiiiiiiii", zaplogger.Event("Test"))
 	Warn("wwwwww", zaplogger.UpdateAt(time.Now().Unix()))
 	Error("eeeeeeee", zaplogger.Value([]interface{}{123123, "safasf"}))
+}
+
+func TestInt64ToHex(t *testing.T) {
+	t.Logf(Int64ToHex(0))
+	t.Logf(Int64ToHex(math.MaxInt16))
+	t.Logf(Int64ToHex(math.MaxUint16))
+}
+
+func TestHex2Int64(t *testing.T) {
+	t.Log(Hex2Int64("00000f"))
+}
+
+func TestInt64ToHexWithPad(t *testing.T) {
+	t.Logf(Int64ToHexWithPad(0, 5))
+	t.Logf(Int64ToHexWithPad(math.MaxUint8, 1))
+	t.Logf(Int64ToHexWithPad(math.MaxUint8, 6))
+	t.Logf(Int64ToHexWithPad(math.MaxInt16, 7))
+	t.Logf(Int64ToHexWithPad(math.MaxUint16, 8))
+}
+
+func TestV1_Unpack(t *testing.T) {
+	key := `i8jdi8jdkfjujui1yhbDCFRE67hbgfde`
+	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
+	aes, err := NewAes(key[:16], key[16:])
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	v1, err := NewV1(key, aes.CbcEncrypt([]byte(transKey)))
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	data := v1.Pack(&Package{
+		Id:   0x1001,
+		Name: "login",
+		Param: JsonParam{
+			"t": "v",
+		},
+	})
+
+	t.Logf("pack--%s", data)
+
+	pkg, err := v1.Unpack(data)
+	t.Logf("%+v", pkg)
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+}
+
+// BenchmarkV1_Pack-8   	 1106918	      1062 ns/op
+func BenchmarkV1_Pack(b *testing.B) {
+	key := `i8jdi8jdkfjujui1yhbDCFRE67hbgfde`
+	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
+	aes, err := NewAes(key[:16], key[16:])
+	if err != nil {
+		b.Fatalf("want nil, got %s", err)
+	}
+
+	v1, err := NewV1(key, aes.CbcEncrypt([]byte(transKey)))
+	if err != nil {
+		b.Fatalf("want nil, got %s", err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = v1.Pack(&Package{
+			Id:   0x1001,
+			Name: "login",
+			Param: JsonParam{
+				"t": "v",
+			},
+		})
+	}
+}
+
+// BenchmarkV1_Unpack-8   	 1243446	       895.3 ns/op
+func BenchmarkV1_Unpack(b *testing.B) {
+	key := `i8jdi8jdkfjujui1yhbDCFRE67hbgfde`
+	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
+	aes, err := NewAes(key[:16], key[16:])
+	if err != nil {
+		b.Fatalf("want nil, got %s", err)
+	}
+
+	v1, err := NewV1(key, aes.CbcEncrypt([]byte(transKey)))
+	if err != nil {
+		b.Fatalf("want nil, got %s", err)
+	}
+
+	data := v1.Pack(&Package{
+		Id:   0x1001,
+		Name: "login",
+		Param: JsonParam{
+			"t": "v",
+		},
+	})
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if _, err = v1.Unpack(data); err != nil {
+			b.Fatalf("want nil, got %s", err)
+		}
+	}
+}
+
+// BenchmarkV1_PackUnpack-8   	  439158	      2307 ns/op
+func BenchmarkV1_PackUnpack(b *testing.B) {
+	key := `i8jdi8jdkfjujui1yhbDCFRE67hbgfde`
+	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
+	aes, err := NewAes(key[:16], key[16:])
+	if err != nil {
+		b.Fatalf("want nil, got %s", err)
+	}
+
+	v1, err := NewV1(key, aes.CbcEncrypt([]byte(transKey)))
+	if err != nil {
+		b.Fatalf("want nil, got %s", err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		data := v1.Pack(&Package{
+			Id:   0x1001,
+			Name: "login",
+			Param: JsonParam{
+				"t": time.Now().Unix(),
+			},
+		})
+
+		if _, err = v1.Unpack(data); err != nil {
+			b.Fatalf("want nil, got %s", err)
+		}
+	}
 }

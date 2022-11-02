@@ -54,6 +54,38 @@ func Bytes2Float64(data []byte) float64 {
 	return val
 }
 
+// Int64ToHex _
+func Int64ToHex(value int64) string {
+	return strconv.FormatInt(value, 16)
+}
+
+// Int64ToHexWithPad _
+func Int64ToHexWithPad(value int64, padLength int) string {
+	hexStr := Int64ToHex(value)
+	if len(hexStr) >= padLength {
+		return hexStr
+	}
+
+	buffer := make([]byte, padLength, padLength)
+
+	for i := 0; i < (padLength - len(hexStr)); i++ {
+		buffer[i] = '0'
+	}
+
+	start := padLength - len(hexStr)
+	for j := start; j < padLength; j++ {
+		buffer[j] = hexStr[j-start]
+	}
+
+	return Bytes2String(buffer)
+}
+
+// Hex2Int64 _
+func Hex2Int64(value string) int64 {
+	val, _ := strconv.ParseInt(value, 16, 64)
+	return val
+}
+
 // BigCamels 转换为大驼峰
 func BigCamels(sep byte, data string) string {
 	var (
