@@ -42,6 +42,12 @@ func Bytes2Int64(data []byte) int64 {
 	return val
 }
 
+// Bytes2Uint32 字节切片转换为uint32
+func Bytes2Uint32(data []byte) uint32 {
+	val, _ := strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
+	return uint32(val)
+}
+
 // Bytes2Float64 字节切片转换为float64
 func Bytes2Float64(data []byte) float64 {
 	val, _ := strconv.ParseFloat(Bytes2String(data), 64)

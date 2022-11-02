@@ -14,16 +14,9 @@ type Config struct {
 	Env    string           `json:"env" yaml:"env"`
 	Ver    string           `json:"ver" yaml:"ver"`
 	Logger zaplogger.Option `json:"logger" yaml:"logger"`
+	Params JsonParam        `json:"params" yaml:"params"`
 }
 
-func (c *Config) IsPro() bool {
-	return c.Env == EnvPro
-}
-
-func (c *Config) IsTest() bool {
-	return c.Env == EnvTest
-}
-
-func (c *Config) IsDev() bool {
-	return c.Env == EnvDev
+func (c *Config) IsEnv(env string) bool {
+	return c.Env == env
 }

@@ -6,8 +6,13 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const (
+	defaultPath       = `/tmp`
+	defaultTickSecond = 5
+)
+
 var (
-	DefaultEncoder = zapcore.NewJSONEncoder(zapcore.EncoderConfig{
+	defaultEncoder = zapcore.NewJSONEncoder(zapcore.EncoderConfig{
 		MessageKey: "Message",
 		LevelKey:   "Level",
 		TimeKey:    "DateTime",
@@ -19,7 +24,7 @@ var (
 		EncodeCaller: zapcore.ShortCallerEncoder,
 	})
 
-	TimeFlag = func() string {
+	timeFlag = func() string {
 		return time.Now().Format("06-01-02")
 	}
 )

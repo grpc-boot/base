@@ -2,7 +2,6 @@ package base
 
 import (
 	"bytes"
-	"context"
 	"crypto"
 	"encoding/hex"
 	"github.com/grpc-boot/base/core/zaplogger"
@@ -634,12 +633,8 @@ func TestStatus_Error(t *testing.T) {
 func TestZapError(t *testing.T) {
 	opt := zaplogger.Option{
 		Level: int8(zapcore.InfoLevel),
-		Path:  "./",
+		Path:  "./logs",
 	}
-
-	opt.WithFlagFunc(func() string {
-		return time.Now().Format("2006-01-02_15_04_05")
-	})
 
 	err := InitZapWithOption(opt)
 	if err != nil {
@@ -661,43 +656,8 @@ func TestZapError(t *testing.T) {
 		t.Fatalf("want true, got %t\n", res)
 	}
 
-	tick := time.NewTicker(time.Millisecond * 10)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-	for {
-		select {
-		case <-ctx.Done():
-			tick.Stop()
-			return
-		case <-tick.C:
-			Debug("dddddd", zaplogger.Mid("asdfasdffasd"))
-			Info("iiiiiiiii", zaplogger.Event("Test"))
-			Warn("wwwwww", zaplogger.UpdateAt(time.Now().Unix()))
-			Error("eeeeeeee", zaplogger.Value([]interface{}{123123, "safasf"}))
-		}
-	}
-}
-
-func BenchmarkZapError(b *testing.B) {
-	opt := zaplogger.Option{
-		Level: int8(zapcore.InfoLevel),
-		Path:  "./",
-	}
-
-	opt.WithFlagFunc(func() string {
-		return time.Now().Format("2006-01-02_15_04_05")
-	})
-
-	err := InitZapWithOption(opt)
-	if err != nil {
-		b.Fatalf("want nil, got %s\n", err.Error())
-	}
-
-	b.ResetTimer()
-
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			Info("iiiii", zaplogger.Mid("asdfasfasfasfdasdfasdfasdasf"))
-		}
-	})
+	Debug("dddddd", zaplogger.Mid("asdfasdffasd"))
+	Info("iiiiiiiii", zaplogger.Event("Test"))
+	Warn("wwwwww", zaplogger.UpdateAt(time.Now().Unix()))
+	Error("eeeeeeee", zaplogger.Value([]interface{}{123123, "safasf"}))
 }

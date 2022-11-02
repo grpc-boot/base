@@ -57,12 +57,12 @@ func ZapError(msg string, fields ...zap.Field) {
 	zapLogger.Error(msg, fields...)
 }
 
-func Fatal(msg string, fields ...zap.Field) {
-	zapLogger.Fatal(msg, fields...)
+func DPanic(msg string, fields ...zap.Field) {
+	zapLogger.DPanic(msg, fields...)
 }
 
-func ZapFatal(msg string, fields ...zap.Field) {
-	zapLogger.Fatal(msg, fields...)
+func ZapDPanic(msg string, fields ...zap.Field) {
+	zapLogger.DPanic(msg, fields...)
 }
 
 func Panic(msg string, fields ...zap.Field) {
@@ -71,6 +71,14 @@ func Panic(msg string, fields ...zap.Field) {
 
 func ZapPanic(msg string, fields ...zap.Field) {
 	zapLogger.Panic(msg, fields...)
+}
+
+func Fatal(msg string, fields ...zap.Field) {
+	zapLogger.Fatal(msg, fields...)
+}
+
+func ZapFatal(msg string, fields ...zap.Field) {
+	zapLogger.Fatal(msg, fields...)
 }
 
 func ZapSync() error {
