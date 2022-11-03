@@ -59,6 +59,11 @@ func Int64ToHex(value int64) string {
 	return strconv.FormatInt(value, 16)
 }
 
+// Uint64ToHex _
+func Uint64ToHex(value uint64) string {
+	return strconv.FormatUint(value, 16)
+}
+
 // Int64ToHexWithPad _
 func Int64ToHexWithPad(value int64, padLength int) string {
 	hexStr := Int64ToHex(value)
@@ -83,6 +88,12 @@ func Int64ToHexWithPad(value int64, padLength int) string {
 // Hex2Int64 _
 func Hex2Int64(value string) int64 {
 	val, _ := strconv.ParseInt(value, 16, 64)
+	return val
+}
+
+// Hex2Uint64 _
+func Hex2Uint64(value string) uint64 {
+	val, _ := strconv.ParseUint(value, 16, 64)
 	return val
 }
 

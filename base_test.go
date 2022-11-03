@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"hash/crc32"
 	"math"
+	"math/rand"
 	"os"
 	"strconv"
 	"testing"
@@ -89,6 +90,8 @@ type Group struct {
 }
 
 func init() {
+	rand.Seed(time.Now().UnixNano())
+
 	sm = NewShardMap()
 	hs = NewHashSet(10)
 	btm = NewBitmap(nil)
@@ -682,15 +685,25 @@ func TestInt64ToHexWithPad(t *testing.T) {
 	t.Logf(Int64ToHexWithPad(math.MaxUint16, 8))
 }
 
-func TestV1_Unpack(t *testing.T) {
-	key := `i8jdi8jdkfjujui1yhbDCFRE67hbgfde`
-	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
-	aes, err := NewAes(key[:16], key[16:])
-	if err != nil {
-		t.Fatalf("want nil, got %s", err)
+var (
+	dAes atomic.Value
+)
+
+func defaultAes() *Aes {
+	aes, ok := dAes.Load().(*Aes)
+	if ok {
+		return aes
 	}
 
-	v1, err := NewV1(key, aes.CbcEncrypt([]byte(transKey)))
+	aes, _ = NewAes(`i8jdi8jdkfjujui1`, `yhbDCFRE67hbgfde`)
+	dAes.Store(dAes)
+	return aes
+}
+
+func TestV1_Unpack(t *testing.T) {
+	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
+	aes := defaultAes()
+	v1, err := NewV1(aes, aes.CbcEncrypt([]byte(transKey)))
 	if err != nil {
 		t.Fatalf("want nil, got %s", err)
 	}
@@ -712,16 +725,11 @@ func TestV1_Unpack(t *testing.T) {
 	}
 }
 
-// BenchmarkV1_Pack-8   	 1106918	      1062 ns/op
+// BenchmarkV1_Pack-8   	 1066840	      1094 ns/op
 func BenchmarkV1_Pack(b *testing.B) {
-	key := `i8jdi8jdkfjujui1yhbDCFRE67hbgfde`
 	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
-	aes, err := NewAes(key[:16], key[16:])
-	if err != nil {
-		b.Fatalf("want nil, got %s", err)
-	}
-
-	v1, err := NewV1(key, aes.CbcEncrypt([]byte(transKey)))
+	aes := defaultAes()
+	v1, err := NewV1(aes, aes.CbcEncrypt([]byte(transKey)))
 	if err != nil {
 		b.Fatalf("want nil, got %s", err)
 	}
@@ -738,16 +746,11 @@ func BenchmarkV1_Pack(b *testing.B) {
 	}
 }
 
-// BenchmarkV1_Unpack-8   	 1243446	       895.3 ns/op
+// BenchmarkV1_Unpack-8   	 1261839	       937.9 ns/op
 func BenchmarkV1_Unpack(b *testing.B) {
-	key := `i8jdi8jdkfjujui1yhbDCFRE67hbgfde`
 	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
-	aes, err := NewAes(key[:16], key[16:])
-	if err != nil {
-		b.Fatalf("want nil, got %s", err)
-	}
-
-	v1, err := NewV1(key, aes.CbcEncrypt([]byte(transKey)))
+	aes := defaultAes()
+	v1, err := NewV1(aes, aes.CbcEncrypt([]byte(transKey)))
 	if err != nil {
 		b.Fatalf("want nil, got %s", err)
 	}
@@ -768,32 +771,176 @@ func BenchmarkV1_Unpack(b *testing.B) {
 	}
 }
 
-// BenchmarkV1_PackUnpack-8   	  439158	      2307 ns/op
+// BenchmarkV1_PackUnpack-8   	 1378827	       878.9 ns/op
 func BenchmarkV1_PackUnpack(b *testing.B) {
-	key := `i8jdi8jdkfjujui1yhbDCFRE67hbgfde`
 	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
-	aes, err := NewAes(key[:16], key[16:])
-	if err != nil {
-		b.Fatalf("want nil, got %s", err)
-	}
-
-	v1, err := NewV1(key, aes.CbcEncrypt([]byte(transKey)))
+	aes := defaultAes()
+	v1, err := NewV1(aes, aes.CbcEncrypt([]byte(transKey)))
 	if err != nil {
 		b.Fatalf("want nil, got %s", err)
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		data := v1.Pack(&Package{
-			Id:   0x1001,
-			Name: "login",
-			Param: JsonParam{
-				"t": time.Now().Unix(),
-			},
-		})
 
-		if _, err = v1.Unpack(data); err != nil {
-			b.Fatalf("want nil, got %s", err)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			data := v1.Pack(&Package{
+				Id:   0x1001,
+				Name: "login",
+				Param: JsonParam{
+					"t": time.Now().Unix(),
+				},
+			})
+
+			if _, err = v1.Unpack(data); err != nil {
+				b.Fatalf("want nil, got %s", err)
+			}
+		}
+	})
+}
+
+func TestV2_Unpack(t *testing.T) {
+	transKey := `i1yhbDhbgfdeCE67`
+	aes := defaultAes()
+	protocol, err := NewV2(aes, aes.CbcEncrypt([]byte(transKey)))
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	explainData, err := aes.CbcDecrypt(protocol.ResponseKey())
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+	t.Logf("iv:%s %s", protocol.ResponseKey(), explainData)
+
+	data := protocol.Pack(&Package{
+		Id:   0x1001,
+		Name: "login",
+		Param: JsonParam{
+			"t": "v",
+		},
+	})
+
+	t.Logf("pack--%s", data)
+
+	pkg, err := protocol.Unpack(data)
+	t.Logf("%+v", pkg)
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+}
+
+func TestAccept_Accept(t *testing.T) {
+	aes := defaultAes()
+	accept := NewAccept(aes, LevelJson)
+
+	protoV0, err := accept.Accept(LevelJson, nil)
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	v1Key := []byte(`FR4#$%i8jdkfjujui1yhbDhbgfdeCE67`)
+
+	protoV1, err := accept.Accept(LevelV1, aes.CbcEncrypt(v1Key))
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	v2Key := []byte(`FR4#$%i8jdkf@&ju`)
+	protoV2, err := accept.Accept(LevelV2, aes.CbcEncrypt(v2Key))
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	pkg := &Package{
+		Id:   Login,
+		Name: "login",
+		Param: JsonParam{
+			"currentTime": time.Now().Unix(),
+		},
+	}
+
+	v0Pack := protoV0.Pack(pkg)
+	v1Pack := protoV1.Pack(pkg)
+	v2Pack := protoV2.Pack(pkg)
+
+	v0Pkg, err := protoV0.Unpack(v0Pack)
+	t.Logf("v0: %+v", v0Pkg)
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	v1Pkg, err := protoV1.Unpack(v1Pack)
+	t.Logf("v1: %+v", v1Pkg)
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	v2Pkg, err := protoV2.Unpack(v2Pack)
+	t.Logf("v2: %+v", v2Pkg)
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	t.Logf("v2-iv:%s", protoV2.ResponseKey())
+
+	accept = NewAccept(aes, LevelV1)
+	protoV0, err = accept.Accept(LevelJson, nil)
+	if err == nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+}
+
+func TestRandSeed(t *testing.T) {
+	for i := 1; i < 128; i++ {
+		str := randSeed(i)
+		t.Logf(str)
+		if len(str) != i {
+			t.Fatalf("want %d, got %d", i, len(str))
+		}
+	}
+}
+
+func BenchmarkRandSeed(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			length := rand.Intn(len(seed) / 2)
+			str := randSeed(length)
+			if len(str) != length {
+				b.Fatalf("want %d, got %d", length, len(str))
+			}
+		}
+	})
+}
+
+func BenchmarkRandSeedBig(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			length := rand.Intn(1024)
+			str := randSeed(length)
+			if len(str) != length {
+				b.Fatalf("want %d, got %d", length, len(str))
+			}
+		}
+	})
+}
+
+func TestRandStr(t *testing.T) {
+	for i := 1; i < 1024; i++ {
+		rBytes := RandBytes(i)
+		t.Logf("%s", rBytes)
+		if len(rBytes) != i {
+			t.Fatalf("want %d, got %d", i, len(rBytes))
+		}
+	}
+}
+
+func BenchmarkRandStr(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		length := 1 + rand.Intn(16)
+		rBytes := RandBytes(length)
+		if len(rBytes) != length {
+			b.Fatalf("want %d, got %d", length, len(rBytes))
 		}
 	}
 }
