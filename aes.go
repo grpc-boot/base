@@ -63,6 +63,14 @@ func (a *Aes) CbcEncrypt(plain []byte) (secretData []byte) {
 
 // CbcDecrypt cbc解密
 func (a *Aes) CbcDecrypt(secretData []byte) (data []byte, err error) {
+	defer func() {
+		er := recover()
+		if er != nil {
+			err = errors.New(er.(string))
+			data = nil
+		}
+	}()
+
 	blockMode := cipher.NewCBCDecrypter(a.block, a.iv)
 	data = make([]byte, len(secretData))
 	blockMode.CryptBlocks(data, secretData)

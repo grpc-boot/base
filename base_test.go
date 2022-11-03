@@ -275,7 +275,7 @@ func TestAes_CbcEncrypt(t *testing.T) {
 	secretData := aes128.CbcEncrypt(data)
 	plain, err := aes128.CbcDecrypt(secretData)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatalf("%swant nil, got %s", plain, err)
 	}
 
 	if !bytes.Equal(data, plain) {
