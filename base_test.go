@@ -817,7 +817,8 @@ func TestV2_Unpack(t *testing.T) {
 		Id:   0x1001,
 		Name: "login",
 		Param: JsonParam{
-			"t": "v",
+			"t":       "v",
+			"current": time.Now().UnixNano(),
 		},
 	})
 

@@ -2,7 +2,6 @@ package base
 
 import (
 	"encoding/binary"
-	"hash/crc32"
 	"math"
 )
 
@@ -67,7 +66,7 @@ func NewV1(aes *Aes, secretData []byte) (protocol Protocol, err error) {
 func (pt1 *v1) header(pkg *Package, data []byte) []byte {
 	hexStr := Int64ToHexWithPad(int64(pkg.Id), 4)
 
-	sign := crc32.ChecksumIEEE(data)
+	sign := Hex2Int64(Md5(data)[:8])
 
 	seqBuf := make([]byte, 5, 5)
 	binary.PutUvarint(seqBuf, uint64(sign))
@@ -104,7 +103,7 @@ func (pt1 *v1) Unpack(data []byte) (pkg *Package, err error) {
 	}
 
 	sign, _ := binary.Uvarint(data[6:11])
-	if crc32.ChecksumIEEE(data[11:]) != uint32(sign) {
+	if Hex2Uint64(Md5(data[11:])[:8]) != sign {
 		return nil, ErrDataSign
 	}
 
@@ -176,7 +175,7 @@ func (pt2 *v2) ResponseKey() []byte {
 func (pt2 *v2) header(pkg *Package, data []byte) []byte {
 	hexStr := Int64ToHexWithPad(int64(pkg.Id), 4)
 
-	sign := crc32.ChecksumIEEE(data)
+	sign := Hex2Int64(Md5(data)[:8])
 
 	seqBuf := make([]byte, 5, 5)
 	binary.PutUvarint(seqBuf, uint64(sign))
@@ -209,7 +208,7 @@ func (pt2 *v2) Unpack(data []byte) (pkg *Package, err error) {
 	}
 
 	sign, _ := binary.Uvarint(data[6:11])
-	if crc32.ChecksumIEEE(data[11:]) != uint32(sign) {
+	if Hex2Uint64(Md5(data[11:])[:8]) != sign {
 		return nil, ErrDataSign
 	}
 
