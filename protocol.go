@@ -129,6 +129,25 @@ type v2 struct {
 	iv  []byte
 }
 
+func NewV2ForClient(aes *Aes, key, secretData []byte) (protocol Protocol, err error) {
+	data, err := aes.CbcDecrypt(secretData)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) != 16 {
+		return nil, ErrKeyFormat
+	}
+
+	transAes, err := NewAesWithBytes(key, data)
+	if err != nil {
+		return nil, err
+	}
+
+	protocol = &v2{aes: transAes}
+	return
+}
+
 func NewV2(aes *Aes, secretData []byte) (protocol Protocol, err error) {
 	data, err := aes.CbcDecrypt(secretData)
 	if err != nil {
