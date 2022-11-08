@@ -1,6 +1,8 @@
 package base
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"strconv"
 	"unicode"
@@ -83,6 +85,32 @@ func Int64ToHexWithPad(value int64, padLength int) string {
 	}
 
 	return Bytes2String(buffer)
+}
+
+func PackUin32(value uint32) []byte {
+	buffer := bytes.NewBuffer([]byte{})
+	_ = binary.Write(buffer, binary.BigEndian, value)
+	return buffer.Bytes()
+}
+
+func PackIn32(value int32) []byte {
+	buffer := bytes.NewBuffer([]byte{})
+	_ = binary.Write(buffer, binary.BigEndian, value)
+	return buffer.Bytes()
+}
+
+func UnpackUint32(data []byte) (value uint32, err error) {
+	buffer := bytes.NewBuffer(data)
+	var val uint32
+	err = binary.Read(buffer, binary.BigEndian, &val)
+	return val, err
+}
+
+func UnpackInt32(data []byte) (value int32, err error) {
+	buffer := bytes.NewBuffer(data)
+	var val int32
+	err = binary.Read(buffer, binary.BigEndian, &val)
+	return val, err
 }
 
 // Hex2Int64 _

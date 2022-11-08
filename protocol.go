@@ -1,7 +1,7 @@
 package base
 
 import (
-	"encoding/binary"
+	"encoding/base64"
 	"math"
 )
 
@@ -68,20 +68,20 @@ func (pt1 *v1) header(pkg *Package, data []byte) []byte {
 
 	sign := Hex2Int64(Md5(data)[:8])
 
-	seqBuf := make([]byte, 5, 5)
-	binary.PutUvarint(seqBuf, uint64(sign))
-
-	header := make([]byte, 0, 11)
+	header := make([]byte, 0, 10)
 	header = append(header, 1, ':')
 	header = append(header, hexStr...)
-	header = append(header, seqBuf...)
+	header = append(header, PackUin32(uint32(sign))...)
 	return header
 }
 
 func (pt1 *v1) Pack(pkg *Package) []byte {
 	data := pt1.aes.CbcEncrypt(pkg.Pack())
-	header := pt1.header(pkg, data)
-	return append(header, data...)
+
+	dst := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
+	base64.StdEncoding.Encode(dst, data)
+	header := pt1.header(pkg, dst)
+	return append(header, dst...)
 }
 
 func (pt1 *v1) ResponseKey() []byte {
@@ -93,7 +93,7 @@ func (pt1 *v1) Unpack(data []byte) (pkg *Package, err error) {
 		return nil, ErrDataEmpty
 	}
 
-	if len(data) < 12 || data[0] != 1 || data[1] != ':' {
+	if len(data) < 11 || data[0] != 1 || data[1] != ':' {
 		return nil, ErrDataFormat
 	}
 
@@ -102,12 +102,17 @@ func (pt1 *v1) Unpack(data []byte) (pkg *Package, err error) {
 		return nil, ErrDataFormat
 	}
 
-	sign, _ := binary.Uvarint(data[6:11])
-	if Hex2Uint64(Md5(data[11:])[:8]) != sign {
+	sign, err := UnpackUint32(data[6:10])
+	if Hex2Uint64(Md5(data[10:])[:8]) != uint64(sign) {
 		return nil, ErrDataSign
 	}
 
-	jsonData, err := pt1.aes.CbcDecrypt(data[11:])
+	binaryData, err := base64.StdEncoding.DecodeString(Bytes2String(data[10:]))
+	if err != nil {
+		return nil, ErrDataFormat
+	}
+
+	jsonData, err := pt1.aes.CbcDecrypt(binaryData)
 	if err != nil {
 		return nil, err
 	}
@@ -177,20 +182,21 @@ func (pt2 *v2) header(pkg *Package, data []byte) []byte {
 
 	sign := Hex2Int64(Md5(data)[:8])
 
-	seqBuf := make([]byte, 5, 5)
-	binary.PutUvarint(seqBuf, uint64(sign))
-
 	header := make([]byte, 0, 11)
 	header = append(header, 2, ':')
 	header = append(header, hexStr...)
-	header = append(header, seqBuf...)
+	header = append(header, PackUin32(uint32(sign))...)
 	return header
 }
 
 func (pt2 *v2) Pack(pkg *Package) []byte {
 	data := pt2.aes.CbcEncrypt(pkg.Pack())
-	header := pt2.header(pkg, data)
-	return append(header, data...)
+
+	dst := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
+	base64.StdEncoding.Encode(dst, data)
+
+	header := pt2.header(pkg, dst)
+	return append(header, dst...)
 }
 
 func (pt2 *v2) Unpack(data []byte) (pkg *Package, err error) {
@@ -207,12 +213,17 @@ func (pt2 *v2) Unpack(data []byte) (pkg *Package, err error) {
 		return nil, ErrDataFormat
 	}
 
-	sign, _ := binary.Uvarint(data[6:11])
-	if Hex2Uint64(Md5(data[11:])[:8]) != sign {
+	sign, _ := UnpackUint32(data[6:10])
+	if Hex2Uint64(Md5(data[10:])[:8]) != uint64(sign) {
 		return nil, ErrDataSign
 	}
 
-	jsonData, err := pt2.aes.CbcDecrypt(data[11:])
+	binaryData, err := base64.StdEncoding.DecodeString(Bytes2String(data[10:]))
+	if err != nil {
+		return nil, ErrDataFormat
+	}
+
+	jsonData, err := pt2.aes.CbcDecrypt(binaryData)
 	if err != nil {
 		return nil, err
 	}
