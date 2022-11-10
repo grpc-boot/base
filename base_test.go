@@ -725,7 +725,7 @@ func TestV1_Unpack(t *testing.T) {
 	}
 }
 
-// BenchmarkV1_Pack-8   	 1066840	      1094 ns/op
+// BenchmarkV1_Pack-8   	 1066840	      1356 ns/op
 func BenchmarkV1_Pack(b *testing.B) {
 	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
 	aes := defaultAes()
@@ -746,7 +746,7 @@ func BenchmarkV1_Pack(b *testing.B) {
 	}
 }
 
-// BenchmarkV1_Unpack-8   	 1261839	       937.9 ns/op
+// BenchmarkV1_Unpack-8   	 1261839	       1149 ns/op
 func BenchmarkV1_Unpack(b *testing.B) {
 	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
 	aes := defaultAes()
@@ -771,7 +771,7 @@ func BenchmarkV1_Unpack(b *testing.B) {
 	}
 }
 
-// BenchmarkV1_PackUnpack-8   	 1378827	       878.9 ns/op
+// BenchmarkV1_PackUnpack-8   	 1378827	       1010 ns/op
 func BenchmarkV1_PackUnpack(b *testing.B) {
 	transKey := `FR4rjdi8jdkfjujui1yhbDhbgfdeCE67`
 	aes := defaultAes()

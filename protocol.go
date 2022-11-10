@@ -41,7 +41,9 @@ func (pt0 *v0) Unpack(data []byte) (pkg *Package, err error) {
 }
 
 type v1 struct {
-	aes *Aes
+	aes          *Aes
+	headerLength int
+	startTag     string
 }
 
 func NewV1(aes *Aes, secretData []byte) (protocol Protocol, err error) {
@@ -59,19 +61,20 @@ func NewV1(aes *Aes, secretData []byte) (protocol Protocol, err error) {
 		return nil, err
 	}
 
-	protocol = &v1{aes: transAes}
+	protocol = &v1{
+		aes:          transAes,
+		headerLength: 16,
+		startTag:     "013a",
+	}
 	return
 }
 
 func (pt1 *v1) header(pkg *Package, data []byte) []byte {
 	hexStr := Int64ToHexWithPad(int64(pkg.Id), 4)
-
-	sign := Hex2Int64(Md5(data)[:8])
-
-	header := make([]byte, 0, 10)
-	header = append(header, 1, ':')
+	header := make([]byte, 0, len(data)+pt1.headerLength)
+	header = append(header, pt1.startTag...)
 	header = append(header, hexStr...)
-	header = append(header, PackUin32(uint32(sign))...)
+	header = append(header, Int64ToHexWithPad(int64(len(data)), 8)...)
 	return header
 }
 
@@ -93,21 +96,21 @@ func (pt1 *v1) Unpack(data []byte) (pkg *Package, err error) {
 		return nil, ErrDataEmpty
 	}
 
-	if len(data) < 11 || data[0] != 1 || data[1] != ':' {
+	if len(data) < (pt1.headerLength+1) || Bytes2String(data[:4]) != pt1.startTag {
 		return nil, ErrDataFormat
 	}
 
-	idInt64 := Hex2Int64(Bytes2String(data[2:6]))
+	idInt64 := Hex2Int64(Bytes2String(data[4:8]))
 	if idInt64 < 1 || idInt64 > math.MaxUint16 {
 		return nil, ErrDataFormat
 	}
 
-	sign, err := UnpackUint32(data[6:10])
-	if Hex2Uint64(Md5(data[10:])[:8]) != uint64(sign) {
+	bodyLength := int(Hex2Int64(Bytes2String(data[8:pt1.headerLength])))
+	if bodyLength+pt1.headerLength != len(data) {
 		return nil, ErrDataSign
 	}
 
-	binaryData, err := base64.StdEncoding.DecodeString(Bytes2String(data[10:]))
+	binaryData, err := base64.StdEncoding.DecodeString(Bytes2String(data[pt1.headerLength:]))
 	if err != nil {
 		return nil, ErrDataFormat
 	}
@@ -129,8 +132,18 @@ func (pt1 *v1) Unpack(data []byte) (pkg *Package, err error) {
 }
 
 type v2 struct {
-	aes *Aes
-	iv  []byte
+	aes          *Aes
+	iv           []byte
+	headerLength int
+	startTag     string
+}
+
+func newV2(aes *Aes) *v2 {
+	return &v2{
+		aes:          aes,
+		headerLength: 16,
+		startTag:     "023a",
+	}
 }
 
 func NewV2ForClient(aes *Aes, key, secretData []byte) (protocol Protocol, err error) {
@@ -148,8 +161,7 @@ func NewV2ForClient(aes *Aes, key, secretData []byte) (protocol Protocol, err er
 		return nil, err
 	}
 
-	protocol = &v2{aes: transAes}
-	return
+	return newV2(transAes), nil
 }
 
 func NewV2(aes *Aes, secretData []byte) (protocol Protocol, err error) {
@@ -169,8 +181,10 @@ func NewV2(aes *Aes, secretData []byte) (protocol Protocol, err error) {
 		return nil, err
 	}
 
-	protocol = &v2{aes: transAes, iv: aes.CbcEncrypt(iv)}
-	return
+	pt := newV2(transAes)
+	pt.iv = aes.CbcEncrypt(iv)
+
+	return pt, nil
 }
 
 func (pt2 *v2) ResponseKey() []byte {
@@ -179,13 +193,10 @@ func (pt2 *v2) ResponseKey() []byte {
 
 func (pt2 *v2) header(pkg *Package, data []byte) []byte {
 	hexStr := Int64ToHexWithPad(int64(pkg.Id), 4)
-
-	sign := Hex2Int64(Md5(data)[:8])
-
-	header := make([]byte, 0, 11)
-	header = append(header, 2, ':')
+	header := make([]byte, 0, len(data)+pt2.headerLength)
+	header = append(header, pt2.startTag...)
 	header = append(header, hexStr...)
-	header = append(header, PackUin32(uint32(sign))...)
+	header = append(header, Int64ToHexWithPad(int64(len(data)), 8)...)
 	return header
 }
 
@@ -204,21 +215,21 @@ func (pt2 *v2) Unpack(data []byte) (pkg *Package, err error) {
 		return nil, ErrDataEmpty
 	}
 
-	if len(data) < 12 || data[0] != 2 || data[1] != ':' {
+	if len(data) < pt2.headerLength+1 || Bytes2String(data[:4]) != pt2.startTag {
 		return nil, ErrDataFormat
 	}
 
-	idInt64 := Hex2Int64(Bytes2String(data[2:6]))
+	idInt64 := Hex2Int64(Bytes2String(data[4:8]))
 	if idInt64 < 1 || idInt64 > math.MaxUint16 {
 		return nil, ErrDataFormat
 	}
 
-	sign, _ := UnpackUint32(data[6:10])
-	if Hex2Uint64(Md5(data[10:])[:8]) != uint64(sign) {
+	bodyLength := int(Hex2Int64(Bytes2String(data[8:pt2.headerLength])))
+	if bodyLength+pt2.headerLength != len(data) {
 		return nil, ErrDataSign
 	}
 
-	binaryData, err := base64.StdEncoding.DecodeString(Bytes2String(data[10:]))
+	binaryData, err := base64.StdEncoding.DecodeString(Bytes2String(data[pt2.headerLength:]))
 	if err != nil {
 		return nil, ErrDataFormat
 	}
