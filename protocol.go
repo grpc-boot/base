@@ -6,12 +6,13 @@ import (
 )
 
 const (
-	ConnectSuccess = 0x0100
-	Tick           = 0x0101
-
-	Login        = 0x0200
-	LoginSuccess = 0x0201
-	LoginFailed  = 0x0202
+	EventConnectSuccess = 0x0100
+	EventTick           = 0x0101
+	EventClose          = 0x0102
+	EventError          = 0x0103
+	EventLogin          = 0x0200
+	EventLoginSuccess   = 0x0201
+	EventLoginFailed    = 0x0202
 )
 
 type Protocol interface {

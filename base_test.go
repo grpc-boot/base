@@ -854,7 +854,7 @@ func TestAccept_Accept(t *testing.T) {
 	}
 
 	pkg := &Package{
-		Id:   Login,
+		Id:   EventLogin,
 		Name: "login",
 		Param: JsonParam{
 			"currentTime": time.Now().Unix(),
