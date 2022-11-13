@@ -9,29 +9,8 @@ import (
 type bucket struct {
 	mutex  sync.RWMutex
 	hasNew bool
+	entry  map[string]int64
 	data   *Bucket
-}
-
-func (b *bucket) set(key string, item *Item) (isCreate bool) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
-	b.hasNew = true
-
-	if b.data == nil {
-		b.data = &Bucket{
-			Items: map[string]*Item{
-				key: item,
-			},
-		}
-		return true
-	}
-
-	_, exists := b.data.Items[key]
-
-	b.data.Items[key] = item
-
-	return !exists
 }
 
 func (b *bucket) setValue(key string, value []byte) (isCreate bool) {
@@ -40,25 +19,28 @@ func (b *bucket) setValue(key string, value []byte) (isCreate bool) {
 
 	b.hasNew = true
 
-	item := &Item{
-		CreatedAt: time.Now().Unix(),
-		Value:     value,
-	}
-
 	if b.data == nil {
 		b.data = &Bucket{
 			Items: map[string]*Item{
-				key: item,
+				key: &Item{
+					CreatedAt: time.Now().Unix(),
+					Value:     value,
+				},
 			},
 		}
 		return true
 	}
 
-	old, exists := b.data.Items[key]
+	item, exists := b.data.Items[key]
 	// 拷贝hit&&miss
 	if exists {
-		item.Hit = old.Hit
-		item.Miss = old.Miss
+		item.Value = value
+		item.CreatedAt = time.Now().Unix()
+	} else {
+		item = &Item{
+			CreatedAt: time.Now().Unix(),
+			Value:     value,
+		}
 	}
 
 	b.data.Items[key] = item
@@ -66,7 +48,7 @@ func (b *bucket) setValue(key string, value []byte) (isCreate bool) {
 	return !exists
 }
 
-func (b *bucket) getValue(key string, timeout int64) (value []byte, exists bool) {
+func (b *bucket) getValue(key string, timeout int64) (value []byte, effective bool, exists bool) {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
 
@@ -77,14 +59,12 @@ func (b *bucket) getValue(key string, timeout int64) (value []byte, exists bool)
 	var item *Item
 	item, exists = b.data.Items[key]
 	if !exists {
-		return nil, exists
+		return
 	}
 
-	if item.effective(timeout) {
-		return item.Value, exists
-	}
+	effective = item.effective(timeout)
 
-	return nil, exists
+	return item.Value, effective, exists
 }
 
 func (b *bucket) get(key string) (item *Item, exists bool) {

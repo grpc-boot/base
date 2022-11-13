@@ -43,7 +43,12 @@ func (c *Cache) index(key string) int {
 }
 
 func (c *Cache) Get(key string, timeoutSecond int64) (value []byte, exists bool) {
-	return c.data[c.index(key)].getValue(key, timeoutSecond)
+	var effective bool
+	value, effective, exists = c.data[c.index(key)].getValue(key, timeoutSecond)
+	if effective {
+		return value, exists
+	}
+	return nil, exists
 }
 
 func (c *Cache) Common(key string, timeoutSecond int64, handler func() ([]byte, error)) []byte {

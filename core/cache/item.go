@@ -28,9 +28,9 @@ type Item struct {
 func (i *Item) effective(timeoutSecond int64) (ok bool) {
 	ok = i.CreatedAt+timeoutSecond > time.Now().Unix()
 	if ok {
-		atomic.AddInt64(&i.Hit, 1)
+		i.Hit++
 	} else {
-		atomic.AddInt64(&i.Miss, 1)
+		i.Miss++
 	}
 
 	return ok
