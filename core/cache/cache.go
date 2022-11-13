@@ -48,7 +48,7 @@ func (c *Cache) index(key string) int {
 	return int(adler32.Checksum([]byte(key))) & bucketLen
 }
 
-func (c *Cache) Get(key string, timeoutSecond int64) (value []byte, exists bool) {
+func (c *Cache) GetValue(key string, timeoutSecond int64) (value []byte, exists bool) {
 	var effective bool
 	value, _, effective, exists = c.data[c.index(key)].getValue(key, timeoutSecond)
 	if effective {
@@ -57,7 +57,7 @@ func (c *Cache) Get(key string, timeoutSecond int64) (value []byte, exists bool)
 	return nil, exists
 }
 
-func (c *Cache) Common(key string, timeoutSecond int64, handler func() ([]byte, error)) []byte {
+func (c *Cache) Get(key string, timeoutSecond int64, handler func() ([]byte, error)) []byte {
 	index := c.index(key)
 
 	value, lock, effective, exists := c.data[index].getValue(key, timeoutSecond)
@@ -69,7 +69,7 @@ func (c *Cache) Common(key string, timeoutSecond int64, handler func() ([]byte, 
 		}
 
 		// 更新缓存
-		c.Set(key, data)
+		c.SetValue(key, data)
 		return data
 	}
 
@@ -97,7 +97,7 @@ func (c *Cache) Common(key string, timeoutSecond int64, handler func() ([]byte, 
 	// 获取数据成功
 
 	// 更新缓存
-	c.Set(key, data)
+	c.SetValue(key, data)
 
 	// 释放锁
 	optimistic.Release(lock, token)
@@ -105,7 +105,7 @@ func (c *Cache) Common(key string, timeoutSecond int64, handler func() ([]byte, 
 	return data
 }
 
-func (c *Cache) Set(key string, value []byte) {
+func (c *Cache) SetValue(key string, value []byte) {
 	if isCreate := c.data[c.index(key)].setValue(key, value); isCreate {
 		c.length.Inc()
 	}

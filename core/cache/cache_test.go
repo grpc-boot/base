@@ -23,9 +23,9 @@ func TestCache_Get(t *testing.T) {
 	for i := 0; i < 1024; i++ {
 		key := getKey(i)
 
-		cache.Set(key, []byte(key))
+		cache.SetValue(key, []byte(key))
 
-		_, exists := cache.Get(getKey(i), 10)
+		_, exists := cache.GetValue(getKey(i), 10)
 		if !exists {
 			t.Fatalf("want true, got %t", exists)
 		}
@@ -50,7 +50,7 @@ func TestCache_SyncLocal(t *testing.T) {
 	for i := 0; i < 10000; i++ {
 		key := getKey(i)
 
-		cache.Set(key, []byte(strings.Repeat(key, 10)))
+		cache.SetValue(key, []byte(strings.Repeat(key, 10)))
 	}
 
 	setEnd := time.Now()
@@ -70,7 +70,7 @@ func TestCache_Common(t *testing.T) {
 	maxCount := 16
 	tick := time.NewTicker(time.Millisecond * 500)
 	for range tick.C {
-		data := cache.Common(getKey(1), 5, func() ([]byte, error) {
+		data := cache.Get(getKey(1), 5, func() ([]byte, error) {
 			time.Sleep(time.Second)
 			return []byte(time.Now().String()), nil
 		})
@@ -81,14 +81,14 @@ func TestCache_Common(t *testing.T) {
 		}
 	}
 
-	value, _ := cache.Get(getKey(1), 10)
+	value, _ := cache.GetValue(getKey(1), 10)
 	t.Logf("%s", value)
 }
 
 func TestCache_Commons(t *testing.T) {
 	cache := New(localDir, time.Second)
 	key := getKey(1)
-	value, exists := cache.Get(key, 60)
+	value, exists := cache.GetValue(key, 60)
 	t.Logf("%s %t", value, exists)
 
 	maxParallel := 8
@@ -101,7 +101,7 @@ func TestCache_Commons(t *testing.T) {
 	for i := 0; i < maxParallel; i++ {
 		go func() {
 			for j := 0; j < maxCount; j++ {
-				cache.Common(key, 1, func() ([]byte, error) {
+				cache.Get(key, 1, func() ([]byte, error) {
 					t.Logf("执行业务代码")
 					time.Sleep(time.Second * 10)
 					return []byte("asdfasdasdf"), nil
