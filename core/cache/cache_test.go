@@ -14,7 +14,7 @@ var (
 )
 
 func getKey(index int) string {
-	return "key:" + strconv.Itoa(index)
+	return "c-key:" + strconv.Itoa(index)
 }
 
 func TestCache_Get(t *testing.T) {
@@ -35,12 +35,17 @@ func TestCache_Get(t *testing.T) {
 
 func TestCache_SyncLocal(t *testing.T) {
 	start := time.Now()
+	runtime.GC()
+	gcEnd := time.Now()
+
+	t.Logf("first gc cost:%s", gcEnd.Sub(start))
+
 	cache := New(localDir, time.Second)
 
 	loadEnd := time.Now()
-	t.Logf("load local cache cost:%s", loadEnd.Sub(start))
+	t.Logf("load local cache cost:%s", loadEnd.Sub(gcEnd))
 
-	for i := 0; i < 1000000; i++ {
+	for i := 0; i < 10000; i++ {
 		key := getKey(i)
 
 		cache.Set(key, []byte(strings.Repeat(key, 10)))

@@ -240,6 +240,12 @@ func (z *Item) DecodeMsg(dc *msgp.Reader) (err error) {
 			return
 		}
 		switch msgp.UnsafeString(field) {
+		case "key":
+			z.Key, err = dc.ReadString()
+			if err != nil {
+				err = msgp.WrapError(err, "Key")
+				return
+			}
 		case "value":
 			z.Value, err = dc.ReadBytes(z.Value)
 			if err != nil {
@@ -283,9 +289,19 @@ func (z *Item) DecodeMsg(dc *msgp.Reader) (err error) {
 
 // EncodeMsg implements msgp.Encodable
 func (z *Item) EncodeMsg(en *msgp.Writer) (err error) {
-	// map header, size 5
+	// map header, size 6
+	// write "key"
+	err = en.Append(0x86, 0xa3, 0x6b, 0x65, 0x79)
+	if err != nil {
+		return
+	}
+	err = en.WriteString(z.Key)
+	if err != nil {
+		err = msgp.WrapError(err, "Key")
+		return
+	}
 	// write "value"
-	err = en.Append(0x85, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65)
+	err = en.Append(0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65)
 	if err != nil {
 		return
 	}
@@ -340,9 +356,12 @@ func (z *Item) EncodeMsg(en *msgp.Writer) (err error) {
 // MarshalMsg implements msgp.Marshaler
 func (z *Item) MarshalMsg(b []byte) (o []byte, err error) {
 	o = msgp.Require(b, z.Msgsize())
-	// map header, size 5
+	// map header, size 6
+	// string "key"
+	o = append(o, 0x86, 0xa3, 0x6b, 0x65, 0x79)
+	o = msgp.AppendString(o, z.Key)
 	// string "value"
-	o = append(o, 0x85, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65)
+	o = append(o, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65)
 	o = msgp.AppendBytes(o, z.Value)
 	// string "hit"
 	o = append(o, 0xa3, 0x68, 0x69, 0x74)
@@ -377,6 +396,12 @@ func (z *Item) UnmarshalMsg(bts []byte) (o []byte, err error) {
 			return
 		}
 		switch msgp.UnsafeString(field) {
+		case "key":
+			z.Key, bts, err = msgp.ReadStringBytes(bts)
+			if err != nil {
+				err = msgp.WrapError(err, "Key")
+				return
+			}
 		case "value":
 			z.Value, bts, err = msgp.ReadBytesBytes(bts, z.Value)
 			if err != nil {
@@ -421,6 +446,6 @@ func (z *Item) UnmarshalMsg(bts []byte) (o []byte, err error) {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *Item) Msgsize() (s int) {
-	s = 1 + 6 + msgp.BytesPrefixSize + len(z.Value) + 4 + msgp.Int64Size + 5 + msgp.Int64Size + 12 + msgp.Int64Size + 10 + msgp.Int64Size
+	s = 1 + 4 + msgp.StringPrefixSize + len(z.Key) + 6 + msgp.BytesPrefixSize + len(z.Value) + 4 + msgp.Int64Size + 5 + msgp.Int64Size + 12 + msgp.Int64Size + 10 + msgp.Int64Size
 	return
 }

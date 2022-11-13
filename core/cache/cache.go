@@ -2,15 +2,19 @@ package cache
 
 import (
 	"hash/adler32"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/grpc-boot/base/core/optimistic"
 
 	"go.uber.org/atomic"
 )
 
 const (
-	bucketLen = 1<<9 - 1
+	bucketLen   = 1<<9 - 1
+	lockTimeout = 10 * time.Second
 )
 
 type Cache struct {
@@ -44,7 +48,7 @@ func (c *Cache) index(key string) int {
 
 func (c *Cache) Get(key string, timeoutSecond int64) (value []byte, exists bool) {
 	var effective bool
-	value, effective, exists = c.data[c.index(key)].getValue(key, timeoutSecond)
+	value, _, effective, exists = c.data[c.index(key)].getValue(key, timeoutSecond)
 	if effective {
 		return value, exists
 	}
@@ -54,7 +58,7 @@ func (c *Cache) Get(key string, timeoutSecond int64) (value []byte, exists bool)
 func (c *Cache) Common(key string, timeoutSecond int64, handler func() ([]byte, error)) []byte {
 	index := c.index(key)
 
-	item, exists := c.data[index].get(key)
+	value, lock, effective, exists := c.data[index].getValue(key, timeoutSecond)
 	if !exists {
 		// 第一次访问，初始化缓存
 		data, err := handler()
@@ -62,33 +66,40 @@ func (c *Cache) Common(key string, timeoutSecond int64, handler func() ([]byte, 
 			return nil
 		}
 
+		// 更新缓存
 		c.Set(key, data)
 		return data
 	}
 
 	// 缓存是否有效
-	if item.effective(timeoutSecond) {
-		return item.Value
+	if effective {
+		return value
 	}
 
-	// 缓存无效，加锁
-	token := item.lock()
+	// 缓存无效
+
+	// 加锁
+	token := optimistic.Acquire(lock, lockTimeout)
+	// 加锁失败
 	if token == 0 {
-		return item.Value
+		return value
 	}
 
 	// 加锁成功，执行耗时操作
 	data, err := handler()
+	// 未获取到数据
 	if err != nil {
 		return nil
 	}
 
-	item.addInvoke()
-	item.CreatedAt = time.Now().Unix()
-	item.Value = data
+	// 获取数据成功
 
-	//释放锁x
-	item.unLock(token)
+	// 更新缓存
+	c.Set(key, data)
+
+	// 释放锁
+	optimistic.Release(lock, token)
+
 	return data
 }
 
@@ -108,6 +119,32 @@ func (c *Cache) Delete(keys ...string) {
 
 func (c *Cache) Length() int64 {
 	return c.length.Load()
+}
+
+func (c *Cache) Items() Info {
+	info := Info{
+		Items: make([]Item, 0, c.Length()),
+	}
+
+	for i := 0; i < bucketLen; i++ {
+		info.Items = append(info.Items, c.data[i].items()...)
+	}
+
+	sort.SliceStable(info.Items, func(i, j int) bool {
+		totalI := info.Items[i].Hit + info.Items[i].Miss
+		totalJ := info.Items[j].Hit + info.Items[j].Miss
+		if totalI > totalJ {
+			return true
+		}
+
+		if info.Items[i].InvokeCount > info.Items[j].InvokeCount {
+			return true
+		}
+
+		return info.Items[i].Miss > info.Items[j].Miss
+	})
+
+	return info
 }
 
 func (c *Cache) SyncLocal() {

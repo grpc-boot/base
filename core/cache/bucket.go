@@ -23,8 +23,10 @@ func (b *bucket) setValue(key string, value []byte) (isCreate bool) {
 		b.data = &Bucket{
 			Items: map[string]*Item{
 				key: &Item{
-					CreatedAt: time.Now().Unix(),
-					Value:     value,
+					Key:         key,
+					CreatedAt:   time.Now().Unix(),
+					Value:       value,
+					InvokeCount: 1,
 				},
 			},
 		}
@@ -32,14 +34,17 @@ func (b *bucket) setValue(key string, value []byte) (isCreate bool) {
 	}
 
 	item, exists := b.data.Items[key]
-	// 拷贝hit&&miss
+
 	if exists {
 		item.Value = value
 		item.CreatedAt = time.Now().Unix()
+		item.InvokeCount++
 	} else {
 		item = &Item{
-			CreatedAt: time.Now().Unix(),
-			Value:     value,
+			Key:         key,
+			CreatedAt:   time.Now().Unix(),
+			Value:       value,
+			InvokeCount: 1,
 		}
 	}
 
@@ -48,7 +53,7 @@ func (b *bucket) setValue(key string, value []byte) (isCreate bool) {
 	return !exists
 }
 
-func (b *bucket) getValue(key string, timeout int64) (value []byte, effective bool, exists bool) {
+func (b *bucket) getValue(key string, timeout int64) (value []byte, lock *int64, effective bool, exists bool) {
 	b.mutex.RLock()
 	defer b.mutex.RUnlock()
 
@@ -64,19 +69,7 @@ func (b *bucket) getValue(key string, timeout int64) (value []byte, effective bo
 
 	effective = item.effective(timeout)
 
-	return item.Value, effective, exists
-}
-
-func (b *bucket) get(key string) (item *Item, exists bool) {
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
-
-	if b.data == nil {
-		return
-	}
-
-	item, exists = b.data.Items[key]
-	return
+	return item.Value, &item._lock, effective, exists
 }
 
 func (b *bucket) exists(key string) (exists bool) {
@@ -110,6 +103,22 @@ func (b *bucket) delete(keys ...string) (delNum int64) {
 	return
 }
 
+func (b *bucket) items() []Item {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	if b.data == nil || len(b.data.Items) < 1 {
+		return nil
+	}
+
+	list := make([]Item, 0, len(b.data.Items))
+	for _, item := range b.data.Items {
+		list = append(list, *item)
+	}
+
+	return list
+}
+
 func (b *bucket) loadFile(fileName string) (loadLength int64, err error) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
@@ -136,7 +145,7 @@ func (b *bucket) flushFile(fileName string) error {
 		return nil
 	}
 
-	if len(b.data.Items) < 1 {
+	if b.data == nil {
 		return nil
 	}
 
