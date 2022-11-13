@@ -1,5 +1,9 @@
 package cache
 
 type Info struct {
-	Items []Item `json:"items"`
+	LocalDir       string `json:"localDir"`
+	FlushInterval  string `json:"flushInterval"`
+	Length         int64  `json:"length"`
+	LatestSyncTime string `json:"latestSyncTime"`
+	Items          []Item `json:"items"`
 }

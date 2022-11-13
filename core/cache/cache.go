@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"fmt"
 	"hash/adler32"
 	"sort"
 	"strconv"
@@ -21,6 +22,7 @@ type Cache struct {
 	data          [bucketLen]bucket
 	length        atomic.Int64
 	localDir      string
+	latestSync    atomic.Time
 	flushInterval time.Duration
 }
 
@@ -121,9 +123,12 @@ func (c *Cache) Length() int64 {
 	return c.length.Load()
 }
 
-func (c *Cache) Items() Info {
+func (c *Cache) Info() Info {
 	info := Info{
-		Items: make([]Item, 0, c.Length()),
+		LocalDir:       c.localDir,
+		FlushInterval:  fmt.Sprintf("%s", c.flushInterval),
+		LatestSyncTime: c.latestSync.Load().Format("2006-01-02 15:04:05"),
+		Items:          make([]Item, 0, c.Length()),
 	}
 
 	for i := 0; i < bucketLen; i++ {
@@ -143,6 +148,8 @@ func (c *Cache) Items() Info {
 
 		return info.Items[i].Miss > info.Items[j].Miss
 	})
+
+	info.Length = int64(len(info.Items))
 
 	return info
 }
@@ -172,6 +179,8 @@ func (c *Cache) loadFromLocal() {
 			c.length.Add(length)
 		}
 	}
+
+	c.latestSync.Store(time.Now())
 }
 
 func (c *Cache) localFileName(index int) string {

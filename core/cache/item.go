@@ -11,11 +11,11 @@ type Bucket struct {
 
 type Item struct {
 	_lock       int64
-	Key         string `json:"key" msg:"key"`
+	Key         string `json:"key" msg:"-"`
 	Value       []byte `json:"value" msg:"value"`
-	Hit         int64  `json:"hit" msg:"hit"`
-	Miss        int64  `json:"miss" msg:"miss"`
-	InvokeCount int64  `json:"invokeCount" msg:"invokeCount"`
+	Hit         int64  `json:"hit" msg:"-"`
+	Miss        int64  `json:"miss" msg:"-"`
+	InvokeCount int64  `json:"invokeCount" msg:"-"`
 	CreatedAt   int64  `json:"createdAt" msg:"createdAt"`
 }
 

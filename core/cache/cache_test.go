@@ -1,6 +1,7 @@
 package cache
 
 import (
+	jsoniter "github.com/json-iterator/go"
 	"runtime"
 	"strconv"
 	"strings"
@@ -30,7 +31,8 @@ func TestCache_Get(t *testing.T) {
 		}
 	}
 
-	t.Logf("cache length: %d", cache.Length())
+	info, _ := jsoniter.Marshal(cache.Info())
+	t.Logf("cache info: %s", info)
 }
 
 func TestCache_SyncLocal(t *testing.T) {

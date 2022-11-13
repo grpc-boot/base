@@ -23,7 +23,6 @@ func (b *bucket) setValue(key string, value []byte) (isCreate bool) {
 		b.data = &Bucket{
 			Items: map[string]*Item{
 				key: &Item{
-					Key:         key,
 					CreatedAt:   time.Now().Unix(),
 					Value:       value,
 					InvokeCount: 1,
@@ -41,7 +40,6 @@ func (b *bucket) setValue(key string, value []byte) (isCreate bool) {
 		item.InvokeCount++
 	} else {
 		item = &Item{
-			Key:         key,
 			CreatedAt:   time.Now().Unix(),
 			Value:       value,
 			InvokeCount: 1,
@@ -112,8 +110,15 @@ func (b *bucket) items() []Item {
 	}
 
 	list := make([]Item, 0, len(b.data.Items))
-	for _, item := range b.data.Items {
-		list = append(list, *item)
+	for key, item := range b.data.Items {
+		list = append(list, Item{
+			Key:         key,
+			Value:       item.Value,
+			Hit:         item.Hit,
+			Miss:        item.Miss,
+			InvokeCount: item.InvokeCount,
+			CreatedAt:   item.CreatedAt,
+		})
 	}
 
 	return list
