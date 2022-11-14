@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/grpc-boot/base/core/optimistic"
+	"github.com/grpc-boot/base/core/mutex"
 
 	"go.uber.org/atomic"
 )
@@ -81,7 +81,7 @@ func (c *Cache) Get(key string, timeoutSecond int64, handler func() ([]byte, err
 	// 缓存无效
 
 	// 加锁
-	token := optimistic.Acquire(lock, lockTimeout)
+	token := mutex.Acquire(lock, lockTimeout)
 	// 加锁失败
 	if token == 0 {
 		return value
@@ -100,7 +100,7 @@ func (c *Cache) Get(key string, timeoutSecond int64, handler func() ([]byte, err
 	c.SetValue(key, data)
 
 	// 释放锁
-	optimistic.Release(lock, token)
+	mutex.Release(lock, token)
 
 	return data
 }
