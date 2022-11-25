@@ -945,3 +945,83 @@ func BenchmarkRandStr(b *testing.B) {
 		}
 	}
 }
+
+func TestState_Remove(t *testing.T) {
+	var st State
+	st.Add(0)
+	if st != 1 {
+		t.Fatalf("want 1, got %d", st)
+	}
+
+	st.Remove(0)
+	if st != 0 {
+		t.Fatalf("want 0, got %d", st)
+	}
+
+	for i := 0; i < StateIndexMax; i++ {
+		var index = uint8(rand.Intn(StateIndexMax + 1))
+		st.Add(index)
+		if !st.Has(index) {
+			t.Fatal("want true, got false")
+		}
+
+		st.Remove(index)
+
+		if st.Has(index) {
+			t.Fatal("want false, got true")
+		}
+
+		st.Add(index)
+	}
+
+	t.Logf("slice: %+v\nvalueSlice:%+v", st.Slice(), st.ValueSlice())
+
+	st.RemoveAll()
+	if st != 0 {
+		t.Fatalf("want 0, got %d", st)
+	}
+}
+
+func TestState_Merge(t *testing.T) {
+	var A State
+	var B State
+
+	A.Add(0, 1, 4, 7, 8, 30)
+	B.Add(2)
+
+	A.Merge(B)
+
+	if !A.Has(2) {
+		t.Fatal("want true, got false")
+	}
+
+	t.Logf("union: %+v intersection:%+v", A.UnionSet(B), A.Intersection(B))
+
+	B.Add(0, 12, 7, 8, 30)
+	t.Logf("union: %+v intersection:%+v", A.UnionSet(B), A.Intersection(B))
+
+	A.Merge(B)
+	t.Logf("A: %+v B:%+v", A.Slice(), B.Slice())
+}
+
+func TestState_ValueSlice(t *testing.T) {
+	var indexList = make([]uint8, 10, 10)
+	for i := 0; i < 10; i++ {
+		indexList[i] = uint8(rand.Intn(StateIndexMax))
+	}
+
+	st1, _ := StateFromSlice(indexList)
+	st2 := StatusFromValueSlice(st1.ValueSlice())
+
+	for _, index := range indexList {
+		if !st1.Has(index) {
+			t.Fatal("want true, got false")
+		}
+
+		if !st2.Has(index) {
+			t.Fatal("want true, got false")
+		}
+	}
+
+	t.Logf("st1:%+v, st2:%+v", st1.Slice(), st2.Slice())
+}
