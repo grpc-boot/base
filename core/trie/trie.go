@@ -1,0 +1,29 @@
+package trie
+
+type Trie struct {
+	sub    *node
+	length int64
+}
+
+func New() *Trie {
+	return &Trie{
+		sub: &node{},
+	}
+}
+
+func (t *Trie) Set(key string, value interface{}) (isNew bool) {
+	isNew = t.sub.set(key, value)
+	if isNew {
+		t.length++
+	}
+
+	return
+}
+
+func (t *Trie) Get(key string) (value interface{}, exists bool) {
+	return t.sub.get(key)
+}
+
+func (t *Trie) Length() int64 {
+	return t.length
+}
