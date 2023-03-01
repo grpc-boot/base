@@ -56,3 +56,8 @@ func (n *node) get(key string) (value interface{}, exists bool) {
 	}
 	return
 }
+
+func (n *node) exists(r rune) (exists bool) {
+	_, exists = n.sub[r]
+	return
+}
