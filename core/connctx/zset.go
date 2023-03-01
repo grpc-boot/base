@@ -213,5 +213,5 @@ func (z *zset) revrange(start, stop int) (items []zsetItem) {
 
 	itemCount := realStop - realStart + 1
 	items = make([]zsetItem, itemCount, itemCount)
-
+	return
 }
