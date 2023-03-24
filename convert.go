@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"strconv"
 	"unicode"
-	"unsafe"
+
+	"github.com/grpc-boot/base/internal"
 )
 
 // ToString 转为字符串类型
@@ -35,25 +36,27 @@ func ToString(val interface{}) string {
 
 // Bytes2String 字节切片转换为字符串
 func Bytes2String(data []byte) string {
-	return *(*string)(unsafe.Pointer(&data))
+	return internal.Bytes2String(data)
 }
 
 // Bytes2Int64 字节切片转换为int64
 func Bytes2Int64(data []byte) int64 {
-	val, _ := strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
-	return val
+	return internal.Bytes2Int64(data)
 }
 
 // Bytes2Uint32 字节切片转换为uint32
 func Bytes2Uint32(data []byte) uint32 {
-	val, _ := strconv.ParseInt(*(*string)(unsafe.Pointer(&data)), 10, 64)
-	return uint32(val)
+	return internal.Bytes2Uint32(data)
+}
+
+// Bytes2Uint64 字节切片转换为uint64
+func Bytes2Uint64(data []byte) uint64 {
+	return internal.Bytes2Uint64(data)
 }
 
 // Bytes2Float64 字节切片转换为float64
 func Bytes2Float64(data []byte) float64 {
-	val, _ := strconv.ParseFloat(Bytes2String(data), 64)
-	return val
+	return Bytes2Float64(data)
 }
 
 // Int64ToHex _
@@ -173,4 +176,12 @@ func SmallCamels(sep byte, data string) string {
 	}
 
 	return Bytes2String(fd)
+}
+
+func LcFirst(str string) string {
+	return internal.LcFirst(str)
+}
+
+func UcFirst(str string) string {
+	return internal.UcFirst(str)
 }
