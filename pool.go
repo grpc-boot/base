@@ -6,7 +6,7 @@ var (
 	//参数池
 	argsPool = &sync.Pool{
 		New: func() interface{} {
-			return make([]interface{}, 0, 8)
+			return []interface{}{}
 		},
 	}
 
