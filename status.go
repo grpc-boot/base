@@ -95,3 +95,11 @@ func (s *Status) JsonMarshal() []byte {
 func (s *Status) ConvertGrpcStatus(details ...proto.Message) (*status.Status, error) {
 	return status.New(s.Code, s.Msg).WithDetails(details...)
 }
+
+func (s *Status) ToError() error {
+	if s.Code == OK {
+		return nil
+	}
+
+	return NewError(s.Code, s.Msg)
+}
