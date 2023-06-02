@@ -8,7 +8,10 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"encoding/pem"
-	"strings"
+)
+
+var (
+	pkcs1Prefix = []byte("BEGIN RSA")
 )
 
 // Rsa Rsa
@@ -19,21 +22,26 @@ type Rsa struct {
 
 // NewRsa 实例化Rsa
 func NewRsa(publicKey, privateKey string) (r *Rsa, err error) {
-	if privateKey != "" && strings.Index(privateKey, "BEGIN RSA") > 0 {
-		return NewRsaWithPkcs1(publicKey, privateKey)
-	}
-	return NewRsaWithPkcs8(publicKey, privateKey)
+	return NewRsaBytes([]byte(publicKey), []byte(privateKey))
 }
 
-// NewRsaWithPkcs8 pkcs8实例化Rsa
-func NewRsaWithPkcs8(publicKey, privateKey string) (r *Rsa, err error) {
+// NewRsaBytes 实例化Rsa
+func NewRsaBytes(public, private []byte) (r *Rsa, err error) {
+	if len(private) > 0 && bytes.Index(private, pkcs1Prefix) > 0 {
+		return NewRsaWithPkcs1Bytes(public, private)
+	}
+
+	return NewRsaWithPkcs8Bytes(public, private)
+}
+
+func NewRsaWithPkcs8Bytes(public, private []byte) (r *Rsa, err error) {
 	var (
 		pubKey *rsa.PublicKey
 		priKey *rsa.PrivateKey
 	)
 
-	if privateKey != "" {
-		block, _ := pem.Decode([]byte(privateKey))
+	if len(private) > 0 {
+		block, _ := pem.Decode(private)
 		var pKey interface{}
 		pKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err != nil {
@@ -42,8 +50,46 @@ func NewRsaWithPkcs8(publicKey, privateKey string) (r *Rsa, err error) {
 		priKey = pKey.(*rsa.PrivateKey)
 	}
 
-	if publicKey != "" {
-		block, _ := pem.Decode([]byte(publicKey))
+	if len(public) > 0 {
+		block, _ := pem.Decode(public)
+		var pKey interface{}
+		pKey, err = x509.ParsePKIXPublicKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		pubKey = pKey.(*rsa.PublicKey)
+	}
+
+	return &Rsa{
+		privateKey: priKey,
+		publicKey:  pubKey,
+	}, nil
+}
+
+// NewRsaWithPkcs8 pkcs8实例化Rsa
+func NewRsaWithPkcs8(publicKey, privateKey string) (r *Rsa, err error) {
+	return NewRsaWithPkcs1Bytes([]byte(publicKey), []byte(privateKey))
+}
+
+// NewRsaWithPkcs1Bytes pkc1实例化Rsa
+func NewRsaWithPkcs1Bytes(public, private []byte) (r *Rsa, err error) {
+	var (
+		pubKey *rsa.PublicKey
+		priKey *rsa.PrivateKey
+	)
+
+	if len(private) > 0 {
+		block, _ := pem.Decode(private)
+		var pKey interface{}
+		pKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, err
+		}
+		priKey = pKey.(*rsa.PrivateKey)
+	}
+
+	if len(public) == 0 {
+		block, _ := pem.Decode(public)
 		var pKey interface{}
 		pKey, err = x509.ParsePKIXPublicKey(block.Bytes)
 		if err != nil {
@@ -60,35 +106,7 @@ func NewRsaWithPkcs8(publicKey, privateKey string) (r *Rsa, err error) {
 
 // NewRsaWithPkcs1 pkcs1实例化Rsa
 func NewRsaWithPkcs1(publicKey, privateKey string) (r *Rsa, err error) {
-	var (
-		pubKey *rsa.PublicKey
-		priKey *rsa.PrivateKey
-	)
-
-	if privateKey != "" {
-		block, _ := pem.Decode([]byte(privateKey))
-		var pKey interface{}
-		pKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
-		if err != nil {
-			return nil, err
-		}
-		priKey = pKey.(*rsa.PrivateKey)
-	}
-
-	if publicKey != "" {
-		block, _ := pem.Decode([]byte(publicKey))
-		var pKey interface{}
-		pKey, err = x509.ParsePKIXPublicKey(block.Bytes)
-		if err != nil {
-			return nil, err
-		}
-		pubKey = pKey.(*rsa.PublicKey)
-	}
-
-	return &Rsa{
-		privateKey: priKey,
-		publicKey:  pubKey,
-	}, nil
+	return NewRsaWithPkcs1Bytes([]byte(publicKey), []byte(privateKey))
 }
 
 // Encrypt 加密
