@@ -50,7 +50,7 @@ func Acquire4Mysql() Query {
 type mysqlQuery struct {
 	table   string
 	columns string
-	where   Where
+	where   []interface{}
 	group   string
 	having  string
 	order   string
@@ -68,7 +68,7 @@ func (mq *mysqlQuery) reset() Query {
 	mq.order = ""
 
 	if mq.where != nil {
-		mq.where.Reset()
+		mq.where = mq.where[:0]
 	}
 
 	return mq
