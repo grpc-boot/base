@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/grpc-boot/base/core/query/condition"
 )
 
 var (
@@ -21,7 +23,7 @@ type Query interface {
 	// From From表达式
 	From(table string) Query
 	// Where where表达式
-	Where(condition Condition) Query
+	Where(condition condition.Condition) Query
 	// Group Group表达式
 	Group(fields ...string) Query
 	// Having Having表达式
@@ -56,7 +58,7 @@ func Acquire4Mysql() Query {
 type mysqlQuery struct {
 	table   string
 	columns string
-	where   Condition
+	where   condition.Condition
 	group   string
 	having  string
 	order   string
@@ -87,7 +89,7 @@ func (mq *mysqlQuery) From(table string) Query {
 	return mq
 }
 
-func (mq *mysqlQuery) Where(condition Condition) Query {
+func (mq *mysqlQuery) Where(condition condition.Condition) Query {
 	mq.where = condition
 	return mq
 }

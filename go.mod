@@ -3,6 +3,7 @@ module github.com/grpc-boot/base
 go 1.15
 
 require (
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang/protobuf v1.5.2
 	github.com/json-iterator/go v1.1.12
 	github.com/tinylib/msgp v1.1.6

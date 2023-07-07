@@ -3,6 +3,7 @@ package query
 import (
 	"strings"
 
+	"github.com/grpc-boot/base/core/query/condition"
 	"github.com/grpc-boot/base/internal"
 )
 
@@ -55,7 +56,7 @@ func Insert(table string, columns Columns, rows []Row, ignore bool) (sql string,
 	return buffer.String(), args
 }
 
-func Update(table, setters string, condition Condition) (sql string, args []interface{}) {
+func Update(table, setters string, condition condition.Condition) (sql string, args []interface{}) {
 	var (
 		where  string
 		buffer strings.Builder
@@ -82,7 +83,7 @@ func Update(table, setters string, condition Condition) (sql string, args []inte
 	return buffer.String(), args
 }
 
-func Delete(table string, condition Condition) (sql string, args []interface{}) {
+func Delete(table string, condition condition.Condition) (sql string, args []interface{}) {
 	var (
 		where  string
 		buffer strings.Builder
