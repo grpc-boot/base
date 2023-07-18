@@ -22,65 +22,101 @@ func InitZapWithOption(conf zaplogger.Option, zapOpts ...zap.Option) error {
 }
 
 func IsLevel(level zapcore.Level) bool {
+	if zapLogger == nil {
+		return false
+	}
+
 	return zapLogger.Is(level)
 }
 
 func Debug(msg string, fields ...zap.Field) {
-	zapLogger.Debug(msg, fields...)
+	ZapDebug(msg, fields...)
 }
 
 func ZapDebug(msg string, fields ...zap.Field) {
+	if zapLogger == nil {
+		return
+	}
+
 	zapLogger.Debug(msg, fields...)
 }
 
 func Info(msg string, fields ...zap.Field) {
-	zapLogger.Info(msg, fields...)
+	ZapInfo(msg, fields...)
 }
 
 func ZapInfo(msg string, fields ...zap.Field) {
+	if zapLogger == nil {
+		return
+	}
+
 	zapLogger.Info(msg, fields...)
 }
 
 func Warn(msg string, fields ...zap.Field) {
-	zapLogger.Warn(msg, fields...)
+	ZapWarn(msg, fields...)
 }
 
 func ZapWarn(msg string, fields ...zap.Field) {
+	if zapLogger == nil {
+		return
+	}
+
 	zapLogger.Warn(msg, fields...)
 }
 
 func Error(msg string, fields ...zap.Field) {
-	zapLogger.Error(msg, fields...)
+	ZapError(msg, fields...)
 }
 
 func ZapError(msg string, fields ...zap.Field) {
+	if zapLogger == nil {
+		return
+	}
+
 	zapLogger.Error(msg, fields...)
 }
 
 func DPanic(msg string, fields ...zap.Field) {
-	zapLogger.DPanic(msg, fields...)
+	ZapDPanic(msg, fields...)
 }
 
 func ZapDPanic(msg string, fields ...zap.Field) {
+	if zapLogger == nil {
+		return
+	}
+
 	zapLogger.DPanic(msg, fields...)
 }
 
 func Panic(msg string, fields ...zap.Field) {
-	zapLogger.Panic(msg, fields...)
+	ZapPanic(msg, fields...)
 }
 
 func ZapPanic(msg string, fields ...zap.Field) {
+	if zapLogger == nil {
+		return
+	}
+
 	zapLogger.Panic(msg, fields...)
 }
 
 func Fatal(msg string, fields ...zap.Field) {
-	zapLogger.Fatal(msg, fields...)
+	ZapFatal(msg, fields...)
 }
 
 func ZapFatal(msg string, fields ...zap.Field) {
+	if zapLogger == nil {
+		return
+	}
+
 	zapLogger.Fatal(msg, fields...)
 }
 
 func ZapSync() error {
+	if zapLogger == nil {
+		return nil
+	}
+
 	return zapLogger.Sync()
 }
