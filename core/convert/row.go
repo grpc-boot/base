@@ -8,9 +8,24 @@ import (
 
 type Row map[string]string
 
+func (r Row) Exists(key string) bool {
+	_, exists := r[key]
+	return exists
+}
+
 func (r Row) String(key string) string {
 	value, _ := r[key]
 	return value
+}
+
+func (r Row) Bool(key string) bool {
+	value, _ := r[key]
+	if value == "" {
+		return false
+	}
+
+	val, _ := strconv.ParseBool(r[key])
+	return val
 }
 
 func (r Row) Float64(key string) float64 {
@@ -21,6 +36,16 @@ func (r Row) Float64(key string) float64 {
 
 	val, _ := strconv.ParseFloat(value, 64)
 	return val
+}
+
+func (r Row) Float32(key string) float32 {
+	value, _ := r[key]
+	if value == "" {
+		return 0
+	}
+
+	val, _ := strconv.ParseFloat(value, 32)
+	return float32(val)
 }
 
 func (r Row) Int64(key string) int64 {
@@ -51,14 +76,64 @@ func (r Row) Uint(key string) uint {
 	return uint(r.Uint64(key))
 }
 
-func (r Row) Bool(key string) bool {
+func (r Row) Int32(key string) int32 {
 	value, _ := r[key]
 	if value == "" {
-		return false
+		return 0
 	}
 
-	val, _ := strconv.ParseBool(r[key])
-	return val
+	val, _ := strconv.ParseInt(value, 10, 32)
+	return int32(val)
+}
+
+func (r Row) Uint32(key string) uint32 {
+	value, _ := r[key]
+	if value == "" {
+		return 0
+	}
+
+	val, _ := strconv.ParseUint(value, 10, 32)
+	return uint32(val)
+}
+
+func (r Row) Int16(key string) int16 {
+	value, _ := r[key]
+	if value == "" {
+		return 0
+	}
+
+	val, _ := strconv.ParseInt(value, 10, 16)
+	return int16(val)
+}
+
+func (r Row) Uint16(key string) uint16 {
+	value, _ := r[key]
+	if value == "" {
+		return 0
+	}
+
+	val, _ := strconv.ParseUint(value, 10, 16)
+	return uint16(val)
+}
+
+func (r Row) Int8(key string) int8 {
+	value, _ := r[key]
+	if value == "" {
+		return 0
+	}
+
+	val, _ := strconv.ParseInt(value, 10, 8)
+	return int8(val)
+}
+
+func (r Row) Uint8(key string) uint8 {
+	value, _ := r[key]
+	if value == "" {
+		return 0
+	}
+
+	val, _ := strconv.ParseUint(value, 10, 8)
+	return uint8(val)
 }
 
 func (r Row) Convert(out interface{}) (err error) {

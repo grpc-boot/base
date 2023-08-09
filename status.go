@@ -1,7 +1,6 @@
 package base
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/golang/protobuf/proto"
@@ -82,7 +81,7 @@ func (s *Status) Error() error {
 		return nil
 	}
 
-	return errors.New(s.Msg)
+	return NewError(s.Code, s.Msg)
 }
 
 // JsonMarshal _
