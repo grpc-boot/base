@@ -25,6 +25,16 @@ func StatusWithCode(code codes.Code) *Status {
 	return sts
 }
 
+// StatusWithCodeMsg 实例化Status
+func StatusWithCodeMsg(code codes.Code, msg string) *Status {
+	return StatusWithCode(code).WithMsg(msg)
+}
+
+// StatusOk 创建携带数据的Status
+func StatusOk(data interface{}) *Status {
+	return StatusWithCode(OK).WithMsg("ok").WithData(data)
+}
+
 // StatusWithJsonUnmarshal 指定json []byte获取一个Status
 func StatusWithJsonUnmarshal(data []byte) (*Status, error) {
 	sts := &Status{}
@@ -77,11 +87,7 @@ func (s *Status) WithData(data interface{}) *Status {
 
 // Error 转换为error
 func (s *Status) Error() error {
-	if s.IsOK() {
-		return nil
-	}
-
-	return NewError(s.Code, s.Msg)
+	return s.ToError()
 }
 
 // JsonMarshal _
