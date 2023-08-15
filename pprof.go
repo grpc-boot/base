@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	_ "net/http/pprof"
+	"time"
 
 	"go.uber.org/atomic"
 )
@@ -29,7 +30,11 @@ func StartPprof(addr string, handler http.Handler) error {
 		Addr:    addr,
 	}
 
-	return pprofServer.ListenAndServe()
+	err := pprofServer.ListenAndServe()
+	if err != nil {
+		pprofStatus.Store(false)
+	}
+	return err
 }
 
 // StopPprof _
@@ -38,8 +43,13 @@ func StopPprof(ctx context.Context) error {
 		return nil
 	}
 
-	err := pprofServer.Shutdown(ctx)
+	return pprofServer.Shutdown(ctx)
+}
 
-	pprofStatus.Store(false)
-	return err
+// StopPprofWithTimeout _
+func StopPprofWithTimeout(seconds int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(seconds))
+	defer cancel()
+
+	return StopPprof(ctx)
 }

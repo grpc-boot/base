@@ -2,9 +2,10 @@ package base
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"net"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -14,7 +15,22 @@ var (
 
 // Long2Ip uint32转换为Ip
 func Long2Ip(ipVal uint32) string {
-	return fmt.Sprintf("%d.%d.%d.%d", ipVal>>24, ipVal<<8>>24, ipVal<<16>>24, ipVal<<24>>24)
+	var (
+		buffer     strings.Builder
+		a, b, c, d = strconv.Itoa(int(ipVal >> 24)), strconv.Itoa(int(ipVal << 8 >> 24)), strconv.Itoa(int(ipVal << 16 >> 24)), strconv.Itoa(int(ipVal << 24 >> 24))
+	)
+
+	buffer.Grow(len(a) + len(b) + len(c) + len(d) + 3)
+
+	buffer.WriteString(a)
+	buffer.WriteByte('.')
+	buffer.WriteString(b)
+	buffer.WriteByte('.')
+	buffer.WriteString(c)
+	buffer.WriteByte('.')
+	buffer.WriteString(d)
+
+	return buffer.String()
 }
 
 // Ip2Long Ip转换为uint32

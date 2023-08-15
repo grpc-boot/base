@@ -5,12 +5,16 @@ import (
 )
 
 var (
-	ErrForbidden  = NewError(ErrPermissionDenied, "permissin denied")
-	ErrDataEmpty  = NewError(ErrDataLoss, "data is empty")
-	ErrKeyFormat  = NewError(ErrInvalidArgument, "invalid key format")
-	ErrDataFormat = NewError(ErrInvalidArgument, "invalid data format")
-	ErrDataSign   = NewError(ErrPermissionDenied, "invalid data sign")
-	ErrState      = NewError(ErrOutRange, "state index must lte 30")
+	ErrForbidden  = NewError(CodePermissionDenied, "permissin denied")
+	ErrDataEmpty  = NewError(CodeDataLoss, "data is empty")
+	ErrKeyFormat  = NewError(CodeInvalidArgument, "invalid key format")
+	ErrDataFormat = NewError(CodeInvalidArgument, "invalid data format")
+	ErrDataSign   = NewError(CodePermissionDenied, "invalid data sign")
+	ErrState      = NewError(CodeOutRange, "state index must lte 30")
+	ErrOutOfRange = NewError(CodeOutRange, "out of range")
+	ErrTimeBack   = NewError(CodeInternal, "time go back")
+	ErrMachineId  = NewError(CodeInvalidArgument, "illegal machine id")
+	ErrLogicId    = NewError(CodeInvalidArgument, "illegal logic id")
 )
 
 type MyError struct {

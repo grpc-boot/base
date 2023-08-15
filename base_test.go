@@ -315,7 +315,11 @@ func TestCreatePkcs8Keys(t *testing.T) {
 
 func TestRsa_Decrypt(t *testing.T) {
 	privateKey, publicKey := CreatePkcs1Keys(2048)
-	rsa, _ := NewRsa(publicKey, privateKey)
+	t.Logf("privateKey:%s publicKey:%s", privateKey, publicKey)
+	rsa, err := NewRsa(publicKey, privateKey)
+	if err != nil {
+		t.Fatalf("want nil, got %s", err.Error())
+	}
 
 	data := []byte("sadfasfd")
 	secretData, err := rsa.Encrypt(data)
@@ -578,12 +582,12 @@ func TestStatusWithCode(t *testing.T) {
 
 	t.Logf("status: %s", stsOk.JsonMarshal())
 
-	stsArg := StatusWithCode(ErrInvalidArgument)
+	stsArg := StatusWithCode(CodeInvalidArgument)
 	defer stsArg.Close()
 
 	t.Logf("status: %s", stsArg.JsonMarshal())
 
-	stsPermiss := StatusWithCode(ErrPermissionDenied)
+	stsPermiss := StatusWithCode(CodePermissionDenied)
 	stsPermiss.WithMsg("FORBIDDEN")
 	defer stsPermiss.Close()
 
@@ -610,9 +614,9 @@ func TestStatusWithJsonUnmarshal(t *testing.T) {
 }
 
 func TestStatus_Is(t *testing.T) {
-	sts := StatusWithCode(ErrCanceled)
+	sts := StatusWithCode(CodeCanceled)
 	defer sts.Close()
-	if !sts.Is(ErrCanceled) {
+	if !sts.Is(CodeCanceled) {
 		t.Fatalf("want true, got false")
 	}
 
@@ -622,7 +626,7 @@ func TestStatus_Is(t *testing.T) {
 }
 
 func TestStatus_Error(t *testing.T) {
-	sts := StatusWithCode(ErrNotFound)
+	sts := StatusWithCode(CodeNotFound)
 	defer sts.Close()
 
 	t.Logf("error format: %s", sts.Error().Error())
@@ -1024,4 +1028,59 @@ func TestState_ValueSlice(t *testing.T) {
 	}
 
 	t.Logf("st1:%+v, st2:%+v", st1.Slice(), st2.Slice())
+}
+
+func TestLocalIp(t *testing.T) {
+	localIp, err := LocalIp()
+	if err != nil {
+		t.Fatalf("want nil, got %s", err.Error())
+	}
+
+	t.Logf("local ip:%s", localIp)
+}
+
+func TestLong2Ip(t *testing.T) {
+	for index := 0; index < 100; index++ {
+		longIp := rand.Uint32()
+		ipStr := Long2Ip(longIp)
+		uint32Ip, err := Ip2Long(ipStr)
+		if err != nil {
+			t.Fatalf("want nil, got %s", err.Error())
+		}
+
+		if uint32Ip != longIp {
+			t.Fatalf("want equal, got %t", false)
+		}
+
+		t.Logf("longIp:%d stringIp:%s", longIp, ipStr)
+	}
+}
+
+func BenchmarkLong2Ip(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			Long2Ip(rand.Uint32())
+		}
+	})
+}
+
+func BenchmarkIp2Long(b *testing.B) {
+	var (
+		size = 500 * 10000
+		list = make([]string, size)
+	)
+
+	for index := 0; index < size; index++ {
+		list[index] = Long2Ip(rand.Uint32())
+	}
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			if _, err := Ip2Long(list[rand.Intn(size)]); err != nil {
+				b.Fatalf("want nil, got %v", err)
+			}
+		}
+	})
 }

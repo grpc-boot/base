@@ -6,17 +6,19 @@ var (
 	defaultOptions = func() *Options {
 		return &Options{
 			panicHandler: func(err interface{}) {
-				fmt.Printf("panic error:%+v", err)
+				fmt.Printf("gopool panic with error:%+v", err)
 			},
+			maxIdleTimeoutSeconds: 60,
 		}
 	}
 )
 
 type Options struct {
-	size         int
-	queue        int
-	spawn        int
-	panicHandler func(err interface{})
+	size                  int
+	queue                 int
+	spawn                 int
+	maxIdleTimeoutSeconds int64
+	panicHandler          func(err interface{})
 }
 
 type Option func(opts *Options)
@@ -47,5 +49,11 @@ func WithQueueLength(length int) Option {
 func WithSpawnSize(size int) Option {
 	return func(opts *Options) {
 		opts.spawn = size
+	}
+}
+
+func WithMaxIdleTimeoutSeconds(seconds int64) Option {
+	return func(opts *Options) {
+		opts.maxIdleTimeoutSeconds = seconds
 	}
 }

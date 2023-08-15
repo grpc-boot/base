@@ -14,6 +14,10 @@ import (
 	"time"
 )
 
+var (
+	ErrNotTcpListener = NewError(CodeInvalidArgument, "listener is not tcp listener")
+)
+
 type GracefulHttp struct {
 	server   *http.Server
 	listener net.Listener
@@ -26,7 +30,7 @@ func NewGracefulHttp(server *http.Server) *GracefulHttp {
 }
 
 func (hs *GracefulHttp) ShutdownWithTimeout(timeoutSecond int64) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecond)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(timeoutSecond))
 	defer cancel()
 
 	return hs.Shutdown(ctx)
@@ -75,6 +79,7 @@ func (hs *GracefulHttp) HandlerSig(pprofAddr string, timeoutSecond int64) {
 			}
 
 			signal.Stop(sigChan)
+
 			Yellow("graceful restart with sub pid: %d", subPid)
 			if err = hs.ShutdownWithTimeout(timeoutSecond); err != nil {
 				Red("shutdown with error: %s", err.Error())
@@ -82,9 +87,7 @@ func (hs *GracefulHttp) HandlerSig(pprofAddr string, timeoutSecond int64) {
 			return
 		case syscall.SIGUSR2:
 			if PprofIsRun() {
-				ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecond)*time.Second)
-				defer cancel()
-				if err := StopPprof(ctx); err != nil && err != http.ErrServerClosed {
+				if err := StopPprofWithTimeout(timeoutSecond); err != nil && err != http.ErrServerClosed {
 					Red("stop pprof error: %s", err.Error())
 				} else {
 					Green("stop pprof success")
@@ -99,13 +102,10 @@ func (hs *GracefulHttp) HandlerSig(pprofAddr string, timeoutSecond int64) {
 					Red("start pprof error: %s", err.Error())
 				}
 			}()
-			continue
 		case syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT:
 			signal.Stop(sigChan)
-			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeoutSecond)*time.Second)
-			defer cancel()
 
-			if err := hs.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
+			if err := hs.ShutdownWithTimeout(timeoutSecond); err != nil && err != http.ErrServerClosed {
 				Red("shutdown with error: %s", err.Error())
 			} else {
 				Green("shutdown success")
@@ -119,7 +119,7 @@ func (hs *GracefulHttp) HandlerSig(pprofAddr string, timeoutSecond int64) {
 func (hs *GracefulHttp) Reload() (pid int, err error) {
 	tl, ok := hs.listener.(*net.TCPListener)
 	if !ok {
-		return 0, errors.New("listener is not tcp listener")
+		return 0, ErrNotTcpListener
 	}
 
 	f, err := tl.File()

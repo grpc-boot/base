@@ -17,15 +17,16 @@ var (
 type Pool struct {
 	sem            chan struct{}
 	work           chan func()
+	maxIdleTimeout time.Duration
 	panicHandler   func(err interface{})
 	pendingTaskNum atomic.Int64
 	successTotal   atomic.Uint64
 	failedTotal    atomic.Uint64
 }
 
-func NewPool(size int, opts ...Option) (*Pool, error) {
+func NewPool(maxWorkerNum int, opts ...Option) (*Pool, error) {
 	options := loadOptions(opts...)
-	options.size = size
+	options.size = maxWorkerNum
 
 	if options.spawn <= 0 && options.queue > 0 {
 		return nil, ErrOptionsDeadQueue
@@ -36,9 +37,10 @@ func NewPool(size int, opts ...Option) (*Pool, error) {
 	}
 
 	p := &Pool{
-		sem:          make(chan struct{}, options.size),
-		work:         make(chan func(), options.queue),
-		panicHandler: options.panicHandler,
+		sem:            make(chan struct{}, options.size),
+		work:           make(chan func(), options.queue),
+		panicHandler:   options.panicHandler,
+		maxIdleTimeout: time.Second * time.Duration(options.maxIdleTimeoutSeconds),
 	}
 
 	for i := 0; i < options.spawn; i++ {
@@ -108,19 +110,56 @@ func (p *Pool) worker(task func()) {
 		<-p.sem
 	}()
 
-	if task != nil {
-		p.runTask(task)
+	p.runTask(task)
+
+	if p.maxIdleTimeout < time.Second {
+		for {
+			select {
+			case t, ok := <-p.work:
+				p.runTask(t)
+				if !ok {
+					return
+				}
+			default:
+			}
+		}
 	}
 
-	for t := range p.work {
-		p.runTask(t)
+	var (
+		ticker  = time.NewTicker(p.maxIdleTimeout)
+		working = false
+	)
+
+	defer func() {
+		ticker.Stop()
+		ticker = nil
+	}()
+
+	for {
+		select {
+		case t, ok := <-p.work:
+			working = true
+			p.runTask(t)
+			if !ok {
+				return
+			}
+		case <-ticker.C:
+			if !working {
+				return
+			}
+			working = false
+		default:
+		}
 	}
 }
 
 func (p *Pool) runTask(task func()) {
+	if task == nil {
+		return
+	}
+
 	defer func() {
 		p.pendingTaskNum.Dec()
-
 		if err := recover(); err != nil {
 			p.failedTotal.Inc()
 			p.panicHandler(err)

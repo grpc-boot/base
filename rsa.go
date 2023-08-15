@@ -68,7 +68,7 @@ func NewRsaWithPkcs8Bytes(public, private []byte) (r *Rsa, err error) {
 
 // NewRsaWithPkcs8 pkcs8实例化Rsa
 func NewRsaWithPkcs8(publicKey, privateKey string) (r *Rsa, err error) {
-	return NewRsaWithPkcs1Bytes([]byte(publicKey), []byte(privateKey))
+	return NewRsaWithPkcs8Bytes([]byte(publicKey), []byte(privateKey))
 }
 
 // NewRsaWithPkcs1Bytes pkc1实例化Rsa
@@ -80,15 +80,13 @@ func NewRsaWithPkcs1Bytes(public, private []byte) (r *Rsa, err error) {
 
 	if len(private) > 0 {
 		block, _ := pem.Decode(private)
-		var pKey interface{}
-		pKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+		priKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
 		if err != nil {
 			return nil, err
 		}
-		priKey = pKey.(*rsa.PrivateKey)
 	}
 
-	if len(public) == 0 {
+	if len(public) > 0 {
 		block, _ := pem.Decode(public)
 		var pKey interface{}
 		pKey, err = x509.ParsePKIXPublicKey(block.Bytes)
