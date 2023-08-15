@@ -1,7 +1,6 @@
 package base
 
 import (
-	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -19,14 +18,17 @@ const (
 	defaultEnvKey = `MNUM`
 )
 
-// SnowFlake 雪花算法接口，1位0，41位毫秒时间戳，8位机器码，2位业务码，12位递增值
+const (
+	maxIndex   = 0x3fff // 2^14 - 1
+	maxMachine = 0xff   // 2^8 - 1
+)
+
+// SnowFlake 雪花算法接口，1位0，41位毫秒时间戳，8位机器码，14位递增值
 type SnowFlake interface {
 	// Id 生成id
-	Id(logicId uint8) (int64, error)
+	Id() (int64, error)
 	// Info 根据id获取信息
-	Info(id int64) (timestamp int64, machineId uint8, logicId uint8, index int16)
-	// idTime 根据指定时间生成id
-	idTime(current time.Time, logicId uint8) (int64, error)
+	Info(id int64) (timestamp int64, machineId uint8, index int16)
 }
 
 // GetMachineId 获取机器Id
@@ -79,7 +81,7 @@ func NewSFByMachineFunc(mode uint8, machindFunc GetMachineId, beginSeconds int64
 		return nil, err
 	}
 
-	return NewSF(mode, uint8(id&math.MaxUint8), beginSeconds)
+	return NewSF(mode, uint8(id&maxMachine), beginSeconds)
 }
 
 // NewSF 实例化雪花算法
@@ -106,31 +108,26 @@ func NewSF(mode uint8, id uint8, beginSeconds int64) (sfl SnowFlake, err error) 
 	return sf, nil
 }
 
-func (sf *snowFlake) Id(logicId uint8) (int64, error) {
-	return sf.idTime(time.Now(), logicId)
-}
-
-func (sf *snowFlake) idTime(current time.Time, logicId uint8) (int64, error) {
-	if logicId > 3 {
-		return 0, ErrLogicId
-	}
-
+func (sf *snowFlake) Id() (int64, error) {
 	sf.mutex.Lock()
 	defer sf.mutex.Unlock()
 
-	err := sf.step(current)
+	err := sf.step(time.Now())
 	if err != nil {
 		return 0, err
 	}
 
-	return ((sf.lastTimeStamp - sf.timeStampBegin) << 22) + sf.machId + (int64(logicId) << 12) + int64(sf.index), nil
+	return ((sf.lastTimeStamp - sf.timeStampBegin) << 22) + sf.machId + int64(sf.index), nil
 }
 
-func (sf *snowFlake) Info(id int64) (timestamp int64, machineId uint8, logicId uint8, index int16) {
-	timestamp = (id >> 22) + sf.timeStampBegin
-	machineId = uint8((id >> 14) & 0xff)
-	logicId = uint8((id >> 12) & 3)
-	index = int16(id & 0xfff)
+func (sf *snowFlake) Info(id int64) (milliTimestamp int64, machineId uint8, index int16) {
+	if id <= sf.machId {
+		return
+	}
+
+	milliTimestamp = (id >> 22) + sf.timeStampBegin
+	machineId = uint8((id >> 14) & maxMachine)
+	index = int16(id & maxIndex)
 	return
 }
 
@@ -145,7 +142,7 @@ func (sf *snowFlake) wait(current time.Time) (err error) {
 
 	if curTimeStamp == sf.lastTimeStamp {
 		sf.index++
-		if sf.index > 0xfff {
+		if sf.index > maxIndex {
 			return ErrOutOfRange
 		}
 	} else {
@@ -165,7 +162,7 @@ func (sf *snowFlake) max(current time.Time) (err error) {
 
 	if curTimeStamp == sf.lastTimeStamp {
 		sf.index++
-		if sf.index > 0xfff {
+		if sf.index > maxIndex {
 			return ErrOutOfRange
 		}
 	} else {
@@ -184,7 +181,7 @@ func (sf *snowFlake) err(current time.Time) (err error) {
 
 	if curTimeStamp == sf.lastTimeStamp {
 		sf.index++
-		if sf.index > 0xfff {
+		if sf.index > maxIndex {
 			return ErrOutOfRange
 		}
 	} else {

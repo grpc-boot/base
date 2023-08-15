@@ -14,7 +14,6 @@ var (
 	ErrOutOfRange = NewError(CodeOutRange, "out of range")
 	ErrTimeBack   = NewError(CodeInternal, "time go back")
 	ErrMachineId  = NewError(CodeInvalidArgument, "illegal machine id")
-	ErrLogicId    = NewError(CodeInvalidArgument, "illegal logic id")
 )
 
 type MyError struct {
