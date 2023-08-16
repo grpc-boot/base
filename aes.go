@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"errors"
 )
 
 var (
-	ErrInvalidPaddingChar = errors.New(`invalid padding char`)
-	ErrAesDecrypt         = errors.New(`aes decrypt error`)
+	ErrInvalidPaddingChar = NewError(CodeInvalidArgument, `invalid padding char`)
+	ErrAesDecrypt         = NewError(CodeInvalidArgument, `aes decrypt error`)
 )
 
 // Aes Aes加密
@@ -20,21 +19,7 @@ type Aes struct {
 
 // NewAes 实例化Aes
 func NewAes(key, iv string) (a *Aes, err error) {
-	var b cipher.Block
-	b, err = aes.NewCipher([]byte(key))
-	if err != nil {
-		return nil, err
-	}
-
-	if iv == "" {
-		iv = key[:b.BlockSize()]
-	}
-
-	a = &Aes{
-		iv:    []byte(iv),
-		block: b,
-	}
-	return
+	return NewAesWithBytes([]byte(key), []byte(iv))
 }
 
 // NewAesWithBytes 实例化Aes
@@ -54,35 +39,33 @@ func NewAesWithBytes(key, iv []byte) (a *Aes, err error) {
 
 // CbcEncrypt cbc加密
 func (a *Aes) CbcEncrypt(plain []byte) (secretData []byte) {
-	data := pkcs5Padding(plain, a.block.BlockSize())
-	blockMode := cipher.NewCBCEncrypter(a.block, a.iv)
+	data := pkcs7Padding(plain, a.block.BlockSize())
+
 	secretData = make([]byte, len(data))
-	blockMode.CryptBlocks(secretData, data)
+	cipher.NewCBCEncrypter(a.block, a.iv).CryptBlocks(secretData, data)
+
 	return
 }
 
 // CbcDecrypt cbc解密
 func (a *Aes) CbcDecrypt(secretData []byte) (data []byte, err error) {
-	defer func() {
-		er := recover()
-		if er != nil {
-			err = errors.New(er.(string))
-			data = nil
-		}
-	}()
+	if len(secretData) == 0 || len(secretData)%a.block.BlockSize() != 0 {
+		err = ErrAesDecrypt
+		return
+	}
 
-	blockMode := cipher.NewCBCDecrypter(a.block, a.iv)
 	data = make([]byte, len(secretData))
-	blockMode.CryptBlocks(data, secretData)
-	return pkcs5UnPadding(data)
+	cipher.NewCBCDecrypter(a.block, a.iv).CryptBlocks(data, secretData)
+
+	return pkcs7UnPadding(data)
 }
 
-func pkcs5Padding(src []byte, blockSize int) []byte {
+func pkcs7Padding(src []byte, blockSize int) []byte {
 	padChar := byte(blockSize - len(src)%blockSize)
 	return append(src, bytes.Repeat([]byte{padChar}, int(padChar))...)
 }
 
-func pkcs5UnPadding(src []byte) ([]byte, error) {
+func pkcs7UnPadding(src []byte) ([]byte, error) {
 	length := len(src)
 	if length == 0 {
 		return nil, ErrAesDecrypt

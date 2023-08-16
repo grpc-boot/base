@@ -1089,3 +1089,43 @@ func BenchmarkIp2Long(b *testing.B) {
 		}
 	})
 }
+
+func BenchmarkAes_CbcDecrypt(b *testing.B) {
+	var (
+		size        = 1000
+		list        = make([]string, size)
+		secretData  = make([][]byte, size)
+		aesObj, err = NewAes("D()sd7huyt56D<>_+tde342d", "@$$*&Dnj923jhfgb")
+	)
+
+	if err != nil {
+		b.Fatalf("want nil, got %v", err)
+	}
+
+	for index := 0; index < size; index++ {
+		data := rand.Perm(33 + rand.Intn(93))
+		item := make([]byte, len(data))
+		for i, bt := range data {
+			item[i] = byte(bt)
+		}
+
+		secretData[index] = aesObj.CbcEncrypt(item)
+		list[index] = Bytes2String(item)
+	}
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			index := rand.Intn(size)
+			data, err := aesObj.CbcDecrypt(secretData[index])
+			if err != nil {
+				b.Fatalf("want nil got %v", err)
+			}
+
+			if Bytes2String(data) != list[index] {
+				b.Fatalf("want %s got %s", list[index], Bytes2String(data))
+			}
+		}
+	})
+}
