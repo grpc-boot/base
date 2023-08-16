@@ -16,32 +16,46 @@ var (
 	ErrMachineId  = NewError(CodeInvalidArgument, "illegal machine id")
 )
 
-type MyError struct {
+type BError struct {
 	code codes.Code
 	msg  string
+	flag uint8
+}
+
+func NewBaseError(code codes.Code, msg string) *BError {
+	return &BError{code: code, msg: msg}
 }
 
 func NewError(code codes.Code, msg string) error {
-	return &MyError{code: code, msg: msg}
+	return NewBaseError(code, msg)
 }
 
-func (me *MyError) Code() codes.Code {
-	return me.code
+func (be *BError) Code() codes.Code {
+	return be.code
 }
 
-func (me *MyError) Error() string {
-	return me.msg
+func (be *BError) Error() string {
+	return be.msg
 }
 
-func (me *MyError) ToStatus() *Status {
-	return StatusWithCode(me.code).WithMsg(me.msg)
+func (be *BError) WithFlag(flag uint8) *BError {
+	be.flag = flag
+	return be
 }
 
-func (me *MyError) Is(target error) bool {
-	tbe, ok := target.(*MyError)
+func (be *BError) ToStatus() *Status {
+	return StatusWithCode(be.code).WithMsg(be.msg).WithFlag(be.flag)
+}
+
+func (be *BError) Is(target error) bool {
+	tbe, ok := target.(*BError)
 	if !ok {
 		return false
 	}
 
-	return me.code == tbe.code && me.msg == tbe.msg
+	return be.code == tbe.code && be.msg == tbe.msg
+}
+
+func (be *BError) JsonMarshal() []byte {
+	return be.ToStatus().JsonMarshal()
 }

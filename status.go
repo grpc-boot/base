@@ -48,6 +48,7 @@ func StatusWithJsonUnmarshal(data []byte) (*Status, error) {
 type Status struct {
 	Code codes.Code  `json:"code"`
 	Msg  string      `json:"msg"`
+	Flag uint8       `json:"flag"`
 	Data interface{} `json:"data"`
 }
 
@@ -55,6 +56,7 @@ func (s *Status) reset() {
 	s.Code = OK
 	s.Msg = ""
 	s.Data = SetValue
+	s.Flag = 0
 }
 
 // Close 释放Status到sync.Pool
@@ -76,6 +78,12 @@ func (s *Status) Is(code codes.Code) bool {
 // WithMsg 附加自定义message
 func (s *Status) WithMsg(msg string) *Status {
 	s.Msg = msg
+	return s
+}
+
+// WithFlag 附加flag
+func (s *Status) WithFlag(flag uint8) *Status {
+	s.Flag = flag
 	return s
 }
 
