@@ -22,12 +22,12 @@ type BError struct {
 	flag uint8
 }
 
-func NewBaseError(code codes.Code, msg string) *BError {
+func NewBError(code codes.Code, msg string) *BError {
 	return &BError{code: code, msg: msg}
 }
 
 func NewError(code codes.Code, msg string) error {
-	return NewBaseError(code, msg)
+	return NewBError(code, msg)
 }
 
 func (be *BError) Code() codes.Code {
@@ -54,6 +54,19 @@ func (be *BError) Is(target error) bool {
 	}
 
 	return be.code == tbe.code && be.msg == tbe.msg
+}
+
+func (be *BError) Equal(target error) bool {
+	tbe, ok := target.(*BError)
+	if !ok {
+		return false
+	}
+
+	return be.code == tbe.code && be.flag == tbe.flag && be.msg == tbe.msg
+}
+
+func (be *BError) Clone() *BError {
+	return NewBError(be.code, be.msg).WithFlag(be.flag)
 }
 
 func (be *BError) JsonMarshal() []byte {
