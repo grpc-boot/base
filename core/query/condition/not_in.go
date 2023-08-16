@@ -12,6 +12,10 @@ func (ni NotIn) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(ni.Value) == 1 {
+		return NotEqual{Field: ni.Field, Value: ni.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(ni.Field) + 10 + (len(ni.Value)-1)*2)
 	args = make([]interface{}, len(ni.Value), len(ni.Value))
@@ -36,6 +40,10 @@ type NotStringIn struct {
 func (nsi NotStringIn) Build() (sql string, args []interface{}) {
 	if len(nsi.Value) == 0 {
 		return
+	}
+
+	if len(nsi.Value) == 1 {
+		return NotEqual{Field: nsi.Field, Value: nsi.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
@@ -64,6 +72,10 @@ func (nii NotIntIn) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(nii.Value) == 1 {
+		return NotEqual{Field: nii.Field, Value: nii.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(nii.Field) + 10 + (len(nii.Value)-1)*2)
 	args = make([]interface{}, len(nii.Value), len(nii.Value))
@@ -88,6 +100,10 @@ type NotUintIn struct {
 func (nui NotUintIn) Build() (sql string, args []interface{}) {
 	if len(nui.Value) == 0 {
 		return
+	}
+
+	if len(nui.Value) == 1 {
+		return NotEqual{Field: nui.Field, Value: nui.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
@@ -116,6 +132,10 @@ func (ni64i NotInt64In) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(ni64i.Value) == 1 {
+		return NotEqual{Field: ni64i.Field, Value: ni64i.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(ni64i.Field) + 10 + (len(ni64i.Value)-1)*2)
 	args = make([]interface{}, len(ni64i.Value), len(ni64i.Value))
@@ -140,6 +160,10 @@ type NotUint64In struct {
 func (nu64i NotUint64In) Build() (sql string, args []interface{}) {
 	if len(nu64i.Value) == 0 {
 		return
+	}
+
+	if len(nu64i.Value) == 1 {
+		return NotEqual{Field: nu64i.Field, Value: nu64i.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
@@ -168,6 +192,10 @@ func (ni32i NotInt32In) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(ni32i.Value) == 1 {
+		return NotEqual{Field: ni32i.Field, Value: ni32i.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(ni32i.Field) + 10 + (len(ni32i.Value)-1)*2)
 	args = make([]interface{}, len(ni32i.Value), len(ni32i.Value))
@@ -192,6 +220,10 @@ type NotUint32In struct {
 func (nu32i NotUint32In) Build() (sql string, args []interface{}) {
 	if len(nu32i.Value) == 0 {
 		return
+	}
+
+	if len(nu32i.Value) == 1 {
+		return NotEqual{Field: nu32i.Field, Value: nu32i.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
@@ -220,6 +252,10 @@ func (ni16i NotInt16In) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(ni16i.Value) == 1 {
+		return NotEqual{Field: ni16i.Field, Value: ni16i.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(ni16i.Field) + 10 + (len(ni16i.Value)-1)*2)
 	args = make([]interface{}, len(ni16i.Value), len(ni16i.Value))
@@ -244,6 +280,10 @@ type NotUint16In struct {
 func (nu16i NotUint16In) Build() (sql string, args []interface{}) {
 	if len(nu16i.Value) == 0 {
 		return
+	}
+
+	if len(nu16i.Value) == 1 {
+		return NotEqual{Field: nu16i.Field, Value: nu16i.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
@@ -272,6 +312,10 @@ func (ni8i NotInt8In) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(ni8i.Value) == 1 {
+		return NotEqual{Field: ni8i.Field, Value: ni8i.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(ni8i.Field) + 10 + (len(ni8i.Value)-1)*2)
 	args = make([]interface{}, len(ni8i.Value), len(ni8i.Value))
@@ -296,6 +340,10 @@ type NotUint8In struct {
 func (nu8i NotUint8In) Build() (sql string, args []interface{}) {
 	if len(nu8i.Value) == 0 {
 		return
+	}
+
+	if len(nu8i.Value) == 1 {
+		return NotEqual{Field: nu8i.Field, Value: nu8i.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder

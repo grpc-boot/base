@@ -14,6 +14,10 @@ func (i In) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(i.Value) == 1 {
+		return Equal{Field: i.Field, Value: i.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(i.Field) + 6 + (len(i.Value)-1)*2)
 	args = make([]interface{}, len(i.Value), len(i.Value))
@@ -38,6 +42,10 @@ type StringIn struct {
 func (si StringIn) Build() (sql string, args []interface{}) {
 	if len(si.Value) == 0 {
 		return
+	}
+
+	if len(si.Value) == 1 {
+		return Equal{Field: si.Field, Value: si.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
@@ -66,6 +74,10 @@ func (ii IntIn) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(ii.Value) == 1 {
+		return Equal{Field: ii.Field, Value: ii.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(ii.Field) + 6 + (len(ii.Value)-1)*2)
 	args = make([]interface{}, len(ii.Value), len(ii.Value))
@@ -90,6 +102,10 @@ type UintIn struct {
 func (ui UintIn) Build() (sql string, args []interface{}) {
 	if len(ui.Value) == 0 {
 		return
+	}
+
+	if len(ui.Value) == 1 {
+		return Equal{Field: ui.Field, Value: ui.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
@@ -118,6 +134,10 @@ func (ii Int64In) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(ii.Value) == 1 {
+		return Equal{Field: ii.Field, Value: ii.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(ii.Field) + 6 + (len(ii.Value)-1)*2)
 	args = make([]interface{}, len(ii.Value), len(ii.Value))
@@ -142,6 +162,10 @@ type Uint64In struct {
 func (ui Uint64In) Build() (sql string, args []interface{}) {
 	if len(ui.Value) == 0 {
 		return
+	}
+
+	if len(ui.Value) == 1 {
+		return Equal{Field: ui.Field, Value: ui.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
@@ -170,6 +194,10 @@ func (i32i Int32In) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(i32i.Value) == 1 {
+		return Equal{Field: i32i.Field, Value: i32i.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(i32i.Field) + 6 + (len(i32i.Value)-1)*2)
 	args = make([]interface{}, len(i32i.Value), len(i32i.Value))
@@ -194,6 +222,10 @@ type Uint32In struct {
 func (u32i Uint32In) Build() (sql string, args []interface{}) {
 	if len(u32i.Value) == 0 {
 		return
+	}
+
+	if len(u32i.Value) == 1 {
+		return Equal{Field: u32i.Field, Value: u32i.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
@@ -222,6 +254,10 @@ func (i16i Int16In) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(i16i.Value) == 1 {
+		return Equal{Field: i16i.Field, Value: i16i.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(i16i.Field) + 6 + (len(i16i.Value)-1)*2)
 	args = make([]interface{}, len(i16i.Value), len(i16i.Value))
@@ -246,6 +282,10 @@ type Uint16In struct {
 func (u16i Uint16In) Build() (sql string, args []interface{}) {
 	if len(u16i.Value) == 0 {
 		return
+	}
+
+	if len(u16i.Value) == 1 {
+		return Equal{Field: u16i.Field, Value: u16i.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
@@ -274,6 +314,10 @@ func (i8i Int8In) Build() (sql string, args []interface{}) {
 		return
 	}
 
+	if len(i8i.Value) == 1 {
+		return Equal{Field: i8i.Field, Value: i8i.Value[0]}.Build()
+	}
+
 	var buffer strings.Builder
 	buffer.Grow(len(i8i.Field) + 6 + (len(i8i.Value)-1)*2)
 	args = make([]interface{}, len(i8i.Value), len(i8i.Value))
@@ -298,6 +342,10 @@ type Uint8In struct {
 func (u8i Uint8In) Build() (sql string, args []interface{}) {
 	if len(u8i.Value) == 0 {
 		return
+	}
+
+	if len(u8i.Value) == 1 {
+		return Equal{Field: u8i.Field, Value: u8i.Value[0]}.Build()
 	}
 
 	var buffer strings.Builder
