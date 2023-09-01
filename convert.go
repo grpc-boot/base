@@ -4,11 +4,32 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"strconv"
 	"unicode"
 
 	"github.com/grpc-boot/base/internal"
 )
+
+const (
+	codeSalt4Six   = 714924305
+	codeSalt4Seven = 42180533654
+	codeSalt4Eight = 2488651484856
+)
+
+var (
+	alphanumericLength byte
+	alphanumericSet    = []byte("M0Q1EK4aFzPcZeUgAfXi3SjTkYmnGpqrJstD6uLv9xy7bB5CHNR8VhW2wdI")
+	alphanumericMap    = make(map[byte]byte, len(alphanumericSet))
+)
+
+func init() {
+	alphanumericLength = byte(len(alphanumericSet))
+
+	for i, b := range alphanumericSet {
+		alphanumericMap[b] = byte(i)
+	}
+}
 
 // ToString 转为字符串类型
 func ToString(val interface{}) string {
@@ -184,4 +205,122 @@ func LcFirst(str string) string {
 
 func UcFirst(str string) string {
 	return internal.UcFirst(str)
+}
+
+func Id2Code6(id uint64) (code string, err error) {
+	return id2Code(id+codeSalt4Six, 6)
+}
+
+func Id2Code7(id uint64) (code string, err error) {
+	return id2Code(id+codeSalt4Seven, 7)
+}
+
+func Id2Code8(id uint64) (code string, err error) {
+	return id2Code(id+codeSalt4Eight, 8)
+}
+
+func id2Code(id uint64, length byte) (code string, err error) {
+	if id < 1 {
+		return "", ErrOutOfRange
+	}
+
+	var (
+		codeBytes = make([]byte, length)
+	)
+
+	max := uint64(math.Pow(float64(len(alphanumericSet)), float64(length))) - 1
+	if id > max {
+		return "", ErrOutOfRange
+	}
+
+	var (
+		c      = byte(id % uint64(len(alphanumericSet)))
+		i byte = 1
+	)
+
+	codeBytes[0] = alphanumericSet[c]
+	id = id / uint64(alphanumericLength)
+
+	for ; i < length; i++ {
+		a := byte(id % uint64(alphanumericLength))
+		d := (a + i + c) % alphanumericLength
+
+		//fmt.Printf("D: %d A:%d I:%d C: %d\n", d, a, i, c)
+
+		codeBytes[i] = alphanumericSet[d]
+		id = id / uint64(len(alphanumericSet))
+	}
+
+	return Bytes2String(codeBytes), nil
+}
+
+func Code2Uint64(code string) (id uint64, err error) {
+	var (
+		salt       uint64
+		codeBytes  = []byte(code)
+		codeLength = byte(len(codeBytes))
+	)
+
+	switch codeLength {
+	case 6:
+		salt = codeSalt4Six
+	case 7:
+		salt = codeSalt4Seven
+	case 8:
+		salt = codeSalt4Eight
+	default:
+		err = ErrOutOfRange
+		return
+	}
+
+	err = ErrOutOfRange
+
+	c, ok := alphanumericMap[codeBytes[0]]
+	if !ok {
+		return
+	}
+
+	id += uint64(c)
+
+	var i byte = 1
+
+	for ; i < codeLength; i++ {
+		d, exists := alphanumericMap[codeBytes[i]]
+		if !exists {
+			id = 0
+			return
+		}
+
+		var (
+			a     = byte(AbsInt8(int8(d) - int8(i+c)))
+			retry = 0
+		)
+
+		for a >= alphanumericLength || d != (a+i+c)%alphanumericLength {
+			retry++
+
+			if alphanumericLength < a {
+				a -= alphanumericLength
+				continue
+			}
+
+			a = alphanumericLength - a
+
+			if retry > 3 {
+				id = 0
+				return
+			}
+		}
+
+		//fmt.Printf("D: %d A:%d I:%d C: %d\n", d, a, i, c)
+
+		id += uint64(a) * uint64(math.Pow(float64(alphanumericLength), float64(i)))
+	}
+
+	if id <= salt {
+		id = 0
+		return
+	}
+
+	return id - salt, nil
 }

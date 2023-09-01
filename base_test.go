@@ -1129,3 +1129,51 @@ func BenchmarkAes_CbcDecrypt(b *testing.B) {
 		}
 	})
 }
+
+func TestId2Code(t *testing.T) {
+	var (
+		num = 50
+	)
+
+	rand.Seed(time.Now().Unix())
+
+	for i := 1; i < num; i++ {
+		id := uint64(rand.Uint32())
+
+		code6, _ := Id2Code6(id)
+		decode6Id, _ := Code2Uint64(code6)
+
+		if id != decode6Id {
+			t.Fatalf("id:%d code:%s decodeId:%d", id, code6, decode6Id)
+		}
+
+		code7, _ := Id2Code7(id)
+		decode7Id, _ := Code2Uint64(code7)
+
+		if id != decode6Id {
+			t.Fatalf("id:%d code:%s decodeId:%d", id, code7, decode7Id)
+		}
+
+		code8, _ := Id2Code8(id)
+		decode8Id, _ := Code2Uint64(code8)
+
+		if id != decode6Id {
+			t.Fatalf("id:%d code:%s decodeId:%d", id, code8, decode8Id)
+		}
+
+		t.Logf("id: %d 6:%s 7:%s 8:%s", id, code6, code7, code8)
+	}
+}
+
+func BenchmarkId2Code4Six(b *testing.B) {
+	rand.Seed(time.Now().Unix())
+
+	for i := 0; i < b.N; i++ {
+		id := uint64(rand.Uint32())
+		code, err := Id2Code6(id)
+
+		if err != nil {
+			b.Fatalf("id:%d code:%s", id, code)
+		}
+	}
+}
