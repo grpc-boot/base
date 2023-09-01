@@ -4,32 +4,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math"
 	"strconv"
 	"unicode"
 
 	"github.com/grpc-boot/base/internal"
 )
-
-const (
-	codeSalt4Six   = 714924305
-	codeSalt4Seven = 42180533654
-	codeSalt4Eight = 2488651484856
-)
-
-var (
-	alphanumericLength byte
-	alphanumericSet    = []byte("M0Q1EK4aFzPcZeUgAfXi3SjTkYmnGpqrJstD6uLv9xy7bB5CHNR8VhW2wdI")
-	alphanumericMap    = make(map[byte]byte, len(alphanumericSet))
-)
-
-func init() {
-	alphanumericLength = byte(len(alphanumericSet))
-
-	for i, b := range alphanumericSet {
-		alphanumericMap[b] = byte(i)
-	}
-}
 
 // ToString 转为字符串类型
 func ToString(val interface{}) string {
@@ -207,120 +186,42 @@ func UcFirst(str string) string {
 	return internal.UcFirst(str)
 }
 
-func Id2Code6(id uint64) (code string, err error) {
-	return id2Code(id+codeSalt4Six, 6)
+func Max6() int64 {
+	return defaultIdCode.Max6()
 }
 
-func Id2Code7(id uint64) (code string, err error) {
-	return id2Code(id+codeSalt4Seven, 7)
+func Max8() int64 {
+	return defaultIdCode.Max8()
 }
 
-func Id2Code8(id uint64) (code string, err error) {
-	return id2Code(id+codeSalt4Eight, 8)
+func Code6(id int64) (code []byte, err *BError) {
+	return defaultIdCode.Code6(id)
 }
 
-func id2Code(id uint64, length byte) (code string, err error) {
-	if id < 1 {
-		return "", ErrOutOfRange
-	}
-
-	var (
-		codeBytes = make([]byte, length)
-	)
-
-	max := uint64(math.Pow(float64(len(alphanumericSet)), float64(length))) - 1
-	if id > max {
-		return "", ErrOutOfRange
-	}
-
-	var (
-		c      = byte(id % uint64(len(alphanumericSet)))
-		i byte = 1
-	)
-
-	codeBytes[0] = alphanumericSet[c]
-	id = id / uint64(alphanumericLength)
-
-	for ; i < length; i++ {
-		a := byte(id % uint64(alphanumericLength))
-		d := (a + i + c) % alphanumericLength
-
-		//fmt.Printf("D: %d A:%d I:%d C: %d\n", d, a, i, c)
-
-		codeBytes[i] = alphanumericSet[d]
-		id = id / uint64(len(alphanumericSet))
-	}
-
-	return Bytes2String(codeBytes), nil
+func Code6String(id int64) (code string, err *BError) {
+	return defaultIdCode.Code6String(id)
 }
 
-func Code2Uint64(code string) (id uint64, err error) {
-	var (
-		salt       uint64
-		codeBytes  = []byte(code)
-		codeLength = byte(len(codeBytes))
-	)
+func Code8(id int64) (code []byte, err *BError) {
+	return defaultIdCode.Code8(id)
+}
 
-	switch codeLength {
-	case 6:
-		salt = codeSalt4Six
-	case 7:
-		salt = codeSalt4Seven
-	case 8:
-		salt = codeSalt4Eight
-	default:
-		err = ErrOutOfRange
-		return
-	}
+func Code8String(id int64) (code string, err *BError) {
+	return defaultIdCode.Code8String(id)
+}
 
-	err = ErrOutOfRange
+func Code2Id(code []byte) (id int64, err *BError) {
+	return defaultIdCode.Code2Id(code)
+}
 
-	c, ok := alphanumericMap[codeBytes[0]]
-	if !ok {
-		return
-	}
+func CodeString2Id(code string) (id int64, err *BError) {
+	return defaultIdCode.CodeString2Id(code)
+}
 
-	id += uint64(c)
+func Code6To8(code6 []byte) (code8 []byte, err *BError) {
+	return defaultIdCode.Code6To8(code6)
+}
 
-	var i byte = 1
-
-	for ; i < codeLength; i++ {
-		d, exists := alphanumericMap[codeBytes[i]]
-		if !exists {
-			id = 0
-			return
-		}
-
-		var (
-			a     = byte(AbsInt8(int8(d) - int8(i+c)))
-			retry = 0
-		)
-
-		for a >= alphanumericLength || d != (a+i+c)%alphanumericLength {
-			retry++
-
-			if alphanumericLength < a {
-				a -= alphanumericLength
-				continue
-			}
-
-			a = alphanumericLength - a
-
-			if retry > 3 {
-				id = 0
-				return
-			}
-		}
-
-		//fmt.Printf("D: %d A:%d I:%d C: %d\n", d, a, i, c)
-
-		id += uint64(a) * uint64(math.Pow(float64(alphanumericLength), float64(i)))
-	}
-
-	if id <= salt {
-		id = 0
-		return
-	}
-
-	return id - salt, nil
+func CodeString6To8(code6 string) (code8 string, err *BError) {
+	return defaultIdCode.CodeString6To8(code6)
 }

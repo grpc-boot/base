@@ -5,15 +5,17 @@ import (
 )
 
 var (
-	ErrForbidden  = NewError(CodePermissionDenied, "permissin denied")
-	ErrDataEmpty  = NewError(CodeDataLoss, "data is empty")
-	ErrKeyFormat  = NewError(CodeInvalidArgument, "invalid key format")
-	ErrDataFormat = NewError(CodeInvalidArgument, "invalid data format")
-	ErrDataSign   = NewError(CodePermissionDenied, "invalid data sign")
-	ErrState      = NewError(CodeOutRange, "state index must lte 30")
-	ErrOutOfRange = NewError(CodeOutRange, "out of range")
-	ErrTimeBack   = NewError(CodeInternal, "time go back")
-	ErrMachineId  = NewError(CodeInvalidArgument, "illegal machine id")
+	ErrForbidden          = NewBError(CodePermissionDenied, "permissin denied")
+	ErrDataEmpty          = NewBError(CodeDataLoss, "data is empty")
+	ErrKeyFormat          = NewBError(CodeInvalidArgument, "invalid key format")
+	ErrDataFormat         = NewBError(CodeInvalidArgument, "invalid data format")
+	ErrDataSign           = NewBError(CodePermissionDenied, "invalid data sign")
+	ErrState              = NewBError(CodeOutRange, "state index must lte 30")
+	ErrOutOfRange         = NewBError(CodeOutRange, "out of range")
+	ErrAlphanumeric       = NewBError(CodeInvalidArgument, "alphanumeric must be [a-zA-Z0-9] and not repeat")
+	ErrAlphanumericLength = NewBError(CodeInvalidArgument, "alphanumeric length must be [50, 62]")
+	ErrTimeBack           = NewBError(CodeInternal, "time go back")
+	ErrMachineId          = NewBError(CodeInvalidArgument, "illegal machine id")
 )
 
 type BError struct {

@@ -1130,50 +1130,80 @@ func BenchmarkAes_CbcDecrypt(b *testing.B) {
 	})
 }
 
-func TestId2Code(t *testing.T) {
+func TestCode2Id(t *testing.T) {
 	var (
 		num = 50
 	)
 
 	rand.Seed(time.Now().Unix())
 
-	for i := 1; i < num; i++ {
-		id := uint64(rand.Uint32())
+	t.Logf("max6:%d max8:%d", Max6(), Max8())
 
-		code6, _ := Id2Code6(id)
-		decode6Id, _ := Code2Uint64(code6)
+	for i := 1; i < num; i++ {
+		id := int64(rand.Uint32())
+
+		code6, _ := Code6(id)
+		decode6Id, _ := Code2Id(code6)
 
 		if id != decode6Id {
 			t.Fatalf("id:%d code:%s decodeId:%d", id, code6, decode6Id)
 		}
 
-		code7, _ := Id2Code7(id)
-		decode7Id, _ := Code2Uint64(code7)
+		code8, _ := Code8(id)
+		decode8Id, _ := Code2Id(code8)
 
-		if id != decode6Id {
-			t.Fatalf("id:%d code:%s decodeId:%d", id, code7, decode7Id)
-		}
-
-		code8, _ := Id2Code8(id)
-		decode8Id, _ := Code2Uint64(code8)
-
-		if id != decode6Id {
+		if id != decode8Id {
 			t.Fatalf("id:%d code:%s decodeId:%d", id, code8, decode8Id)
 		}
 
-		t.Logf("id: %d 6:%s 7:%s 8:%s", id, code6, code7, code8)
+		t.Logf("id: %d 6:%s 8:%s", id, code6, code8)
 	}
 }
 
-func BenchmarkId2Code4Six(b *testing.B) {
-	rand.Seed(time.Now().Unix())
-
+func BenchmarkId2Code6(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		id := uint64(rand.Uint32())
-		code, err := Id2Code6(id)
+		id := int64(rand.Uint32())
+		code, err := Code6(id)
 
 		if err != nil {
 			b.Fatalf("id:%d code:%s", id, code)
+		}
+	}
+}
+
+func BenchmarkCode2Id(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		id := int64(rand.Uint32())
+		code, err := Code6(id)
+
+		if err != nil {
+			b.Fatalf("id:%d code:%s", id, code)
+		}
+
+		decodeId, _ := Code2Id(code)
+		if id != decodeId {
+			b.Fatalf("id:%d decodeId:%d code:%s", id, decodeId, code)
+		}
+	}
+}
+
+func BenchmarkIdCode_Code2Id(b *testing.B) {
+	alphanumeric := []byte("D6uLv9xy7bB5AfCHNR8VK4aFzPcZeUghIM0Q1EXi3SjTkYmnGpqrJst")
+	ic, _ := NewIdCode(alphanumeric, defaultSalt6-1000, defaultSalt8-20000)
+
+	b.Logf("max6:%d max8:%d", ic.Max6(), ic.Max8())
+
+	for i := 0; i < b.N; i++ {
+		id := int64(rand.Uint32())
+		code, err := ic.Code6(id)
+
+		if err != nil {
+			b.Fatalf("id:%d code:%s", id, code)
+		}
+
+		decodeId, _ := ic.Code2Id(code)
+		if id != decodeId {
+			b.Fatalf("id:%d decodeId:%d code:%s", id, decodeId, code)
 		}
 	}
 }
