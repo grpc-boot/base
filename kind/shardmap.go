@@ -1,9 +1,10 @@
 package kind
 
 import (
-	"github.com/grpc-boot/base/v2/internal"
 	"hash/crc32"
 	"math"
+
+	"github.com/grpc-boot/base/v2/internal"
 
 	"go.uber.org/atomic"
 )
