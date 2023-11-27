@@ -6,6 +6,8 @@ type Set[V comparable] interface {
 	Exists(value V) (exists bool)
 	Length() (length int)
 	List() (list Slice[V])
+	Pop() (value V)
+	Rand() (value V)
 }
 
 // set hash set，非线程安全
@@ -69,5 +71,29 @@ func (s *set[V]) List() (list Slice[V]) {
 		i++
 	}
 
+	return
+}
+
+func (s *set[V]) Pop() (value V) {
+	if s.Length() < 1 {
+		return
+	}
+
+	for val, _ := range s.data {
+		value = val
+		delete(s.data, value)
+	}
+
+	return
+}
+
+func (s *set[V]) Rand() (value V) {
+	if s.Length() < 1 {
+		return
+	}
+
+	for val, _ := range s.data {
+		return val
+	}
 	return
 }

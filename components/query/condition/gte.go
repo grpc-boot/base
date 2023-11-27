@@ -3,11 +3,11 @@ package condition
 import "strings"
 
 type Gte struct {
-	Field string      `json:"field"`
-	Value interface{} `json:"value"`
+	Field string `json:"field"`
+	Value any    `json:"value"`
 }
 
-func (g Gte) Build() (sql string, args []interface{}) {
+func (g Gte) Build() (sql string, args []any) {
 	var (
 		buffer strings.Builder
 	)
@@ -17,5 +17,5 @@ func (g Gte) Build() (sql string, args []interface{}) {
 	buffer.WriteString(g.Field)
 	buffer.WriteString(">=?")
 
-	return buffer.String(), []interface{}{g.Value}
+	return buffer.String(), []any{g.Value}
 }

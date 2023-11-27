@@ -3,10 +3,10 @@ package connctx
 type doubleLinkednode struct {
 	prev  *doubleLinkednode
 	next  *doubleLinkednode
-	value interface{}
+	value any
 }
 
-func (dln *doubleLinkednode) remove() (value interface{}) {
+func (dln *doubleLinkednode) remove() (value any) {
 	value = dln.value
 
 	if dln.next != nil {

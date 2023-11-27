@@ -7,7 +7,7 @@ type BeginWith struct {
 	Words string `json:"words"`
 }
 
-func (b BeginWith) Build() (sql string, args []interface{}) {
+func (b BeginWith) Build() (sql string, args []any) {
 	var (
 		buffer strings.Builder
 	)
@@ -17,5 +17,5 @@ func (b BeginWith) Build() (sql string, args []interface{}) {
 	buffer.WriteString(b.Field)
 	buffer.WriteString(" LIKE ?")
 
-	return buffer.String(), []interface{}{b.Words + "%"}
+	return buffer.String(), []any{b.Words + "%"}
 }

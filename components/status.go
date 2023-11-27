@@ -1,6 +1,7 @@
 package components
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/grpc-boot/base/v2/kind"
@@ -12,7 +13,7 @@ import (
 )
 
 var statusPool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &Status{Data: kind.Empty}
 	},
 }
@@ -34,7 +35,7 @@ func StatusWithCodeMsg(code codes.Code, msg string) *Status {
 }
 
 // StatusOk 创建携带数据的Status
-func StatusOk(data interface{}) *Status {
+func StatusOk(data any) *Status {
 	return StatusWithCode(OK).WithMsg("ok").WithData(data)
 }
 
@@ -49,10 +50,10 @@ func StatusWithJsonUnmarshal(data []byte) (*Status, error) {
 }
 
 type Status struct {
-	Code codes.Code  `json:"code"`
-	Msg  string      `json:"msg"`
-	Flag uint8       `json:"flag"`
-	Data interface{} `json:"data"`
+	Code codes.Code `json:"code"`
+	Msg  string     `json:"msg"`
+	Flag uint8      `json:"flag"`
+	Data any        `json:"data"`
 }
 
 func (s *Status) reset() {
@@ -91,14 +92,14 @@ func (s *Status) WithFlag(flag uint8) *Status {
 }
 
 // WithData 附加自定义Data
-func (s *Status) WithData(data interface{}) *Status {
+func (s *Status) WithData(data any) *Status {
 	s.Data = data
 	return s
 }
 
 // Error 转换为error
-func (s *Status) Error() error {
-	return s.ToError()
+func (s *Status) Error() string {
+	return s.Msg
 }
 
 // JsonMarshal _
@@ -117,5 +118,5 @@ func (s *Status) ToError() error {
 		return nil
 	}
 
-	return NewError(s.Code, s.Msg)
+	return errors.New(s.Msg)
 }

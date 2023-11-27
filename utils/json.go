@@ -3,12 +3,12 @@ package utils
 import (
 	"os"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/goccy/go-json"
 )
 
 var (
-	JsonMarshal   = jsoniter.Marshal
-	JsonUnmarshal = jsoniter.Unmarshal
+	JsonMarshal   = json.Marshal
+	JsonUnmarshal = json.Unmarshal
 )
 
 // JsonEncode ---

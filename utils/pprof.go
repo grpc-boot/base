@@ -1,4 +1,4 @@
-package components
+package utils
 
 import (
 	"context"
@@ -21,7 +21,7 @@ func PprofIsRun() bool {
 
 // StartPprof _
 func StartPprof(addr string, handler http.Handler) error {
-	if !pprofStatus.CAS(false, true) {
+	if !pprofStatus.CompareAndSwap(false, true) {
 		return nil
 	}
 
@@ -39,7 +39,7 @@ func StartPprof(addr string, handler http.Handler) error {
 
 // StopPprof _
 func StopPprof(ctx context.Context) error {
-	if !pprofStatus.CAS(true, false) {
+	if !pprofStatus.CompareAndSwap(true, false) {
 		return nil
 	}
 

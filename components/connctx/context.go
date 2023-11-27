@@ -15,13 +15,13 @@ type Context interface {
 	// Del 删除key
 	Del(keys ...string) (delNum int)
 	// Get 获取key值
-	Get(key string) (value interface{}, exists bool)
+	Get(key string) (value any, exists bool)
 	// Set 设置key值
-	Set(key string, value interface{})
+	Set(key string, value any)
 	// SetNx 设置key的值，当且仅当key不存在
-	SetNx(key string, value interface{}) (ok bool)
+	SetNx(key string, value any) (ok bool)
 	// GetSet 设置key的值，并返回key的旧值
-	GetSet(key string, value interface{}) (old interface{})
+	GetSet(key string, value any) (old any)
 
 	// IncrBy 将key所储存的值加上增量value
 	// key存储的数据仅支持int和int64两种数据类型，否则返回类型错误
@@ -50,20 +50,20 @@ type Context interface {
 	BitCount(key string) (num int, err error)
 
 	// LPush 将一个或多个值插入到列表key的表头
-	LPush(key string, items ...interface{}) (length int, err error)
+	LPush(key string, items ...any) (length int, err error)
 	// RPush 将一个或多个值插入到列表key的表尾
-	RPush(key string, items ...interface{}) (length int, err error)
+	RPush(key string, items ...any) (length int, err error)
 	// LPop 移除并返回列表key的头元素
-	LPop(key string) (value interface{}, err error)
+	LPop(key string) (value any, err error)
 	// LIndex 返回列表key中，下标为index的元素
-	LIndex(key string, index int) (value interface{}, err error)
+	LIndex(key string, index int) (value any, err error)
 	// LSet 将列表key下标为index的元素的值设置为value
-	LSet(key string, index int, value interface{}) (err error)
+	LSet(key string, index int, value any) (err error)
 	// LLen 返回列表key的长度
 	LLen(key string) (length int, err error)
 	// LRange 返回列表key中指定区间内的元素，区间以偏移量start和stop指定
 	// 参数 start 和 stop 都以 0 为底，也就是说，以 0 表示列表的第一个元素，以 1 表示列表的第二个元素，以此类推
-	LRange(key string, start, end int) (valueList []interface{}, err error)
+	LRange(key string, start, end int) (valueList []any, err error)
 	// LTrim 对一个列表进行修剪(trim)，就是说，让列表只保留指定区间内的元素，不在指定区间之内的元素都将被删除
 	LTrim(key string, start, end int) (err error)
 	// LTrimLastest 对一个列表进行修剪(trim)，保留列表key的表尾最近count条数据
@@ -71,24 +71,24 @@ type Context interface {
 
 	// SAdd 将一个或多个元素加入到集合key当中，已经存在于集合的元素将被忽略
 	// 注意：items中不同数据类型会被认为是不同的元素
-	SAdd(key string, items ...interface{}) (newNum int, err error)
+	SAdd(key string, items ...any) (newNum int, err error)
 	// SCard 返回集合key中元素的数量
 	SCard(key string) (total int, err error)
 	// SMembers 返回集合key中的所有成员
-	SMembers(key string) (items []interface{}, err error)
+	SMembers(key string) (items []any, err error)
 	// SIsMember 判断元素是否是集合key的成员
-	SIsMember(key string, item interface{}) (isMem bool, err error)
+	SIsMember(key string, item any) (isMem bool, err error)
 	// SRem 移除集合key中的一个或多个元素，不存在的元素会被忽略
-	SRem(key string, items ...interface{}) (delNum int, err error)
+	SRem(key string, items ...any) (delNum int, err error)
 	// SPop 移除并返回集合中的一个随机元素
-	SPop(key string) (item interface{}, err error)
+	SPop(key string) (item any, err error)
 	// SRandMember 返回集合中的一个随机元素
-	SRandMember(key string) (item interface{}, err error)
+	SRandMember(key string) (item any, err error)
 
 	// HSet 将哈希表key中的域field的值设为value
-	HSet(key, field string, value interface{}) (isCreate bool, err error)
+	HSet(key, field string, value any) (isCreate bool, err error)
 	// HGet 返回哈希表key中给定域field的值
-	HGet(key, field string) (value interface{}, err error)
+	HGet(key, field string) (value any, err error)
 	// HGetAll 返回哈希表key中，所有的域和值
 	HGetAll(key string) (value Hash, err error)
 	// HDel 删除哈希表key中的一个或多个指定域，不存在的域将被忽略
@@ -99,21 +99,21 @@ type Context interface {
 	// HLen 返回哈希表key中域的数量
 	HLen(key string) (length int, err error)
 	// HSetNx 将哈希表key中的域field的值设置为value，当且仅当域field不存在
-	HSetNx(key, field string, value interface{}) (ok bool, err error)
+	HSetNx(key, field string, value any) (ok bool, err error)
 	// HSAdd 将一个或多个元素加入到哈希表key中域field集合中，已经存在于集合的元素将被忽略
-	HSAdd(key, field string, items ...interface{}) (newNum int, err error)
+	HSAdd(key, field string, items ...any) (newNum int, err error)
 	// HSCard 返回哈希表key中域field集合中元素的数量
 	HSCard(key, field string) (total int, err error)
 	// HSMembers 返回哈希表key中域field集合中的所有成员
-	HSMembers(key, field string) (items []interface{}, err error)
+	HSMembers(key, field string) (items []any, err error)
 	// HSIsMember 判断元素是否是哈希表key中域field集合的成员
-	HSIsMember(key, field string, item interface{}) (isMem bool, err error)
+	HSIsMember(key, field string, item any) (isMem bool, err error)
 	// HSRem 移除哈希表key中域field中的一个或多个元素，不存在的元素会被忽略
-	HSRem(key, field string, items ...interface{}) (delNum int, err error)
+	HSRem(key, field string, items ...any) (delNum int, err error)
 	// HSPop 移除并返回哈希表key中域field集合中的一个随机元素
-	HSPop(key, field string) (item interface{}, err error)
+	HSPop(key, field string) (item any, err error)
 	// HSRandMember 返回哈希表key中域field集合中的一个随机元素
-	HSRandMember(key, field string) (item interface{}, err error)
+	HSRandMember(key, field string) (item any, err error)
 	// HSetBit 对哈希表key中域field所储存的[]byte，设置或清除指定偏移量上的位(bit)
 	// field存储的数据仅支持[]byte，否则返回类型错误
 	HSetBit(key, field string, offset uint16, val bool) (oldValue bool, err error)
@@ -170,27 +170,27 @@ func (c *ctx) Del(keys ...string) (delNum int) {
 	return c.data.del(keys...)
 }
 
-func (c *ctx) Get(key string) (value interface{}, exists bool) {
+func (c *ctx) Get(key string) (value any, exists bool) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
 	return c.data.get(key)
 }
 
-func (c *ctx) Set(key string, value interface{}) {
+func (c *ctx) Set(key string, value any) {
 	c.setOrUpdate(func() {
 		c.data.set(key, value)
 	})
 }
 
-func (c *ctx) SetNx(key string, value interface{}) (ok bool) {
+func (c *ctx) SetNx(key string, value any) (ok bool) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	return c.data.setnx(key, value)
 }
 
-func (c *ctx) GetSet(key string, value interface{}) (old interface{}) {
+func (c *ctx) GetSet(key string, value any) (old any) {
 	c.setOrUpdate(func() {
 		old = c.data.getSet(key, value)
 	})
@@ -256,7 +256,7 @@ func (c *ctx) BitCount(key string) (num int, err error) {
 	return c.data.bitCount(key)
 }
 
-func (c *ctx) LPush(key string, items ...interface{}) (length int, err error) {
+func (c *ctx) LPush(key string, items ...any) (length int, err error) {
 	if len(items) < 1 {
 		return
 	}
@@ -284,7 +284,7 @@ func (c *ctx) LPush(key string, items ...interface{}) (length int, err error) {
 	return
 }
 
-func (c *ctx) RPush(key string, items ...interface{}) (length int, err error) {
+func (c *ctx) RPush(key string, items ...any) (length int, err error) {
 	if len(items) < 1 {
 		return
 	}
@@ -312,7 +312,7 @@ func (c *ctx) RPush(key string, items ...interface{}) (length int, err error) {
 	return
 }
 
-func (c *ctx) LPop(key string) (value interface{}, err error) {
+func (c *ctx) LPop(key string) (value any, err error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -335,7 +335,7 @@ func (c *ctx) LPop(key string) (value interface{}, err error) {
 	return
 }
 
-func (c *ctx) LIndex(key string, index int) (value interface{}, err error) {
+func (c *ctx) LIndex(key string, index int) (value any, err error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -358,7 +358,7 @@ func (c *ctx) LIndex(key string, index int) (value interface{}, err error) {
 	return
 }
 
-func (c *ctx) LSet(key string, index int, value interface{}) (err error) {
+func (c *ctx) LSet(key string, index int, value any) (err error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -403,7 +403,7 @@ func (c *ctx) LLen(key string) (length int, err error) {
 	return
 }
 
-func (c *ctx) LRange(key string, start, end int) (valueList []interface{}, err error) {
+func (c *ctx) LRange(key string, start, end int) (valueList []any, err error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -452,7 +452,7 @@ func (c *ctx) LTrimLastest(key string, count int) (err error) {
 	return c.LTrim(key, -count, -1)
 }
 
-func (c *ctx) SAdd(key string, items ...interface{}) (newNum int, err error) {
+func (c *ctx) SAdd(key string, items ...any) (newNum int, err error) {
 	c.setOrUpdate(func() {
 		newNum, err = c.data.sAdd(key, items...)
 	})
@@ -471,7 +471,7 @@ func (c *ctx) SCard(key string) (total int, err error) {
 	return c.data.sCard(key)
 }
 
-func (c *ctx) SMembers(key string) (items []interface{}, err error) {
+func (c *ctx) SMembers(key string) (items []any, err error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -482,7 +482,7 @@ func (c *ctx) SMembers(key string) (items []interface{}, err error) {
 	return c.data.sMembers(key)
 }
 
-func (c *ctx) SIsMember(key string, item interface{}) (isMem bool, err error) {
+func (c *ctx) SIsMember(key string, item any) (isMem bool, err error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -493,7 +493,7 @@ func (c *ctx) SIsMember(key string, item interface{}) (isMem bool, err error) {
 	return c.data.sIsMember(key, item)
 }
 
-func (c *ctx) SRem(key string, items ...interface{}) (delNum int, err error) {
+func (c *ctx) SRem(key string, items ...any) (delNum int, err error) {
 	c.setOrUpdate(func() {
 		delNum, err = c.data.sRem(key, items...)
 	})
@@ -501,7 +501,7 @@ func (c *ctx) SRem(key string, items ...interface{}) (delNum int, err error) {
 	return
 }
 
-func (c *ctx) SPop(key string) (item interface{}, err error) {
+func (c *ctx) SPop(key string) (item any, err error) {
 	c.setOrUpdate(func() {
 		item, err = c.data.sPop(key)
 	})
@@ -509,7 +509,7 @@ func (c *ctx) SPop(key string) (item interface{}, err error) {
 	return
 }
 
-func (c *ctx) SRandMember(key string) (item interface{}, err error) {
+func (c *ctx) SRandMember(key string) (item any, err error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -520,7 +520,7 @@ func (c *ctx) SRandMember(key string) (item interface{}, err error) {
 	return c.data.sRandMember(key)
 }
 
-func (c *ctx) HSet(key, field string, value interface{}) (isCreate bool, err error) {
+func (c *ctx) HSet(key, field string, value any) (isCreate bool, err error) {
 	c.setOrUpdate(func() {
 		val, exists := c.data[key]
 		if !exists {
@@ -565,7 +565,7 @@ func (c *ctx) HMSet(key string, kv Hash) (err error) {
 	return
 }
 
-func (c *ctx) HGet(key, field string) (value interface{}, err error) {
+func (c *ctx) HGet(key, field string) (value any, err error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -678,7 +678,7 @@ func (c *ctx) HLen(key string) (length int, err error) {
 	return
 }
 
-func (c *ctx) HSetNx(key, field string, value interface{}) (ok bool, err error) {
+func (c *ctx) HSetNx(key, field string, value any) (ok bool, err error) {
 	c.setOrUpdate(func() {
 		val, exists := c.data[key]
 		if !exists {
@@ -700,7 +700,7 @@ func (c *ctx) HSetNx(key, field string, value interface{}) (ok bool, err error) 
 	return
 }
 
-func (c *ctx) HSAdd(key, field string, items ...interface{}) (newNum int, err error) {
+func (c *ctx) HSAdd(key, field string, items ...any) (newNum int, err error) {
 	if len(items) < 1 {
 		return
 	}
@@ -748,7 +748,7 @@ func (c *ctx) HSCard(key, field string) (total int, err error) {
 	return val.sCard(field)
 }
 
-func (c *ctx) HSMembers(key, field string) (items []interface{}, err error) {
+func (c *ctx) HSMembers(key, field string) (items []any, err error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -766,7 +766,7 @@ func (c *ctx) HSMembers(key, field string) (items []interface{}, err error) {
 	return val.sMembers(field)
 }
 
-func (c *ctx) HSIsMember(key, field string, item interface{}) (isMem bool, err error) {
+func (c *ctx) HSIsMember(key, field string, item any) (isMem bool, err error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -784,7 +784,7 @@ func (c *ctx) HSIsMember(key, field string, item interface{}) (isMem bool, err e
 	return val.sIsMember(field, item)
 }
 
-func (c *ctx) HSRem(key, field string, items ...interface{}) (delNum int, err error) {
+func (c *ctx) HSRem(key, field string, items ...any) (delNum int, err error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -805,7 +805,7 @@ func (c *ctx) HSRem(key, field string, items ...interface{}) (delNum int, err er
 	return c.data[key].(Hash).sRem(field, items...)
 }
 
-func (c *ctx) HSPop(key, field string) (item interface{}, err error) {
+func (c *ctx) HSPop(key, field string) (item any, err error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -826,7 +826,7 @@ func (c *ctx) HSPop(key, field string) (item interface{}, err error) {
 	return c.data[key].(Hash).sPop(field)
 }
 
-func (c *ctx) HSRandMember(key, field string) (item interface{}, err error) {
+func (c *ctx) HSRandMember(key, field string) (item any, err error) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -950,7 +950,7 @@ func (c *ctx) Err() error {
 	return nil
 }
 
-func (c *ctx) Value(key interface{}) interface{} {
+func (c *ctx) Value(key any) any {
 	if k, ok := key.(string); ok {
 		v, exists := c.Get(k)
 		if exists {

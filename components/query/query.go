@@ -5,12 +5,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/grpc-boot/base/core/query/condition"
+	"github.com/grpc-boot/base/v2/components/query/condition"
 )
 
 var (
 	mysqlQueryPool = &sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return &mysqlQuery{}
 		},
 	}
@@ -35,17 +35,17 @@ type Query interface {
 	// Limit Limit表达式
 	Limit(limit int64) Query
 	// Sql 生成sql和参数
-	Sql() (sql string, args []interface{})
+	Sql() (sql string, args []any)
 	// Count 计数
-	Count(field string) (sql string, args []interface{})
+	Count(field string) (sql string, args []any)
 	// Sum 求和
-	Sum(field string) (sql string, args []interface{})
+	Sum(field string) (sql string, args []any)
 	// Max 最大值
-	Max(field string) (sql string, args []interface{})
+	Max(field string) (sql string, args []any)
 	// Min 最小值
-	Min(field string) (sql string, args []interface{})
+	Min(field string) (sql string, args []any)
 	// Avg 平均值
-	Avg(field string) (sql string, args []interface{})
+	Avg(field string) (sql string, args []any)
 	// Close 释放Query
 	Close()
 }
@@ -124,7 +124,7 @@ func (mq *mysqlQuery) Close() {
 	mysqlQueryPool.Put(mq)
 }
 
-func (mq *mysqlQuery) Sql() (sql string, args []interface{}) {
+func (mq *mysqlQuery) Sql() (sql string, args []any) {
 	var (
 		whereStr  string
 		sqlBuffer strings.Builder
@@ -164,7 +164,7 @@ func (mq *mysqlQuery) Sql() (sql string, args []interface{}) {
 	return sqlBuffer.String(), args
 }
 
-func (mq *mysqlQuery) Count(field string) (sql string, args []interface{}) {
+func (mq *mysqlQuery) Count(field string) (sql string, args []any) {
 	var (
 		buffer   strings.Builder
 		whereStr string
@@ -194,7 +194,7 @@ func (mq *mysqlQuery) Count(field string) (sql string, args []interface{}) {
 	return buffer.String(), args
 }
 
-func (mq *mysqlQuery) Sum(field string) (sql string, args []interface{}) {
+func (mq *mysqlQuery) Sum(field string) (sql string, args []any) {
 	var (
 		buffer   strings.Builder
 		whereStr string
@@ -224,7 +224,7 @@ func (mq *mysqlQuery) Sum(field string) (sql string, args []interface{}) {
 	return buffer.String(), args
 }
 
-func (mq *mysqlQuery) Max(field string) (sql string, args []interface{}) {
+func (mq *mysqlQuery) Max(field string) (sql string, args []any) {
 	var (
 		buffer   strings.Builder
 		whereStr string
@@ -254,7 +254,7 @@ func (mq *mysqlQuery) Max(field string) (sql string, args []interface{}) {
 	return buffer.String(), args
 }
 
-func (mq *mysqlQuery) Min(field string) (sql string, args []interface{}) {
+func (mq *mysqlQuery) Min(field string) (sql string, args []any) {
 	var (
 		buffer   strings.Builder
 		whereStr string
@@ -284,7 +284,7 @@ func (mq *mysqlQuery) Min(field string) (sql string, args []interface{}) {
 	return buffer.String(), args
 }
 
-func (mq *mysqlQuery) Avg(field string) (sql string, args []interface{}) {
+func (mq *mysqlQuery) Avg(field string) (sql string, args []any) {
 	var (
 		buffer   strings.Builder
 		whereStr string

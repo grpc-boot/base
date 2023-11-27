@@ -3,12 +3,12 @@ package condition
 import "strings"
 
 type Between struct {
-	Field string      `json:"field"`
-	Start interface{} `json:"start"`
-	End   interface{} `json:"end"`
+	Field string `json:"field"`
+	Start any    `json:"start"`
+	End   any    `json:"end"`
 }
 
-func (b Between) Build() (sql string, args []interface{}) {
+func (b Between) Build() (sql string, args []any) {
 	var (
 		buffer strings.Builder
 	)
@@ -18,5 +18,5 @@ func (b Between) Build() (sql string, args []interface{}) {
 	buffer.WriteString(b.Field)
 	buffer.WriteString(" BETWEEN ? AND ?")
 
-	return buffer.String(), []interface{}{b.Start, b.End}
+	return buffer.String(), []any{b.Start, b.End}
 }

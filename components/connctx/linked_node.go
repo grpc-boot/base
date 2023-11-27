@@ -2,7 +2,7 @@ package connctx
 
 type linkedNode struct {
 	next  *linkedNode
-	value interface{}
+	value any
 }
 
 func (ln *linkedNode) append(n *linkedNode) {

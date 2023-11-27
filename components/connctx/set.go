@@ -4,14 +4,14 @@ var (
 	setValue = struct{}{}
 )
 
-type set map[interface{}]struct{}
+type set map[any]struct{}
 
-func (s set) exists(key interface{}) bool {
+func (s set) exists(key any) bool {
 	_, exists := s[key]
 	return exists
 }
 
-func (s set) add(keys ...interface{}) (newNum int) {
+func (s set) add(keys ...any) (newNum int) {
 	for _, key := range keys {
 		if !s.exists(key) {
 			newNum++
@@ -26,12 +26,12 @@ func (s set) card() int {
 	return int(len(s))
 }
 
-func (s set) members() (keys []interface{}) {
+func (s set) members() (keys []any) {
 	if s.card() < 1 {
 		return
 	}
 
-	keys = make([]interface{}, s.card())
+	keys = make([]any, s.card())
 
 	index := 0
 
@@ -43,12 +43,12 @@ func (s set) members() (keys []interface{}) {
 	return
 }
 
-func (s set) isMember(key interface{}) bool {
+func (s set) isMember(key any) bool {
 	_, exists := s[key]
 	return exists
 }
 
-func (s set) rem(keys ...interface{}) (delNum int) {
+func (s set) rem(keys ...any) (delNum int) {
 	for _, key := range keys {
 		if _, exists := s[key]; exists {
 			delete(s, key)
@@ -59,7 +59,7 @@ func (s set) rem(keys ...interface{}) (delNum int) {
 	return
 }
 
-func (s set) pop() (item interface{}) {
+func (s set) pop() (item any) {
 	if s.card() < 1 {
 		return
 	}
@@ -73,7 +73,7 @@ func (s set) pop() (item interface{}) {
 	return
 }
 
-func (s set) randMember() (item interface{}) {
+func (s set) randMember() (item any) {
 	if s.card() < 1 {
 		return
 	}

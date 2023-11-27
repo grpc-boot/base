@@ -4,10 +4,10 @@ import "strings"
 
 type Equal struct {
 	Field string
-	Value interface{}
+	Value any
 }
 
-func (e Equal) Build() (sql string, args []interface{}) {
+func (e Equal) Build() (sql string, args []any) {
 	var buffer strings.Builder
 
 	buffer.Grow(len(e.Field) + 2)
@@ -15,5 +15,5 @@ func (e Equal) Build() (sql string, args []interface{}) {
 	buffer.WriteString(e.Field)
 	buffer.WriteString("=?")
 
-	return buffer.String(), []interface{}{e.Value}
+	return buffer.String(), []any{e.Value}
 }

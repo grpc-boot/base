@@ -13,7 +13,7 @@ type CanHash interface {
 }
 
 // HashValue 计算任意类型hash值
-func HashValue(key interface{}) uint32 {
+func HashValue(key any) uint32 {
 	switch v := key.(type) {
 	case CanHash:
 		return v.HashCode()
@@ -56,21 +56,21 @@ func HashValue(key interface{}) uint32 {
 }
 
 // Index4Bit 索引路由方法，值范围为uint32
-func Index4Bit(key interface{}, bitCount uint8) uint32 {
+func Index4Bit(key any, bitCount uint8) uint32 {
 	return HashValue(key) & ((1 << bitCount) - 1)
 }
 
 // Index4Uint8 索引路由方法，值范围为uint8
-func Index4Uint8(key interface{}) uint8 {
+func Index4Uint8(key any) uint8 {
 	return uint8(HashValue(key) & math.MaxUint8)
 }
 
 // Index4Int8 索引路由方法，值范围为int8
-func Index4Int8(key interface{}) int8 {
+func Index4Int8(key any) int8 {
 	return int8(HashValue(key) & math.MaxInt8)
 }
 
 // Index4Int16 索引路由方法，值范围为int16
-func Index4Int16(key interface{}) int16 {
+func Index4Int16(key any) int16 {
 	return int16(HashValue(key) * math.MaxInt16)
 }

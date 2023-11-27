@@ -9,6 +9,8 @@ type Option struct {
 	Path string `json:"path" yaml:"path"`
 	// 定时检测文件时间间隔，单位秒，配置小于0的值表示禁用，默认5秒
 	TickSecond int32 `json:"tickSecond" yaml:"tickSecond"`
+	// 日志文件最长保留时间，单位天，配置小于0表示永久保留，默认7天
+	MaxDays int `json:"maxDays" yaml:"maxDays"`
 
 	encoder  zapcore.Encoder
 	flagFunc func() string
@@ -29,6 +31,10 @@ func loadOption(o Option) *Option {
 
 	if o.TickSecond == 0 {
 		o.TickSecond = defaultTickSecond
+	}
+
+	if o.MaxDays == 0 {
+		o.MaxDays = defaultMaxDays
 	}
 
 	return &o

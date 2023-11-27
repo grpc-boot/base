@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/grpc-boot/base"
+	"github.com/grpc-boot/base/v2/components"
+	"github.com/grpc-boot/base/v2/utils"
 )
 
 func main() {
@@ -15,11 +16,11 @@ func main() {
 			Handler: mux(),
 		}
 
-		gracehttp = base.NewGracefulHttp(server)
+		gracehttp = components.NewGracefulHttp(server)
 	)
 
 	if err := gracehttp.Listen(); err != nil {
-		base.RedFatal("start server failed with error:%s", err.Error())
+		utils.RedFatal("start server failed with error:%s", err.Error())
 	}
 
 	gracehttp.HandlerSig(":8090", 10)

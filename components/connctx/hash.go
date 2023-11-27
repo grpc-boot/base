@@ -2,7 +2,7 @@ package connctx
 
 import "math"
 
-type Hash map[string]interface{}
+type Hash map[string]any
 
 func (h Hash) del(fields ...string) (delNum int) {
 	for _, field := range fields {
@@ -18,12 +18,12 @@ func (h Hash) len() int {
 	return len(h)
 }
 
-func (h Hash) get(field string) (value interface{}, exists bool) {
+func (h Hash) get(field string) (value any, exists bool) {
 	value, exists = h[field]
 	return
 }
 
-func (h Hash) set(field string, value interface{}) (isCreate bool) {
+func (h Hash) set(field string, value any) (isCreate bool) {
 	_, exists := h[field]
 
 	h[field] = value
@@ -41,14 +41,14 @@ func (h Hash) mset(fv Hash) {
 	}
 }
 
-func (h Hash) getSet(field string, value interface{}) (old interface{}) {
+func (h Hash) getSet(field string, value any) (old any) {
 	old, _ = h[field]
 	h[field] = value
 
 	return
 }
 
-func (h Hash) setnx(field string, value interface{}) (ok bool) {
+func (h Hash) setnx(field string, value any) (ok bool) {
 	_, exists := h[field]
 	if exists {
 		return
@@ -210,7 +210,7 @@ func (h Hash) bitCount(field string) (num int, err error) {
 	return
 }
 
-func (h Hash) sAdd(field string, items ...interface{}) (newNum int, err error) {
+func (h Hash) sAdd(field string, items ...any) (newNum int, err error) {
 	value, exists := h[field]
 	if !exists {
 		s := set{}
@@ -247,7 +247,7 @@ func (h Hash) sCard(field string) (total int, err error) {
 	return
 }
 
-func (h Hash) sMembers(field string) (items []interface{}, err error) {
+func (h Hash) sMembers(field string) (items []any, err error) {
 	value, exists := h[field]
 	if !exists {
 		return
@@ -262,7 +262,7 @@ func (h Hash) sMembers(field string) (items []interface{}, err error) {
 	return
 }
 
-func (h Hash) sIsMember(field string, item interface{}) (isMem bool, err error) {
+func (h Hash) sIsMember(field string, item any) (isMem bool, err error) {
 	value, exists := h[field]
 	if !exists {
 		return
@@ -277,7 +277,7 @@ func (h Hash) sIsMember(field string, item interface{}) (isMem bool, err error) 
 	return
 }
 
-func (h Hash) sRem(field string, items ...interface{}) (delNum int, err error) {
+func (h Hash) sRem(field string, items ...any) (delNum int, err error) {
 	value, exists := h[field]
 	if !exists {
 		return
@@ -292,7 +292,7 @@ func (h Hash) sRem(field string, items ...interface{}) (delNum int, err error) {
 	return
 }
 
-func (h Hash) sPop(field string) (item interface{}, err error) {
+func (h Hash) sPop(field string) (item any, err error) {
 	value, exists := h[field]
 	if !exists {
 		return
@@ -307,7 +307,7 @@ func (h Hash) sPop(field string) (item interface{}, err error) {
 	return
 }
 
-func (h Hash) sRandMember(field string) (item interface{}, err error) {
+func (h Hash) sRandMember(field string) (item any, err error) {
 	value, exists := h[field]
 	if !exists {
 		return

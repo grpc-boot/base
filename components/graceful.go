@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	ErrNotTcpListener = NewError(CodeInvalidArgument, "listener is not tcp listener")
+	ErrNotTcpListener = errors.New("listener is not tcp listener")
 )
 
 type GracefulHttp struct {

@@ -11,7 +11,7 @@ func New() *Trie {
 	}
 }
 
-func (t *Trie) Set(key string, value interface{}) (isNew bool) {
+func (t *Trie) Set(key string, value any) (isNew bool) {
 	isNew = t.sub.set(key, value)
 	if isNew {
 		t.length++
@@ -20,7 +20,7 @@ func (t *Trie) Set(key string, value interface{}) (isNew bool) {
 	return
 }
 
-func (t *Trie) Get(key string) (value interface{}, exists bool) {
+func (t *Trie) Get(key string) (value any, exists bool) {
 	return t.sub.get(key)
 }
 

@@ -16,7 +16,7 @@ type HashRing interface {
 	// Store 存储servers
 	Store(servers ...CanHash)
 	// Get 获取server
-	Get(key interface{}) (server CanHash, err error)
+	Get(key any) (server CanHash, err error)
 	// Index 根据index获取server
 	Index(index int) (server CanHash, err error)
 	// Add 添加server
@@ -110,7 +110,7 @@ func (hr *hashRing) Remove(server CanHash) {
 	hr.mutex.Unlock()
 }
 
-func (hr *hashRing) Get(key interface{}) (server CanHash, err error) {
+func (hr *hashRing) Get(key any) (server CanHash, err error) {
 	hr.mutex.RLock()
 	defer hr.mutex.RUnlock()
 

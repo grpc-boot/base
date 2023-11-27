@@ -42,7 +42,7 @@ func NewRsaWithPkcs8Bytes(public, private []byte) (r *Rsa, err error) {
 
 	if len(private) > 0 {
 		block, _ := pem.Decode(private)
-		var pKey interface{}
+		var pKey any
 		pKey, err = x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err != nil {
 			return nil, err
@@ -52,7 +52,7 @@ func NewRsaWithPkcs8Bytes(public, private []byte) (r *Rsa, err error) {
 
 	if len(public) > 0 {
 		block, _ := pem.Decode(public)
-		var pKey interface{}
+		var pKey any
 		pKey, err = x509.ParsePKIXPublicKey(block.Bytes)
 		if err != nil {
 			return nil, err
@@ -88,7 +88,7 @@ func NewRsaWithPkcs1Bytes(public, private []byte) (r *Rsa, err error) {
 
 	if len(public) > 0 {
 		block, _ := pem.Decode(public)
-		var pKey interface{}
+		var pKey any
 		pKey, err = x509.ParsePKIXPublicKey(block.Bytes)
 		if err != nil {
 			return nil, err

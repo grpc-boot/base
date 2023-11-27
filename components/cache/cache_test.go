@@ -1,13 +1,14 @@
 package cache
 
 import (
-	jsoniter "github.com/json-iterator/go"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/goccy/go-json"
 )
 
 var (
@@ -31,7 +32,7 @@ func TestCache_Get(t *testing.T) {
 		}
 	}
 
-	info, _ := jsoniter.Marshal(cache.Info())
+	info, _ := json.Marshal(cache.Info())
 	t.Logf("cache info: %s", info)
 }
 

@@ -4,10 +4,10 @@ import "strings"
 
 type NotEqual struct {
 	Field string
-	Value interface{}
+	Value any
 }
 
-func (ne NotEqual) Build() (sql string, args []interface{}) {
+func (ne NotEqual) Build() (sql string, args []any) {
 	var buffer strings.Builder
 
 	buffer.Grow(len(ne.Field) + 3)
@@ -15,5 +15,5 @@ func (ne NotEqual) Build() (sql string, args []interface{}) {
 	buffer.WriteString(ne.Field)
 	buffer.WriteString("<>?")
 
-	return buffer.String(), []interface{}{ne.Value}
+	return buffer.String(), []any{ne.Value}
 }

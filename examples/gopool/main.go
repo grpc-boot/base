@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/grpc-boot/base"
-	"github.com/grpc-boot/base/core/gopool"
+	"github.com/grpc-boot/base/v2/components/gopool"
+	"github.com/grpc-boot/base/v2/utils"
 )
 
 func init() {
@@ -14,27 +14,27 @@ func init() {
 }
 
 func main() {
-	pool, err := base.NewGoPool(100,
+	pool, err := gopool.NewPool(100,
 		gopool.WithQueueLength(50),
 		gopool.WithSpawnSize(runtime.NumCPU()),
 		gopool.WithMaxIdleTimeoutSeconds(30),
 		gopool.WithPanicHandler(func(err interface{}) {
 			if err != nil {
-				base.Red("panic error:%+v", err)
+				utils.Red("panic error:%+v", err)
 			}
 		}),
 	)
 
 	if err != nil {
-		base.RedFatal("new pool error:%s", err.Error())
+		utils.RedFatal("new pool error:%s", err.Error())
 	}
 
 	go func() {
-		base.Green("workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", pool.ActiveWorkerNum(), pool.QueueLength(), pool.PendingTaskTotal(), pool.SuccessTotal(), pool.FailedTotal(), pool.HandleTotal())
+		utils.Green("workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", pool.ActiveWorkerNum(), pool.QueueLength(), pool.PendingTaskTotal(), pool.SuccessTotal(), pool.FailedTotal(), pool.HandleTotal())
 
 		tick := time.NewTicker(time.Second)
 		for range tick.C {
-			base.Green("workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", pool.ActiveWorkerNum(), pool.QueueLength(), pool.PendingTaskTotal(), pool.SuccessTotal(), pool.FailedTotal(), pool.HandleTotal())
+			utils.Green("workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", pool.ActiveWorkerNum(), pool.QueueLength(), pool.PendingTaskTotal(), pool.SuccessTotal(), pool.FailedTotal(), pool.HandleTotal())
 		}
 	}()
 
@@ -45,7 +45,7 @@ func main() {
 	done := make(chan struct{}, 1)
 	<-done
 
-	base.Green("done workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", pool.ActiveWorkerNum(), pool.QueueLength(), pool.PendingTaskTotal(), pool.SuccessTotal(), pool.FailedTotal(), pool.HandleTotal())
+	utils.Green("done workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", pool.ActiveWorkerNum(), pool.QueueLength(), pool.PendingTaskTotal(), pool.SuccessTotal(), pool.FailedTotal(), pool.HandleTotal())
 }
 
 func submit(pool *gopool.Pool) {
@@ -75,7 +75,7 @@ func submit(pool *gopool.Pool) {
 		})
 
 		if err != nil {
-			base.Red("submit error:%s", err.Error())
+			utils.Red("submit error:%s", err.Error())
 		}
 	}
 }

@@ -18,7 +18,7 @@ type Pool struct {
 	sem            chan struct{}
 	work           chan func()
 	maxIdleTimeout time.Duration
-	panicHandler   func(err interface{})
+	panicHandler   func(err any)
 	pendingTaskNum atomic.Int64
 	successTotal   atomic.Uint64
 	failedTotal    atomic.Uint64

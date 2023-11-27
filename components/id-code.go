@@ -22,6 +22,46 @@ var (
 	defaultIdCode, _    = NewIdCode(defaultAlphanumeric, defaultSalt6, defaultSalt8)
 )
 
+func Max6() int64 {
+	return defaultIdCode.Max6()
+}
+
+func Max8() int64 {
+	return defaultIdCode.Max8()
+}
+
+func Code6(id int64) (code []byte, err error) {
+	return defaultIdCode.Code6(id)
+}
+
+func Code6String(id int64) (code string, err error) {
+	return defaultIdCode.Code6String(id)
+}
+
+func Code8(id int64) (code []byte, err error) {
+	return defaultIdCode.Code8(id)
+}
+
+func Code8String(id int64) (code string, err error) {
+	return defaultIdCode.Code8String(id)
+}
+
+func Code2Id(code []byte) (id int64, err error) {
+	return defaultIdCode.Code2Id(code)
+}
+
+func CodeString2Id(code string) (id int64, err error) {
+	return defaultIdCode.CodeString2Id(code)
+}
+
+func Code6To8(code6 []byte) (code8 []byte, err error) {
+	return defaultIdCode.Code6To8(code6)
+}
+
+func CodeString6To8(code6 string) (code8 string, err error) {
+	return defaultIdCode.CodeString6To8(code6)
+}
+
 type IdCode struct {
 	alphanumericSet    []byte
 	alphanumericMap    map[byte]byte
@@ -32,7 +72,7 @@ type IdCode struct {
 	max8               int64
 }
 
-func NewIdCode(alphanumericSet []byte, salt6, salt8 int64) (*IdCode, *BError) {
+func NewIdCode(alphanumericSet []byte, salt6, salt8 int64) (*IdCode, error) {
 	if salt6 < 1 {
 		salt6 = defaultSalt6
 	}
@@ -59,7 +99,7 @@ func NewIdCode(alphanumericSet []byte, salt6, salt8 int64) (*IdCode, *BError) {
 	return ic, nil
 }
 
-func (ic *IdCode) initAndCheckAlphanumeric() *BError {
+func (ic *IdCode) initAndCheckAlphanumeric() error {
 	if len(ic.alphanumericSet) < alphanumericMin {
 		return ErrAlphanumericLength
 	}
@@ -94,7 +134,7 @@ func (ic *IdCode) Max8() int64 {
 	return ic.max8
 }
 
-func (ic *IdCode) Code6String(id int64) (code string, err *BError) {
+func (ic *IdCode) Code6String(id int64) (code string, err error) {
 	cb, err := ic.Code6(id)
 	if err != nil {
 		return
@@ -103,15 +143,15 @@ func (ic *IdCode) Code6String(id int64) (code string, err *BError) {
 	return utils.Bytes2String(cb), err
 }
 
-func (ic *IdCode) Code6(id int64) (code []byte, err *BError) {
+func (ic *IdCode) Code6(id int64) (code []byte, err error) {
 	return ic.id2Code(id+ic.salt6, 6)
 }
 
-func (ic *IdCode) Code8(id int64) (code []byte, err *BError) {
+func (ic *IdCode) Code8(id int64) (code []byte, err error) {
 	return ic.id2Code(id+ic.salt8, 8)
 }
 
-func (ic *IdCode) Code8String(id int64) (code string, err *BError) {
+func (ic *IdCode) Code8String(id int64) (code string, err error) {
 	cb, err := ic.Code8(id)
 	if err != nil {
 		return
@@ -120,7 +160,7 @@ func (ic *IdCode) Code8String(id int64) (code string, err *BError) {
 	return utils.Bytes2String(cb), err
 }
 
-func (ic *IdCode) id2Code(id int64, length byte) (code []byte, err *BError) {
+func (ic *IdCode) id2Code(id int64, length byte) (code []byte, err error) {
 	if id < 1 {
 		return nil, ErrOutOfRange
 	}
@@ -150,11 +190,11 @@ func (ic *IdCode) id2Code(id int64, length byte) (code []byte, err *BError) {
 	return codeBytes, nil
 }
 
-func (ic *IdCode) CodeString2Id(code string) (id int64, err *BError) {
+func (ic *IdCode) CodeString2Id(code string) (id int64, err error) {
 	return ic.Code2Id([]byte(code))
 }
 
-func (ic *IdCode) Code2Id(code []byte) (id int64, err *BError) {
+func (ic *IdCode) Code2Id(code []byte) (id int64, err error) {
 	var (
 		salt       int64
 		codeBytes  = code
@@ -223,7 +263,7 @@ func (ic *IdCode) Code2Id(code []byte) (id int64, err *BError) {
 	return id - salt, nil
 }
 
-func (ic *IdCode) Code6To8(code6 []byte) (code8 []byte, err *BError) {
+func (ic *IdCode) Code6To8(code6 []byte) (code8 []byte, err error) {
 	id, err := ic.Code2Id(code6)
 	if err != nil {
 		return
@@ -232,7 +272,7 @@ func (ic *IdCode) Code6To8(code6 []byte) (code8 []byte, err *BError) {
 	return ic.Code8(id)
 }
 
-func (ic *IdCode) CodeString6To8(code6 string) (code8 string, err *BError) {
+func (ic *IdCode) CodeString6To8(code6 string) (code8 string, err error) {
 	code, err := ic.Code6To8([]byte(code6))
 	if err != nil {
 		return

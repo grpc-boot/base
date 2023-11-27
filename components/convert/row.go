@@ -136,11 +136,11 @@ func (r Row) Uint8(key string) uint8 {
 	return uint8(val)
 }
 
-func (r Row) Convert(out interface{}) (err error) {
+func (r Row) Convert(out any) (err error) {
 	return r.ConvertByTag(out, "json")
 }
 
-func (r Row) ConvertByTag(out interface{}, tagName string) (err error) {
+func (r Row) ConvertByTag(out any, tagName string) (err error) {
 	var (
 		fields      []cacheType
 		t           = reflect.TypeOf(out)

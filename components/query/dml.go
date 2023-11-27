@@ -3,15 +3,35 @@ package query
 import (
 	"strings"
 
-	"github.com/grpc-boot/base/core/query/condition"
-	"github.com/grpc-boot/base/internal"
+	"github.com/grpc-boot/base/v2/components/query/condition"
 )
 
-type Row []interface{}
+type Row []any
 
 type Columns []string
 
-func Insert(table string, columns Columns, rows []Row, ignore bool) (sql string, args []interface{}) {
+func repeatAndJoin(word, sep string, count int) string {
+	if count < 1 {
+		return ""
+	}
+
+	if count == 1 {
+		return word
+	}
+
+	var buffer strings.Builder
+	buffer.Grow(len(word) + (count-1)*(len(word)+len(sep)))
+
+	buffer.WriteString(word)
+	for index := 1; index < count; index++ {
+		buffer.WriteString(sep)
+		buffer.WriteString(word)
+	}
+
+	return buffer.String()
+}
+
+func Insert(table string, columns Columns, rows []Row, ignore bool) (sql string, args []any) {
 	if len(columns) == 0 || len(rows) == 0 {
 		return
 	}
@@ -19,7 +39,7 @@ func Insert(table string, columns Columns, rows []Row, ignore bool) (sql string,
 	var (
 		buffer      strings.Builder
 		fields      = strings.Join(columns, ",")
-		placeHolder = internal.RepeatAndJoin("?", ",", len(columns))
+		placeHolder = repeatAndJoin("?", ",", len(columns))
 	)
 	length := 6 + 6 + len(table) + len(fields) + 2 + 7 + 2 + len(placeHolder) + (len(rows)-1)*(len(placeHolder)+3)
 	if ignore {
@@ -28,7 +48,7 @@ func Insert(table string, columns Columns, rows []Row, ignore bool) (sql string,
 
 	buffer.Grow(length)
 
-	args = make([]interface{}, 0, len(columns)*len(rows))
+	args = make([]any, 0, len(columns)*len(rows))
 
 	buffer.WriteString("INSERT")
 	if ignore {
@@ -56,7 +76,7 @@ func Insert(table string, columns Columns, rows []Row, ignore bool) (sql string,
 	return buffer.String(), args
 }
 
-func Update(table, setters string, condition condition.Condition) (sql string, args []interface{}) {
+func Update(table, setters string, condition condition.Condition) (sql string, args []any) {
 	var (
 		where  string
 		buffer strings.Builder
@@ -83,7 +103,7 @@ func Update(table, setters string, condition condition.Condition) (sql string, a
 	return buffer.String(), args
 }
 
-func Delete(table string, condition condition.Condition) (sql string, args []interface{}) {
+func Delete(table string, condition condition.Condition) (sql string, args []any) {
 	var (
 		where  string
 		buffer strings.Builder

@@ -6,7 +6,7 @@ type NotEmpty struct {
 	Field string `json:"field"`
 }
 
-func (ne NotEmpty) Build() (sql string, args []interface{}) {
+func (ne NotEmpty) Build() (sql string, args []any) {
 	var buffer strings.Builder
 	buffer.Grow(len(ne.Field) + 4)
 

@@ -52,7 +52,7 @@ func TestLogger_Info(t *testing.T) {
 	tick := time.NewTicker(time.Second)
 	var num int
 	for range tick.C {
-		if num > 10 {
+		if num > 200 {
 			return
 		}
 		logger.Info("iiiiiii", zap.Int64("Current", time.Now().Unix()))

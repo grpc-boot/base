@@ -52,3 +52,25 @@ func (cs *concurrentSet[V]) List() (list Slice[V]) {
 
 	return cs.data.List()
 }
+
+func (cs *concurrentSet[V]) Pop() (value V) {
+	if cs.Length() < 1 {
+		return
+	}
+
+	cs.mutex.Lock()
+	defer cs.mutex.Unlock()
+
+	return cs.data.Pop()
+}
+
+func (cs *concurrentSet[V]) Rand() (value V) {
+	if cs.Length() < 1 {
+		return
+	}
+
+	cs.mutex.Lock()
+	defer cs.mutex.Unlock()
+
+	return cs.data.Rand()
+}

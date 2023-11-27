@@ -6,7 +6,7 @@ type Not struct {
 	Condition Condition
 }
 
-func (n Not) Build() (sql string, args []interface{}) {
+func (n Not) Build() (sql string, args []any) {
 	sql, args = n.Condition.Build()
 	if sql == "" {
 		return

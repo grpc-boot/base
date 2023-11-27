@@ -6,7 +6,7 @@ type node struct {
 	sub   map[rune]*node
 }
 
-func (n *node) set(key string, value interface{}) (isNew bool) {
+func (n *node) set(key string, value any) (isNew bool) {
 	if key == "" {
 		return
 	}
@@ -35,7 +35,7 @@ func (n *node) set(key string, value interface{}) (isNew bool) {
 	return
 }
 
-func (n *node) get(key string) (value interface{}, exists bool) {
+func (n *node) get(key string) (value any, exists bool) {
 	if key == "" {
 		return
 	}

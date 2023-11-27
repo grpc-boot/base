@@ -6,7 +6,7 @@ type Null struct {
 	Field string `json:"field"`
 }
 
-func (n Null) Build() (sql string, args []interface{}) {
+func (n Null) Build() (sql string, args []any) {
 	var buffer strings.Builder
 	buffer.Grow(len(n.Field) + 8)
 

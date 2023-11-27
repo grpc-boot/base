@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"errors"
+
+	"github.com/grpc-boot/base/v2/utils"
 )
 
 var (
-	ErrInvalidPaddingChar = NewError(CodeInvalidArgument, `invalid padding char`)
-	ErrAesDecrypt         = NewError(CodeInvalidArgument, `aes decrypt error`)
+	ErrInvalidPaddingChar = errors.New(`invalid padding char`)
+	ErrAesDecrypt         = errors.New(`aes decrypt error`)
 )
 
 // Aes Aes加密
@@ -19,7 +22,7 @@ type Aes struct {
 
 // NewAes 实例化Aes
 func NewAes(key, iv string) (a *Aes, err error) {
-	return NewAesWithBytes([]byte(key), []byte(iv))
+	return NewAesWithBytes(utils.String2Bytes(key), utils.String2Bytes(iv))
 }
 
 // NewAesWithBytes 实例化Aes

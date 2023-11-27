@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/grpc-boot/base/v2/internal"
+
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -80,6 +82,10 @@ func (l *Logger) checkFile() {
 			if err != nil {
 				fmt.Printf("reset logger file error:%s\n", err.Error())
 			}
+
+			if err = l.clearDirty(); err != nil {
+				fmt.Printf("clear dirty file error:%s\n", err.Error())
+			}
 		}()
 	}
 }
@@ -150,6 +156,52 @@ func (l *Logger) resetZap(flagStr string) (*zap.Logger, error) {
 	l.flag = flagStr
 
 	return logger, nil
+}
+
+func (l *Logger) clearDirty() (err error) {
+	entryList, err := os.ReadDir(l.opt.Path)
+	if err != nil {
+		return
+	}
+
+	now := time.Now()
+	for _, entry := range entryList {
+		if entry.IsDir() {
+			continue
+		}
+
+		fileName := entry.Name()
+
+		if !strings.HasSuffix(fileName, ".log") {
+			continue
+		}
+
+		end := strings.Index(fileName, "-")
+		if end < 4 {
+			continue
+		}
+
+		switch fileName[:end] {
+		case zapcore.DebugLevel.String():
+		case zapcore.InfoLevel.String():
+		case zapcore.WarnLevel.String():
+		case zapcore.ErrorLevel.String():
+		case zapcore.DPanicLevel.String():
+		case zapcore.PanicLevel.String():
+		case zapcore.FatalLevel.String():
+		default:
+			continue
+		}
+
+		fullFileName := strings.TrimSuffix(l.opt.Path, "/") + "/" + fileName
+		ctime, _, _, _ := internal.FileTime(fullFileName)
+		if ctime < 1 || now.Unix()-ctime < int64(l.opt.MaxDays)*3600*24 {
+			continue
+		}
+
+		_ = os.Remove(fullFileName)
+	}
+	return
 }
 
 // Is 判断日志级别

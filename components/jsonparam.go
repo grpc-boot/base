@@ -1,7 +1,7 @@
 package components
 
 import (
-	jsoniter "github.com/json-iterator/go"
+	"github.com/grpc-boot/base/v2/utils"
 )
 
 type JsonParam map[string]any
@@ -9,7 +9,7 @@ type JsonParam map[string]any
 // UnmarshalJsonParam _
 func UnmarshalJsonParam(data []byte) (JsonParam, error) {
 	var jp map[string]any
-	err := jsoniter.Unmarshal(data, &jp)
+	err := utils.JsonUnmarshal(data, &jp)
 	return jp, err
 }
 
@@ -27,7 +27,7 @@ func (jp JsonParam) String(key string) string {
 
 // StringSlice 获取[]string，如果不是[]string返回nil
 func (jp JsonParam) StringSlice(key string) []string {
-	value, ok := jp[key].([]interface{})
+	value, ok := jp[key].([]any)
 	if !ok {
 		return nil
 	}
@@ -53,7 +53,7 @@ func (jp JsonParam) Int(key string) int {
 
 // IntSlice 获取[]int，获取失败，返回nil
 func (jp JsonParam) IntSlice(key string) []int {
-	value, ok := jp[key].([]interface{})
+	value, ok := jp[key].([]any)
 	if !ok {
 		return nil
 	}
@@ -85,7 +85,7 @@ func (jp JsonParam) Int64(key string) int64 {
 
 // Int64Slice 获取[]int64，获取失败返回nil
 func (jp JsonParam) Int64Slice(key string) []int64 {
-	value, ok := jp[key].([]interface{})
+	value, ok := jp[key].([]any)
 	if !ok {
 		return nil
 	}
@@ -106,7 +106,7 @@ func (jp JsonParam) Int64Slice(key string) []int64 {
 
 // Uint32Slice 获取[]uint32，获取失败返回nil
 func (jp JsonParam) Uint32Slice(key string) []uint32 {
-	value, ok := jp[key].([]interface{})
+	value, ok := jp[key].([]any)
 	if !ok {
 		return nil
 	}
@@ -133,6 +133,6 @@ func (jp JsonParam) Float64(key string) float64 {
 
 // JsonMarshal _
 func (jp JsonParam) JsonMarshal() []byte {
-	data, _ := jsoniter.Marshal(jp)
+	data, _ := utils.JsonMarshal(jp)
 	return data
 }

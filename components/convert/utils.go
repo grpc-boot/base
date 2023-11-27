@@ -3,7 +3,7 @@ package convert
 import (
 	"reflect"
 
-	"github.com/grpc-boot/base/internal"
+	"github.com/grpc-boot/base/v2/utils"
 )
 
 func parseType(t reflect.Type, tagName string) []cacheType {
@@ -17,11 +17,11 @@ func parseType(t reflect.Type, tagName string) []cacheType {
 		field := t.Field(index)
 
 		if tagName == "" {
-			tag = internal.LcFirst(field.Name)
+			tag = utils.LcFirst(field.Name)
 		} else {
 			tag = field.Tag.Get(tagName)
 			if tag == "" {
-				tag = internal.LcFirst(field.Name)
+				tag = utils.LcFirst(field.Name)
 			}
 		}
 

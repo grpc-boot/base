@@ -6,7 +6,7 @@ type NotNull struct {
 	Field string `json:"field"`
 }
 
-func (nn NotNull) Build() (sql string, args []interface{}) {
+func (nn NotNull) Build() (sql string, args []any) {
 	var buffer strings.Builder
 	buffer.Grow(len(nn.Field) + 12)
 

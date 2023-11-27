@@ -12,7 +12,7 @@ func (l *list) reset() {
 	l.length = 0
 }
 
-func (l *list) prepend(items ...interface{}) {
+func (l *list) prepend(items ...any) {
 	if len(items) < 1 {
 		return
 	}
@@ -36,7 +36,7 @@ func (l *list) prepend(items ...interface{}) {
 	l.length += len(items)
 }
 
-func (l *list) lpop() (value interface{}) {
+func (l *list) lpop() (value any) {
 	if l.length < 1 {
 		return
 	}
@@ -51,7 +51,7 @@ func (l *list) lpop() (value interface{}) {
 	return
 }
 
-func (l *list) append(items ...interface{}) {
+func (l *list) append(items ...any) {
 	if len(items) < 1 {
 		return
 	}
@@ -75,7 +75,7 @@ func (l *list) append(items ...interface{}) {
 	l.length += len(items)
 }
 
-func (l *list) index(index int) (value interface{}) {
+func (l *list) index(index int) (value any) {
 	if index >= l.length || l.length < 1 {
 		return
 	}
@@ -99,7 +99,7 @@ func (l *list) index(index int) (value interface{}) {
 	return
 }
 
-func (l *list) lrange(start, end int) (valueList []interface{}, err error) {
+func (l *list) lrange(start, end int) (valueList []any, err error) {
 	if l.length < 1 {
 		return
 	}
@@ -121,7 +121,7 @@ func (l *list) lrange(start, end int) (valueList []interface{}, err error) {
 	}
 
 	itemCount := endIndex - startIndex + 1
-	valueList = make([]interface{}, itemCount, itemCount)
+	valueList = make([]any, itemCount, itemCount)
 
 	current := l.head
 	for startIndex != 0 {
@@ -189,7 +189,7 @@ func (l *list) trim(start, end int) {
 	return
 }
 
-func (l *list) set(index int, value interface{}) (err error) {
+func (l *list) set(index int, value any) (err error) {
 	if index >= l.length || l.length < 1 {
 		return ErrIndexOutOfRange
 	}

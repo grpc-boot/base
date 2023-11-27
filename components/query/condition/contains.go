@@ -7,7 +7,7 @@ type Contains struct {
 	Words string `json:"words"`
 }
 
-func (c Contains) Build() (sql string, args []interface{}) {
+func (c Contains) Build() (sql string, args []any) {
 	var (
 		buffer strings.Builder
 	)
@@ -17,5 +17,5 @@ func (c Contains) Build() (sql string, args []interface{}) {
 	buffer.WriteString(c.Field)
 	buffer.WriteString(" LIKE ?")
 
-	return buffer.String(), []interface{}{"%" + c.Words + "%"}
+	return buffer.String(), []any{"%" + c.Words + "%"}
 }

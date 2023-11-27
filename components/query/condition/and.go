@@ -4,14 +4,14 @@ import "strings"
 
 type And []Condition
 
-func (ac And) Build() (sql string, args []interface{}) {
+func (ac And) Build() (sql string, args []any) {
 	if len(ac) == 0 {
 		return
 	}
 
 	var buffer strings.Builder
 
-	args = make([]interface{}, 0)
+	args = make([]any, 0)
 
 	buffer.WriteByte('(')
 	sql, buildArgs := ac[0].Build()

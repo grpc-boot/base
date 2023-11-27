@@ -1,4 +1,4 @@
-package mutex
+package utils
 
 import (
 	"sync/atomic"

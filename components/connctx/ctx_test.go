@@ -126,7 +126,7 @@ func TestCtx_LList(t *testing.T) {
 
 	v1Data := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
-	v1List := make([]interface{}, len(v1Data))
+	v1List := make([]any, len(v1Data))
 	for index, value := range v1Data {
 		v1List[index] = value
 	}

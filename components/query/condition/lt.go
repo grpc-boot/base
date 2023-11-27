@@ -3,11 +3,11 @@ package condition
 import "strings"
 
 type Lt struct {
-	Field string      `json:"field"`
-	Value interface{} `json:"value"`
+	Field string `json:"field"`
+	Value any    `json:"value"`
 }
 
-func (l Lt) Build() (sql string, args []interface{}) {
+func (l Lt) Build() (sql string, args []any) {
 	var (
 		buffer strings.Builder
 	)
@@ -17,5 +17,5 @@ func (l Lt) Build() (sql string, args []interface{}) {
 	buffer.WriteString(l.Field)
 	buffer.WriteString("<?")
 
-	return buffer.String(), []interface{}{l.Value}
+	return buffer.String(), []any{l.Value}
 }

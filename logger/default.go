@@ -10,6 +10,7 @@ import (
 const (
 	defaultPath       = `/tmp`
 	defaultTickSecond = 5
+	defaultMaxDays    = 7
 )
 
 var (
@@ -26,7 +27,7 @@ var (
 	})
 
 	timeFlag = func() string {
-		return time.Now().Format("06-01-02")
+		return time.Now().Format("060102")
 	}
 )
 

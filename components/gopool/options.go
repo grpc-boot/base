@@ -5,7 +5,7 @@ import "fmt"
 var (
 	defaultOptions = func() *Options {
 		return &Options{
-			panicHandler: func(err interface{}) {
+			panicHandler: func(err any) {
 				fmt.Printf("gopool panic with error:%+v", err)
 			},
 			maxIdleTimeoutSeconds: 60,
@@ -18,7 +18,7 @@ type Options struct {
 	queue                 int
 	spawn                 int
 	maxIdleTimeoutSeconds int64
-	panicHandler          func(err interface{})
+	panicHandler          func(err any)
 }
 
 type Option func(opts *Options)
@@ -32,7 +32,7 @@ func loadOptions(options ...Option) *Options {
 }
 
 // WithPanicHandler set panicHandler
-func WithPanicHandler(panicHandler func(err interface{})) Option {
+func WithPanicHandler(panicHandler func(err any)) Option {
 	return func(opts *Options) {
 		opts.panicHandler = panicHandler
 	}
