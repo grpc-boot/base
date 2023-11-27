@@ -88,8 +88,8 @@ func (hs *GracefulHttp) HandlerSig(pprofAddr string, timeoutSecond int64) {
 			}
 			return
 		case syscall.SIGUSR2:
-			if PprofIsRun() {
-				if err := StopPprofWithTimeout(timeoutSecond); err != nil && err != http.ErrServerClosed {
+			if utils.PprofIsRun() {
+				if err := utils.StopPprofWithTimeout(timeoutSecond); err != nil && err != http.ErrServerClosed {
 					utils.Red("stop pprof error: %s", err.Error())
 				} else {
 					utils.Green("stop pprof success")
@@ -100,7 +100,7 @@ func (hs *GracefulHttp) HandlerSig(pprofAddr string, timeoutSecond int64) {
 
 			go func() {
 				utils.Yellow("start pprof with addr: %s", pprofAddr)
-				if err := StartPprof(pprofAddr, nil); err != nil && err != http.ErrServerClosed {
+				if err := utils.StartPprof(pprofAddr, nil); err != nil && err != http.ErrServerClosed {
 					utils.Red("start pprof error: %s", err.Error())
 				}
 			}()
