@@ -12,8 +12,8 @@ func Base64Encode(src []byte) []byte {
 
 func Base64Decode(src []byte) (dst []byte, err error) {
 	dst = make([]byte, base64.StdEncoding.DecodedLen(len(src)))
-	_, err = base64.StdEncoding.Decode(dst, src)
-	return
+	end, err := base64.StdEncoding.Decode(dst, src)
+	return dst[:end], err
 }
 
 func Base64UrlEncode(src []byte) []byte {
@@ -24,8 +24,8 @@ func Base64UrlEncode(src []byte) []byte {
 
 func Base64UrlDecode(src []byte) (dst []byte, err error) {
 	dst = make([]byte, base64.URLEncoding.DecodedLen(len(src)))
-	_, err = base64.URLEncoding.Decode(dst, src)
-	return
+	end, err := base64.URLEncoding.Decode(dst, src)
+	return dst[:end], err
 }
 
 func Base64Encode2String(src []byte) string {
