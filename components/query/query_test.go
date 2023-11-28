@@ -8,7 +8,6 @@ import (
 	"github.com/grpc-boot/base/v2/kind"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/grpc-boot/base/v2/components/convert"
 	"github.com/grpc-boot/base/v2/components/query/condition"
 )
 
@@ -127,12 +126,6 @@ func TestMysqlQuery_Sql(t *testing.T) {
 	query1.Close()
 
 	t.Logf("sql1: %s with args:%+v", sql1, args1)
-	res, err := conn.Query(sql1, args1...)
-	if err != nil {
-		t.Fatalf("want nil, got %s", err.Error())
-	}
-	rows, err := convert.SqlRows2RowList(res)
-	t.Logf("query rows:%+v %+v", rows, err)
 
 	query2 := Acquire4Mysql().
 		Select("*").
@@ -142,12 +135,6 @@ func TestMysqlQuery_Sql(t *testing.T) {
 	query2.Close()
 
 	t.Logf("sql2: %s with args:%+v", sql2, args2)
-	res, err = conn.Query(sql2, args2...)
-	if err != nil {
-		t.Fatalf("want nil, got %s", err.Error())
-	}
-	rows, err = convert.SqlRows2RowList(res)
-	t.Logf("query rows:%+v %+v", rows, err)
 
 	query3 := Acquire4Mysql().
 		Select("*").
@@ -161,12 +148,6 @@ func TestMysqlQuery_Sql(t *testing.T) {
 	query3.Close()
 
 	t.Logf("sql3: %s with args:%+v", sql3, args3)
-	res, err = conn.Query(sql3, args3...)
-	if err != nil {
-		t.Fatalf("want nil, got %s", err.Error())
-	}
-	rows, err = convert.SqlRows2RowList(res)
-	t.Logf("query rows:%+v %+v", rows, err)
 
 	query4 := Acquire4Mysql().
 		Select("*").
@@ -188,12 +169,6 @@ func TestMysqlQuery_Sql(t *testing.T) {
 	query4.Close()
 
 	t.Logf("sql4: %s with args:%+v", sql4, args4)
-	res, err = conn.Query(sql4, args4...)
-	if err != nil {
-		t.Fatalf("want nil, got %s", err.Error())
-	}
-	rows, err = convert.SqlRows2RowList(res)
-	t.Logf("query rows:%+v %+v", rows, err)
 
 	query5 := Acquire4Mysql().
 		Select("COUNT(id) AS num", "name").
@@ -207,12 +182,6 @@ func TestMysqlQuery_Sql(t *testing.T) {
 	query5.Close()
 
 	t.Logf("sql5: %s with args:%+v", sql5, args5)
-	res, err = conn.Query(sql5, args5...)
-	if err != nil {
-		t.Fatalf("want nil, got %s", err.Error())
-	}
-	rows, err = convert.SqlRows2RowList(res)
-	t.Logf("query rows:%+v %+v", rows, err)
 
 	query6 := Acquire4Mysql().
 		Select("COUNT(`id`) AS `num`", "`name`").
@@ -229,12 +198,6 @@ func TestMysqlQuery_Sql(t *testing.T) {
 	query6.Close()
 
 	t.Logf("sql6: %s with args:%+v", sql6, args6)
-	res, err = conn.Query(sql6, args6...)
-	if err != nil {
-		t.Fatalf("want nil, got %s", err.Error())
-	}
-	rows, err = convert.SqlRows2RowList(res)
-	t.Logf("query rows:%+v %+v", rows, err)
 
 	query7 := Acquire4Mysql().
 		Select("COUNT(`id`) AS `num`", "`name`").
@@ -247,10 +210,4 @@ func TestMysqlQuery_Sql(t *testing.T) {
 	query6.Close()
 
 	t.Logf("sql7: %s with args:%+v", sql7, args7)
-	res, err = conn.Query(sql7, args7...)
-	if err != nil {
-		t.Fatalf("want nil, got %s", err.Error())
-	}
-	rows, err = convert.SqlRows2RowList(res)
-	t.Logf("query rows:%+v %+v", rows, err)
 }

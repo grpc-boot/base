@@ -71,11 +71,11 @@ func (s *Status) Close() {
 
 // IsOK 操作是否OK
 func (s *Status) IsOK() bool {
-	return s.Is(OK)
+	return s.IsCode(OK)
 }
 
-// Is 判断是否是指定Code
-func (s *Status) Is(code codes.Code) bool {
+// IsCode 判断是否是指定Code
+func (s *Status) IsCode(code codes.Code) bool {
 	return s.Code == code
 }
 

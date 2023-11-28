@@ -16,17 +16,19 @@ var ctxPool = sync.Pool{
 	},
 }
 
+type Handler func(ctx *Context)
+
 // Context 上下文
 type Context struct {
 	mutex sync.RWMutex
 
 	data     map[string]any
 	index    int8
-	handlers []func(ctx *Context)
+	handlers []Handler
 }
 
 // AcquireCtx 申请Context
-func AcquireCtx(handlers []func(ctx *Context)) *Context {
+func AcquireCtx(handlers []Handler) *Context {
 	ctx := ctxPool.Get().(*Context)
 	ctx.reset()
 	ctx.handlers = handlers

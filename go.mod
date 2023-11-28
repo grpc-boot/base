@@ -9,6 +9,7 @@ require (
 	github.com/tinylib/msgp v1.1.6
 	go.uber.org/atomic v1.11.0
 	go.uber.org/zap v1.26.0
+	golang.org/x/exp v0.0.0-20190121172915-509febef88a4
 	google.golang.org/grpc v1.50.1
 	gopkg.in/yaml.v3 v3.0.1
 )

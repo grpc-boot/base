@@ -1,7 +1,7 @@
 package main
 
 import (
-	"math/rand"
+	"golang.org/x/exp/rand"
 	"runtime"
 	"time"
 
@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(uint64(time.Now().UnixNano()))
 }
 
 func main() {

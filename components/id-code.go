@@ -181,8 +181,6 @@ func (ic *IdCode) id2Code(id int64, length byte) (code []byte, err error) {
 		a := byte(id % int64(ic.alphanumericLength))
 		d := (a + i + c) % ic.alphanumericLength
 
-		//fmt.Printf("D: %d A:%d I:%d C: %d\n", d, a, i, c)
-
 		codeBytes[i] = ic.alphanumericSet[d]
 		id = id / int64(ic.alphanumericLength)
 	}
@@ -249,8 +247,6 @@ func (ic *IdCode) Code2Id(code []byte) (id int64, err error) {
 				return
 			}
 		}
-
-		//fmt.Printf("D: %d A:%d I:%d C: %d\n", d, a, i, c)
 
 		id += int64(a) * int64(math.Pow(float64(ic.alphanumericLength), float64(i)))
 	}
