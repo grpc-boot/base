@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/grpc-boot/base/core/convert"
-	"github.com/grpc-boot/base/core/query/condition"
+	"github.com/grpc-boot/base/v2/kind"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/grpc-boot/base/v2/components/convert"
+	"github.com/grpc-boot/base/v2/components/query/condition"
 )
 
 var conn *sql.DB
@@ -81,7 +82,7 @@ func TestUpdate(t *testing.T) {
 	rowsAffected, err := res.RowsAffected()
 	t.Logf("rowsAffected:%d %+v", rowsAffected, err)
 
-	sql2, args2 := Update("`user`", "amount=amount+1", condition.In{"id", condition.Values{45, 6, 7}})
+	sql2, args2 := Update("`user`", "amount=amount+1", condition.In[int]{"id", kind.Slice[int]{45, 6, 7}})
 
 	t.Logf("sql2: %s with args:%+v", sql2, args2)
 	res, err = conn.Exec(sql2, args2...)
@@ -105,7 +106,7 @@ func TestDelete(t *testing.T) {
 	rowsAffected, err := res.RowsAffected()
 	t.Logf("rowsAffected:%d %+v", rowsAffected, err)
 
-	sql2, args2 := Delete("`user`", condition.In{"id", condition.Values{45, 6, 7}})
+	sql2, args2 := Delete("`user`", condition.In[uint8]{"id", kind.Slice[uint8]{45, 6, 7}})
 
 	t.Logf("sql2: %s with args:%+v", sql2, args2)
 	res, err = conn.Exec(sql2, args2...)
@@ -121,7 +122,7 @@ func TestMysqlQuery_Sql(t *testing.T) {
 	query1 := Acquire4Mysql().
 		Select("*").
 		From("`user`").
-		Where(condition.In{"id", condition.Values{3, 5}})
+		Where(condition.In[uint8]{"id", kind.Slice[uint8]{3, 5}})
 	sql1, args1 := query1.Sql()
 	query1.Close()
 
