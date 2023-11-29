@@ -1,6 +1,6 @@
 # base
 
-### recover帮助方法，减少未知panic导致进程宕掉
+### utils.Recover帮助方法，减少未知panic导致进程宕掉
 
 ```go
 func TestRecover(t *testing.T) {
@@ -29,7 +29,7 @@ func TestJoin(t *testing.T) {
 }
 ```
 
-### 基于原子操作的超时锁
+### utils.Acquire基于原子操作的超时锁
 
 ```go
 func TestAcquire(t *testing.T) {
