@@ -6,6 +6,9 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v2/utils"
+
 	"go.uber.org/atomic"
 )
 
@@ -14,23 +17,23 @@ var ErrNoServer = errors.New("no server")
 // HashRing Hash环
 type HashRing interface {
 	// Store 存储servers
-	Store(servers ...CanHash)
+	Store(servers ...kind.CanHash)
 	// Get 获取server
-	Get(key any) (server CanHash, err error)
+	Get(key any) (server kind.CanHash, err error)
 	// Index 根据index获取server
-	Index(index int) (server CanHash, err error)
+	Index(index int) (server kind.CanHash, err error)
 	// Add 添加server
-	Add(server CanHash)
+	Add(server kind.CanHash)
 	// Remove 移除server
-	Remove(server CanHash)
+	Remove(server kind.CanHash)
 	// Length 获取servers长度
 	Length() int
 	// Range 遍历servers
-	Range(handler func(index int, server CanHash, hitCount uint64) (handled bool))
+	Range(handler func(index int, server kind.CanHash, hitCount uint64) (handled bool))
 }
 
 type Node struct {
-	server    CanHash
+	server    kind.CanHash
 	hashValue uint32
 	hitCount  atomic.Uint64
 }
@@ -56,13 +59,13 @@ type hashRing struct {
 	mutex sync.RWMutex
 }
 
-func NewHashRing(servers ...CanHash) HashRing {
+func NewHashRing(servers ...kind.CanHash) HashRing {
 	r := &hashRing{}
 	r.Store(servers...)
 	return r
 }
 
-func (hr *hashRing) Store(servers ...CanHash) {
+func (hr *hashRing) Store(servers ...kind.CanHash) {
 	hr.mutex.Lock()
 	nodes := make(NodeList, len(servers), len(servers))
 
@@ -79,7 +82,7 @@ func (hr *hashRing) Store(servers ...CanHash) {
 	hr.mutex.Unlock()
 }
 
-func (hr *hashRing) Add(server CanHash) {
+func (hr *hashRing) Add(server kind.CanHash) {
 	hr.mutex.Lock()
 	hr.nodes = append(hr.nodes, Node{
 		server:    server,
@@ -89,7 +92,7 @@ func (hr *hashRing) Add(server CanHash) {
 	hr.mutex.Unlock()
 }
 
-func (hr *hashRing) Remove(server CanHash) {
+func (hr *hashRing) Remove(server kind.CanHash) {
 	hr.mutex.Lock()
 
 	value := server.HashCode()
@@ -110,7 +113,7 @@ func (hr *hashRing) Remove(server CanHash) {
 	hr.mutex.Unlock()
 }
 
-func (hr *hashRing) Get(key any) (server CanHash, err error) {
+func (hr *hashRing) Get(key any) (server kind.CanHash, err error) {
 	hr.mutex.RLock()
 	defer hr.mutex.RUnlock()
 
@@ -124,7 +127,7 @@ func (hr *hashRing) Get(key any) (server CanHash, err error) {
 		return hr.nodes[0].server, nil
 	}
 
-	value := HashValue(key)
+	value := utils.HashValue(key)
 	index := sort.Search(length, func(i int) bool {
 		return hr.nodes[i].hashValue >= value
 	})
@@ -148,7 +151,7 @@ func (hr *hashRing) Get(key any) (server CanHash, err error) {
 	return hr.nodes[index].server, nil
 }
 
-func (hr *hashRing) Index(index int) (server CanHash, err error) {
+func (hr *hashRing) Index(index int) (server kind.CanHash, err error) {
 	hr.mutex.RLock()
 	defer hr.mutex.RUnlock()
 
@@ -171,7 +174,7 @@ func (hr *hashRing) Length() int {
 	return len(hr.nodes)
 }
 
-func (hr *hashRing) Range(handler func(index int, server CanHash, hitCount uint64) (handled bool)) {
+func (hr *hashRing) Range(handler func(index int, server kind.CanHash, hitCount uint64) (handled bool)) {
 	hr.mutex.RLock()
 	for index, _ := range hr.nodes {
 		//标记已处理

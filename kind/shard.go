@@ -2,26 +2,26 @@ package kind
 
 import "sync"
 
-type Shard[T comparable] interface {
-	Set(key T, value any) (oldValue any, exists bool)
-	Get(key T) (value any, exists bool)
-	Exists(key T) (exists bool)
-	Delete(keys ...T) (delNum int)
+type Shard[K Key] interface {
+	Set(key K, value any) (oldValue any, exists bool)
+	Get(key K) (value any, exists bool)
+	Exists(key K) (exists bool)
+	Delete(keys ...K) (delNum int)
 	Length() int64
 }
 
-func NewShard[T comparable](initSize int) Shard[T] {
-	return &shard[T]{
-		items: make(map[T]any, initSize),
+func NewShard[K Key](initSize int) Shard[K] {
+	return &shard[K]{
+		items: make(map[K]any, initSize),
 	}
 }
 
-type shard[T comparable] struct {
+type shard[K Key] struct {
 	mutex sync.RWMutex
-	items map[T]any
+	items map[K]any
 }
 
-func (s *shard[T]) Set(key T, value any) (oldValue any, exists bool) {
+func (s *shard[K]) Set(key K, value any) (oldValue any, exists bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -30,7 +30,7 @@ func (s *shard[T]) Set(key T, value any) (oldValue any, exists bool) {
 	return
 }
 
-func (s *shard[T]) Get(key T) (value any, exists bool) {
+func (s *shard[K]) Get(key K) (value any, exists bool) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
@@ -38,7 +38,7 @@ func (s *shard[T]) Get(key T) (value any, exists bool) {
 	return
 }
 
-func (s *shard[T]) Exists(key T) (exists bool) {
+func (s *shard[K]) Exists(key K) (exists bool) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
@@ -46,7 +46,7 @@ func (s *shard[T]) Exists(key T) (exists bool) {
 	return
 }
 
-func (s *shard[T]) Delete(keys ...T) (delNum int) {
+func (s *shard[K]) Delete(keys ...K) (delNum int) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -61,7 +61,7 @@ func (s *shard[T]) Delete(keys ...T) (delNum int) {
 	return
 }
 
-func (s *shard[T]) Length() int64 {
+func (s *shard[K]) Length() int64 {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 

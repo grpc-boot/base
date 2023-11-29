@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/grpc-boot/base/v2/kind"
@@ -43,7 +44,13 @@ func ToString(val any) string {
 }
 
 func StringInteger[T kind.Integer](value T) string {
-	return fmt.Sprintf("%d", value)
+	val := reflect.ValueOf(value)
+	switch val.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(val.Int(), 10)
+	default:
+		return strconv.FormatUint(val.Uint(), 10)
+	}
 }
 
 func LcFirst(str string) string {

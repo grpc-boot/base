@@ -1,9 +1,11 @@
 package components
 
 import (
-	"hash/crc32"
 	"strconv"
 	"testing"
+
+	"github.com/grpc-boot/base/v2/internal"
+	"github.com/grpc-boot/base/v2/kind"
 
 	"go.uber.org/atomic"
 )
@@ -60,13 +62,13 @@ var (
 )
 
 type Data struct {
-	CanHash
+	kind.CanHash
 
 	id string
 }
 
 func (d *Data) HashCode() (hashValue uint32) {
-	return crc32.ChecksumIEEE([]byte(d.id))
+	return kind.Uint32Hash(internal.String2Bytes(d.id))
 }
 
 type Group struct {
@@ -74,7 +76,7 @@ type Group struct {
 }
 
 func TestHashRing_Get(t *testing.T) {
-	serverList := make([]CanHash, 0, len(hostList))
+	serverList := make([]kind.CanHash, 0, len(hostList))
 
 	for _, server := range hostList {
 		serverList = append(serverList, &Data{
@@ -91,16 +93,16 @@ func TestHashRing_Get(t *testing.T) {
 		}
 	}
 
-	hashGroup.ring.Range(func(index int, server CanHash, hitCount uint64) (handled bool) {
+	hashGroup.ring.Range(func(index int, server kind.CanHash, hitCount uint64) (handled bool) {
 		t.Logf("index:%d, server.id:%s, hitCount:%d", index, server.(*Data).id, hitCount)
 		return
 	})
 }
 
 // go test -bench=. -benchmem -v
-// BenchmarkHashRing_GetIndex-4    24148118                65.9 ns/op            16 B/op          1 allocs/op
+// BenchmarkHashRing_Get-8   	 7349292	       155.2 ns/op
 func BenchmarkHashRing_Get(b *testing.B) {
-	serverList := make([]CanHash, 0, len(hostList))
+	serverList := make([]kind.CanHash, 0, len(hostList))
 
 	for _, server := range hostList {
 		serverList = append(serverList, &Data{
@@ -112,12 +114,11 @@ func BenchmarkHashRing_Get(b *testing.B) {
 	var val atomic.Uint64
 
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			_, err := hashGroup.ring.Get([]byte(strconv.FormatUint(val.Add(1), 10)))
-			if err != nil {
-				b.Fatal(err.Error())
-			}
+
+	for i := 0; i < b.N; i++ {
+		_, err := hashGroup.ring.Get(internal.String2Bytes(strconv.FormatUint(val.Add(1), 10)))
+		if err != nil {
+			b.Fatal(err.Error())
 		}
-	})
+	}
 }

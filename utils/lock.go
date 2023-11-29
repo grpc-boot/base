@@ -21,6 +21,6 @@ func Acquire(lock *int64, timeout time.Duration) (token int64) {
 	return 0
 }
 
-func Release(lock *int64, token int64) {
-	atomic.CompareAndSwapInt64(lock, token, 0)
+func Release(lock *int64, token int64) (swapped bool) {
+	return atomic.CompareAndSwapInt64(lock, token, 0)
 }

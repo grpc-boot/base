@@ -95,6 +95,13 @@ func TestNewShardMap(t *testing.T) {
 	t.Logf("shard length:%v", sm.ShardLength())
 }
 
+func TestNewConcurrentSet(t *testing.T) {
+	d := -5
+	c := uint32(d)
+
+	t.Logf("%d", c)
+}
+
 func BenchmarkStringShardMap_Set(b *testing.B) {
 	var (
 		ssm = NewStringShardMap()
