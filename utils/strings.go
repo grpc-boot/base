@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/grpc-boot/base/v2/internal"
 	"github.com/grpc-boot/base/v2/kind"
 )
 
@@ -15,7 +16,7 @@ func ToString(val any) string {
 	case string:
 		return v
 	case []byte:
-		return Bytes2String(v)
+		return internal.Bytes2String(v)
 	case int:
 		return strconv.Itoa(v)
 	case int8:

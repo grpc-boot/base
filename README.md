@@ -1,6 +1,111 @@
 # base
 
-### utils.Recover帮助方法，减少未知panic导致进程宕掉
+### 运行时开启关闭pprof，当系统出现问题时可以实时开启pprof定位系统问题
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/grpc-boot/base/v2/internal"
+	"github.com/grpc-boot/base/v2/utils"
+)
+
+type router struct {
+}
+
+func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	_, _ = w.Write(internal.String2Bytes(`ok`))
+}
+
+func main() {
+	server := http.Server{
+		Addr:    ":8080",
+		Handler: &router{},
+	}
+
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	var sig = make(chan os.Signal, 1)
+	signal.Notify(sig)
+
+	for {
+		val, ok := <-sig
+		if !ok {
+			break
+		}
+
+		switch val {
+		case syscall.SIGUSR1:
+			if utils.PprofIsRun() {
+				continue
+			}
+
+			go func() {
+				err := utils.StartPprof(":8081", nil)
+				if err != nil {
+					fmt.Printf("start pprof error:%v", err)
+				}
+			}()
+		case syscall.SIGUSR2:
+			if !utils.PprofIsRun() {
+				continue
+			}
+
+			err := utils.StopPprofWithTimeout(10)
+			if err != nil {
+				fmt.Printf("stop pprof error:%v", err)
+			}
+		default:
+			close(sig)
+			signal.Stop(sig)
+			break
+		}
+	}
+}
+```
+
+```shell
+## 开启pprof
+kill -USR1 ${pid}
+
+## 关闭pprof
+kill -USR2 ${pid}
+```
+
+### utils.Timeout帮助方法，简化超时实现逻辑
+
+```go
+func TestTimeout(t *testing.T) {
+    err := Timeout(time.Second, func() {
+        time.Sleep(time.Millisecond * 500)
+    })
+    
+    if err != nil {
+        t.Fatalf("want nil, got %v", err)
+    }
+    
+    err = Timeout(time.Millisecond*100, func() {
+        time.Sleep(time.Millisecond * 200)
+    })
+    
+    if err != context.DeadlineExceeded {
+        t.Fatalf("want err, got %v", err)
+    }
+}
+```
+
+### `utils.Recover`帮助方法，减少未知panic导致进程宕掉
 
 ```go
 func TestRecover(t *testing.T) {
@@ -75,3 +180,5 @@ func TestAcquire(t *testing.T) {
 	wa.Wait()
 }
 ```
+
+
