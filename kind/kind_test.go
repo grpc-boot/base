@@ -102,19 +102,6 @@ func TestNewConcurrentSet(t *testing.T) {
 	t.Logf("%d", c)
 }
 
-func BenchmarkStringShardMap_Set(b *testing.B) {
-	var (
-		ssm = NewStringShardMap()
-		key = `撒旦法`
-	)
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		ssm.Set(key+strconv.Itoa(i), true)
-	}
-}
-
 func BenchmarkShard_Set(b *testing.B) {
 	var (
 		ssm = NewShard[string](8)
