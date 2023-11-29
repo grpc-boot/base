@@ -6,11 +6,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/grpc-boot/base/v2/internal"
 	"github.com/grpc-boot/base/v2/utils"
@@ -31,8 +33,17 @@ func main() {
 
 	go func() {
 		err := server.ListenAndServe()
-		if err != nil {
+		if err != http.ErrServerClosed {
 			panic(err)
+		}
+	}()
+
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+		err := server.Shutdown(ctx)
+		if err != nil {
+			fmt.Printf("shutdown server error:%v", err)
 		}
 	}()
 
@@ -40,11 +51,7 @@ func main() {
 	signal.Notify(sig)
 
 	for {
-		val, ok := <-sig
-		if !ok {
-			break
-		}
-
+		val := <-sig
 		switch val {
 		case syscall.SIGUSR1:
 			if utils.PprofIsRun() {
@@ -67,9 +74,8 @@ func main() {
 				fmt.Printf("stop pprof error:%v", err)
 			}
 		default:
-			close(sig)
 			signal.Stop(sig)
-			break
+			return
 		}
 	}
 }
