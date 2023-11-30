@@ -3,6 +3,8 @@ package utils
 import (
 	"os"
 
+	"github.com/grpc-boot/base/v2/internal"
+
 	"github.com/goccy/go-json"
 )
 
@@ -18,12 +20,12 @@ func JsonEncode(v any) (data string, err error) {
 		return "", err
 	}
 
-	return Bytes2String(bytes), nil
+	return internal.Bytes2String(bytes), nil
 }
 
 // JsonDecode ---
 func JsonDecode(data string, v any) (err error) {
-	return JsonUnmarshal(String2Bytes(data), v)
+	return JsonUnmarshal(internal.String2Bytes(data), v)
 }
 
 // JsonUnmarshalFile ---

@@ -36,3 +36,39 @@ func TestTrie_Get(t *testing.T) {
 		t.Fatalf("want true, got %t", exists)
 	}
 }
+
+func words() []string {
+	return []string{
+		`我`,
+		`中国人`,
+		`很好`,
+	}
+}
+
+func TestNewTrieSet(t *testing.T) {
+	ts := NewTrieSet()
+
+	wordList := words()
+
+	for _, word := range wordList {
+		ts.Add(word)
+	}
+
+	res := ts.HasKey(`当时有好多中国人`)
+	if !res {
+		t.Fatalf("want true, got %v", res)
+	}
+
+	res = ts.HasKey(`当时有好多很好`)
+	if !res {
+		t.Fatalf("want true, got %v", res)
+	}
+
+	res = ts.HasKey(`当时有好多很`)
+	if res {
+		t.Fatalf("want false, got %v", res)
+	}
+
+	rd := ts.ReplaceKey(`当时我看见有好多中国人`, '*')
+	t.Logf("rd: %s", rd)
+}
