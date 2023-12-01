@@ -2,19 +2,18 @@ package cache
 
 import (
 	"fmt"
-	"hash/adler32"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
+	"github.com/grpc-boot/base/v2/kind"
 	"github.com/grpc-boot/base/v2/utils"
 
 	"go.uber.org/atomic"
 )
 
 const (
-	bucketLen   = 1<<9 - 1
+	bucketLen   = 1<<7 - 1
 	lockTimeout = 10 * time.Second
 )
 
@@ -27,7 +26,7 @@ type Cache struct {
 }
 
 func New(localDir string, flushInterval time.Duration) *Cache {
-	if localDir != "" && !strings.HasSuffix(localDir, "/") {
+	if localDir != "" && localDir[len(localDir)-1] != '/' {
 		localDir += "/"
 	}
 
@@ -45,7 +44,7 @@ func New(localDir string, flushInterval time.Duration) *Cache {
 }
 
 func (c *Cache) index(key string) int {
-	return int(adler32.Checksum([]byte(key))) & bucketLen
+	return int(kind.Uint32Hash(utils.String2Bytes(key))) & bucketLen
 }
 
 func (c *Cache) GetValue(key string, timeoutSecond int64) (value []byte, exists bool) {

@@ -4,25 +4,41 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"go.uber.org/atomic"
 )
 
 type bucket struct {
 	mutex  sync.RWMutex
-	hasNew bool
+	fMutex sync.Mutex
+	hasNew atomic.Bool
 	entry  map[string]int64
 	data   *Bucket
 }
 
 func (b *bucket) setValue(key string, value []byte) (isCreate bool) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
+	b.mutex.RLock()
+	if b.data != nil {
+		if item, exists := b.data.Items[key]; exists {
+			item.save(value)
 
-	b.hasNew = true
+			b.hasNew.Store(true)
+			b.mutex.RUnlock()
+			return false
+		}
+	}
+	b.mutex.RUnlock()
+
+	b.mutex.Lock()
+	defer func() {
+		b.hasNew.Store(true)
+		b.mutex.Unlock()
+	}()
 
 	if b.data == nil {
 		b.data = &Bucket{
 			Items: map[string]*Item{
-				key: &Item{
+				key: {
 					CreatedAt:   time.Now().Unix(),
 					Value:       value,
 					InvokeCount: 1,
@@ -39,14 +55,12 @@ func (b *bucket) setValue(key string, value []byte) (isCreate bool) {
 		item.CreatedAt = time.Now().Unix()
 		item.InvokeCount++
 	} else {
-		item = &Item{
+		b.data.Items[key] = &Item{
 			CreatedAt:   time.Now().Unix(),
 			Value:       value,
 			InvokeCount: 1,
 		}
 	}
-
-	b.data.Items[key] = item
 
 	return !exists
 }
@@ -66,7 +80,6 @@ func (b *bucket) getValue(key string, timeout int64) (value []byte, lock *int64,
 	}
 
 	effective = item.effective(timeout)
-
 	return item.Value, &item._lock, effective, exists
 }
 
@@ -84,7 +97,12 @@ func (b *bucket) exists(key string) (exists bool) {
 
 func (b *bucket) delete(keys ...string) (delNum int64) {
 	b.mutex.Lock()
-	defer b.mutex.Unlock()
+	defer func() {
+		if delNum > 0 {
+			b.hasNew.Store(true)
+		}
+		b.mutex.Unlock()
+	}()
 
 	if b.data == nil {
 		return
@@ -94,7 +112,6 @@ func (b *bucket) delete(keys ...string) (delNum int64) {
 		if _, exists := b.data.Items[key]; exists {
 			delNum++
 			delete(b.data.Items, key)
-			b.hasNew = true
 		}
 	}
 
@@ -125,9 +142,6 @@ func (b *bucket) items() []Item {
 }
 
 func (b *bucket) loadFile(fileName string) (loadLength int64, err error) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
-
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		return 0, err
@@ -137,39 +151,48 @@ func (b *bucket) loadFile(fileName string) (loadLength int64, err error) {
 		return 0, nil
 	}
 
-	b.data = &Bucket{Items: map[string]*Item{}}
-	_, err = b.data.UnmarshalMsg(data)
+	bkt := &Bucket{Items: map[string]*Item{}}
+	_, err = bkt.UnmarshalMsg(data)
+	if err != nil {
+		return 0, err
+	}
+
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+	b.data = bkt
+
 	return int64(len(b.data.Items)), err
 }
 
-func (b *bucket) flushFile(fileName string) error {
+func (b *bucket) flushFile(fileName string) (err error) {
+	if !b.hasNew.Load() {
+		return nil
+	}
+
 	b.mutex.RLock()
-	defer b.mutex.RUnlock()
-
-	if !b.hasNew {
+	if !b.hasNew.Load() || b.data == nil {
+		b.mutex.RUnlock()
 		return nil
 	}
 
-	if b.data == nil {
-		return nil
+	data := make([]byte, 0, b.data.Msgsize())
+	data, err = b.data.MarshalMsg(data)
+	if err != nil {
+		b.mutex.RUnlock()
+		return err
 	}
+	b.hasNew.Store(false)
+	b.mutex.RUnlock()
+
+	b.fMutex.Lock()
+	defer b.fMutex.Unlock()
 
 	file, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
-
 	defer file.Close()
 
-	data := make([]byte, 0, b.data.Msgsize())
-	data, err = b.data.MarshalMsg(data)
-	if err != nil {
-		return err
-	}
-
 	_, err = file.Write(data)
-	if err == nil {
-		b.hasNew = false
-	}
 	return err
 }

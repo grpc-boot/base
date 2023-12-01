@@ -19,6 +19,12 @@ type Item struct {
 	CreatedAt   int64  `json:"createdAt" msg:"createdAt"`
 }
 
+func (i *Item) save(value []byte) {
+	i.CreatedAt = time.Now().Unix()
+	i.Value = value
+	i.InvokeCount++
+}
+
 // effective 数据是否有效
 func (i *Item) effective(timeoutSecond int64) (ok bool) {
 	ok = i.CreatedAt+timeoutSecond > time.Now().Unix()
