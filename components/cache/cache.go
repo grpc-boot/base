@@ -332,8 +332,13 @@ func (c *Cache) CommonMap(key string, timeoutSecond int64, handler func() (inter
 		return
 	}
 
-	v, _ := val.(map[string]interface{})
-	value = Map(v)
+	v, ok := val.(map[string]interface{})
+	if ok {
+		value = Map(v)
+	} else {
+		value, _ = val.(Map)
+	}
+
 	return
 }
 

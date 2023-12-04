@@ -2,18 +2,64 @@ package cache
 
 import (
 	"bytes"
-	"github.com/grpc-boot/base/v2/kind"
+	"fmt"
+	"golang.org/x/exp/rand"
 	"math"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/grpc-boot/base/v2/kind"
 	"github.com/grpc-boot/base/v2/utils"
 )
 
 var (
 	localDir = "/tmp/cache"
 )
+
+type User struct {
+	Id        uint32 `json:"id"`
+	Name      string `json:"name"`
+	CreatedAt int64  `json:"createdAt"`
+}
+
+func (u User) ToMap() Map {
+	return Map{
+		"id":        u.Id,
+		"name":      u.Name,
+		"createdAt": u.CreatedAt,
+	}
+}
+
+func TestCache_CommonMap(t *testing.T) {
+	var (
+		cache        = New(localDir, time.Second*3)
+		id    uint32 = 10086
+		key          = fmt.Sprintf("user:%d", 10086)
+	)
+
+	user, err := cache.CommonMap(key, 60, func() (interface{}, error) {
+		time.Sleep(time.Millisecond * time.Duration(rand.Intn(1008)))
+
+		user := User{
+			Id:        id,
+			Name:      "移动",
+			CreatedAt: time.Now().Unix(),
+		}
+
+		return user.ToMap(), nil
+	})
+
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+
+	if user.Int("id") != int64(id) {
+		t.Fatalf("want %d, got %v", id, user.Int("id"))
+	}
+
+	t.Logf("createdAt:%d", user.Int("createdAt"))
+}
 
 func TestCache_Get(t *testing.T) {
 	start := time.Now()
