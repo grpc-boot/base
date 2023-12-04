@@ -93,7 +93,7 @@ kill -USR2 ${pid}
 
 ```go
 func TestTimeout(t *testing.T) {
-    err := Timeout(time.Second, func() {
+    err := Timeout(time.Second, func(args ...any) {
         time.Sleep(time.Millisecond * 500)
     })
     
@@ -101,7 +101,7 @@ func TestTimeout(t *testing.T) {
         t.Fatalf("want nil, got %v", err)
     }
     
-    err = Timeout(time.Millisecond*100, func() {
+    err = Timeout(time.Millisecond*100, func(args ...any) {
         time.Sleep(time.Millisecond * 200)
     })
     
@@ -115,7 +115,7 @@ func TestTimeout(t *testing.T) {
 
 ```go
 func TestRecover(t *testing.T) {
-	go Recover("recover test", func() {
+	go Recover("recover test", func(args ...any) {
 		panic("panic with test")
 	})
 }

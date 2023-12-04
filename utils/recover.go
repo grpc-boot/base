@@ -6,7 +6,7 @@ import (
 	"github.com/grpc-boot/base/v2/logger"
 )
 
-func Recover(eventName string, f func()) {
+func Recover(eventName string, f func(args ...any), args ...any) {
 	defer func() {
 		if err := recover(); err != nil {
 			if _, ok := err.(error); !ok {
@@ -20,5 +20,5 @@ func Recover(eventName string, f func()) {
 		}
 	}()
 
-	f()
+	f(args...)
 }

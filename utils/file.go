@@ -7,16 +7,35 @@ import (
 )
 
 // FileExists 判断文件是否存在
-func FileExists(fileName string) bool {
-	_, err := os.Stat(fileName)
+func FileExists(fileName string) (exists bool, err error) {
+	_, err = os.Stat(fileName)
 	if err == nil {
-		return true
+		exists = true
+		return
 	}
 
-	return !os.IsNotExist(err)
+	if os.IsNotExist(err) {
+		err = nil
+	}
+
+	return
 }
 
 // FileTime 获取文件时间
 func FileTime(fileName string) (createTime, lastAccessTime, lastWriteTime int64, err error) {
 	return internal.FileTime(fileName)
+}
+
+// MkDir 创建目录
+func MkDir(dir string, perm os.FileMode) (err error) {
+	exists, err := FileExists(dir)
+	if err != nil {
+		return
+	}
+
+	if exists {
+		return
+	}
+
+	return os.MkdirAll(dir, perm)
 }

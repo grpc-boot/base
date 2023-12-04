@@ -123,7 +123,7 @@ func (hr *hashRing) Get(key any) (server kind.CanHash, err error) {
 	}
 
 	if length < 2 {
-		hr.nodes[0].hitCount.Inc()
+		hr.nodes[0].hitCount.Add(1)
 		return hr.nodes[0].server, nil
 	}
 
@@ -134,20 +134,20 @@ func (hr *hashRing) Get(key any) (server kind.CanHash, err error) {
 
 	if index == length || index == 0 {
 		if (value - hr.nodes[length-1].hashValue) < (math.MaxUint32 - value + hr.nodes[0].hashValue) {
-			hr.nodes[length-1].hitCount.Inc()
+			hr.nodes[length-1].hitCount.Add(1)
 			return hr.nodes[length-1].server, nil
 		}
 
-		hr.nodes[0].hitCount.Inc()
+		hr.nodes[0].hitCount.Add(1)
 		return hr.nodes[0].server, nil
 	}
 
 	if (hr.nodes[index].hashValue - value) > (value - hr.nodes[index-1].hashValue) {
-		hr.nodes[index-1].hitCount.Inc()
+		hr.nodes[index-1].hitCount.Add(1)
 		return hr.nodes[index-1].server, nil
 	}
 
-	hr.nodes[index].hitCount.Inc()
+	hr.nodes[index].hitCount.Add(1)
 	return hr.nodes[index].server, nil
 }
 
@@ -164,7 +164,7 @@ func (hr *hashRing) Index(index int) (server kind.CanHash, err error) {
 		return nil, ErrNoServer
 	}
 
-	hr.nodes[index].hitCount.Inc()
+	hr.nodes[index].hitCount.Add(1)
 	return hr.nodes[index].server, nil
 }
 

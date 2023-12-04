@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func Timeout(timeout time.Duration, handler func()) error {
+func Timeout(timeout time.Duration, handler func(args ...any), args ...any) error {
 	var (
 		ctx, cancel = context.WithTimeout(context.Background(), timeout)
 		done        = make(chan struct{}, 1)
@@ -13,7 +13,7 @@ func Timeout(timeout time.Duration, handler func()) error {
 	defer cancel()
 
 	go func() {
-		handler()
+		handler(args...)
 		done <- struct{}{}
 	}()
 
