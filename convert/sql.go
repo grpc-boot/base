@@ -6,7 +6,6 @@ import (
 	"reflect"
 
 	"github.com/grpc-boot/base/v2/internal"
-	"github.com/grpc-boot/base/v2/utils"
 )
 
 func SqlRows2RowList(rows *sql.Rows) (list []Row, err error) {
@@ -100,13 +99,13 @@ func SqlRows2StructList(rows *sql.Rows, out any, tagName string) (list []any, er
 				case reflect.String:
 					value.Field(ct.index).SetString(internal.Bytes2String(v))
 				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-					value.Field(ct.index).SetInt(utils.Bytes2Int64(v))
+					value.Field(ct.index).SetInt(internal.Bytes2Int64(v))
 				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-					value.Field(ct.index).SetUint(utils.Bytes2Uint64(v))
+					value.Field(ct.index).SetUint(internal.Bytes2Uint64(v))
 				case reflect.Float32, reflect.Float64:
-					value.Field(ct.index).SetFloat(utils.Bytes2Float64(v))
+					value.Field(ct.index).SetFloat(internal.Bytes2Float64(v))
 				case reflect.Bool:
-					value.Field(ct.index).SetBool(utils.Bytes2Bool(v))
+					value.Field(ct.index).SetBool(internal.Bytes2Bool(v))
 				default:
 					continue
 				}

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/grpc-boot/base/v2/components/query/condition"
+	"github.com/grpc-boot/base/v2/query/condition"
 )
 
 var (
