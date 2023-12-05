@@ -1,5 +1,44 @@
 # base
 
+### components.cache 本地内存缓存组件，会同步到本地目录，重启后从本地加载到内存
+
+```go
+// BenchmarkCacheParallel_CommonMap-8      20719171                58.49 ns/op            0 B/op          0 allocs/op
+func BenchmarkCacheParallel_CommonMap(b *testing.B) {
+	var (
+		cache        = New(localDir, time.Second*3)
+		id    uint32 = 10086
+		key          = fmt.Sprintf("user:%d", 10086)
+	)
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			user, err := cache.CommonMap(key, 10, func() (interface{}, error) {
+				time.Sleep(time.Millisecond * 500)
+
+				user := User{
+					Id:        id,
+					Name:      "移动",
+					CreatedAt: time.Now().Unix(),
+				}
+
+				return user.ToMap(), nil
+			})
+
+			if err != nil {
+				b.Fatalf("want nil, got %v", err)
+			}
+
+			if user.Int("id") != int64(id) {
+				b.Fatalf("want %d, got %v", id, user.Int("id"))
+			}
+		}
+	})
+}
+```
+
 ### 运行时开启关闭pprof，当系统出现问题时可以实时开启pprof定位系统问题
 
 ```go

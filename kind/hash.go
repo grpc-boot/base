@@ -1,10 +1,10 @@
 package kind
 
 import (
-	"hash/adler32"
+	"hash/crc32"
 )
 
-var Uint32Hash = adler32.Checksum
+var Uint32Hash = crc32.ChecksumIEEE
 
 // CanHash hash接口
 type CanHash interface {

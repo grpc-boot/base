@@ -10,10 +10,18 @@ import (
 
 //------------------------ Bucket Start--------------------------------
 
+func (b *Bucket) Marshal() (data []byte, err error) {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	data = make([]byte, 0, b.Msgsize())
+	return b.MarshalMsg(data)
+}
+
 func (b *Bucket) set(key string, value interface{}) (isCreate bool, err error) {
 	b.mutex.Lock()
 	defer func() {
-		b.hasChanged.Store(true)
+		b.hasChanged = true
 		b.mutex.Unlock()
 	}()
 
@@ -91,7 +99,7 @@ func (b *Bucket) delete(keys ...string) (delNum int64) {
 	b.mutex.Lock()
 	defer func() {
 		if delNum > 0 {
-			b.hasChanged.Store(true)
+			b.hasChanged = true
 		}
 		b.mutex.Unlock()
 	}()
@@ -148,26 +156,38 @@ func (b *Bucket) loadFile(fileName string) (loadLength int64, err error) {
 	return int64(len(b.Data)), err
 }
 
-func (b *Bucket) flushFile(fileName string) (err error) {
-	if !b.hasChanged.Load() {
-		return nil
+func (b *Bucket) needFlush() bool {
+	if time.Now().Unix()-b.latestSync.Load().Unix() > FlushWithoutChangeIntervalSeconds {
+		return true
 	}
 
 	b.mutex.RLock()
-	if !b.hasChanged.Load() || b.Data == nil {
-		b.mutex.RUnlock()
+	defer b.mutex.RUnlock()
+
+	if b.hasChanged {
+		return true
+	}
+
+	if b.Data == nil {
+		return false
+	}
+	return true
+}
+
+func (b *Bucket) flushFile(fileName string) (err error) {
+	if !b.needFlush() {
 		return nil
 	}
 
-	data := make([]byte, 0, b.Msgsize())
-	data, err = b.MarshalMsg(data)
+	// 允许误差
+	b.hasChanged = false
+
+	data, err := b.Marshal()
 	if err != nil {
-		b.mutex.RUnlock()
 		return err
 	}
-	b.hasChanged.Store(false)
-	b.mutex.RUnlock()
 
+	// 保证同一个文件没有并发
 	b.fMutex.Lock()
 	defer b.fMutex.Unlock()
 
@@ -178,6 +198,9 @@ func (b *Bucket) flushFile(fileName string) (err error) {
 	defer file.Close()
 
 	_, err = file.Write(data)
+	if err == nil {
+		b.latestSync.Store(time.Now())
+	}
 	return err
 }
 

@@ -14,8 +14,12 @@ import (
 )
 
 const (
-	bucketLen   = 1<<7 - 1
+	bucketLen   = 1 << 8
 	lockTimeout = 10 * time.Second
+)
+
+var (
+	FlushWithoutChangeIntervalSeconds int64 = 60
 )
 
 type Cache struct {
@@ -49,7 +53,7 @@ func New(localDir string, flushInterval time.Duration) *Cache {
 }
 
 func (c *Cache) index(key string) int {
-	return int(kind.Uint32Hash(utils.String2Bytes(key))) & bucketLen
+	return int(kind.Uint32Hash(utils.String2Bytes(key))) & (bucketLen - 1)
 }
 
 func (c *Cache) Set(key string, value interface{}) (err error) {
@@ -243,7 +247,7 @@ func (c *Cache) CommonGet(key string, timeoutSecond int64, handler func() (inter
 	}
 
 	// 加锁成功，执行耗时操作
-	data, err := handler()
+	value, err = handler()
 	// 未获取到数据
 	if err != nil {
 		return
@@ -252,7 +256,7 @@ func (c *Cache) CommonGet(key string, timeoutSecond int64, handler func() (inter
 	// 获取数据成功
 
 	// 更新缓存
-	err = c.Set(key, data)
+	err = c.Set(key, value)
 	return
 }
 

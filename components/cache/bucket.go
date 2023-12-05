@@ -11,7 +11,8 @@ import (
 type Bucket struct {
 	mutex      sync.RWMutex
 	fMutex     sync.Mutex
-	hasChanged atomic.Bool
+	hasChanged bool
+	latestSync atomic.Time
 	Data       map[string]*Entry `msg:"data"`
 }
 

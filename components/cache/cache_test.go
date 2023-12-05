@@ -6,6 +6,7 @@ import (
 	"golang.org/x/exp/rand"
 	"math"
 	"reflect"
+	"runtime"
 	"testing"
 	"time"
 
@@ -337,4 +338,123 @@ func keyEqual[T comparable](a, b kind.Slice[T]) bool {
 	}
 
 	return true
+}
+
+func TestCache_SyncLocal(t *testing.T) {
+	var (
+		start = time.Now()
+		cache = New(localDir, time.Second*3)
+	)
+
+	t.Logf("load %d length key cost:%s", cache.Length(), time.Since(start))
+
+	keyMax := 50 * 10000
+	for i := 0; i < keyMax; i++ {
+		key := fmt.Sprintf("key:%d", i)
+		err := cache.Set(key, User{
+			Id:        uint32(i),
+			Name:      key,
+			CreatedAt: time.Now().Unix(),
+		}.ToMap())
+		if err != nil {
+			t.Fatalf("want nil, got %v", err)
+		}
+	}
+
+	start = time.Now()
+	cache.SyncLocal()
+
+	t.Logf("sync to local cost: %s", time.Since(start))
+
+	start = time.Now()
+	runtime.GC()
+
+	t.Logf("gc cost: %s", time.Since(start))
+}
+
+func TestCache_LoadLocal(t *testing.T) {
+	var (
+		start = time.Now()
+		cache = New(localDir, time.Second*3)
+	)
+
+	t.Logf("load %d length key cost:%s", cache.Length(), time.Since(start))
+
+	start = time.Now()
+	runtime.GC()
+
+	t.Logf("first gc cost: %s", time.Since(start))
+
+	start = time.Now()
+	runtime.GC()
+
+	t.Logf("second gc cost: %s", time.Since(start))
+}
+
+// BenchmarkCache_CommonMap-8       9286664               125.5 ns/op             0 B/op          0 allocs/op
+func BenchmarkCache_CommonMap(b *testing.B) {
+	var (
+		cache        = New(localDir, time.Second*3)
+		id    uint32 = 10086
+		key          = fmt.Sprintf("user:%d", 10086)
+	)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		user, err := cache.CommonMap(key, 10, func() (interface{}, error) {
+			time.Sleep(time.Millisecond * 500)
+
+			user := User{
+				Id:        id,
+				Name:      "移动",
+				CreatedAt: time.Now().Unix(),
+			}
+
+			return user.ToMap(), nil
+		})
+
+		if err != nil {
+			b.Fatalf("want nil, got %v", err)
+		}
+
+		if user.Int("id") != int64(id) {
+			b.Fatalf("want %d, got %v", id, user.Int("id"))
+		}
+	}
+}
+
+// BenchmarkCacheParallel_CommonMap-8      20719171                58.49 ns/op            0 B/op          0 allocs/op
+func BenchmarkCacheParallel_CommonMap(b *testing.B) {
+	var (
+		cache        = New(localDir, time.Second*3)
+		id    uint32 = 10086
+		key          = fmt.Sprintf("user:%d", 10086)
+	)
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			user, err := cache.CommonMap(key, 10, func() (interface{}, error) {
+				time.Sleep(time.Millisecond * 500)
+
+				user := User{
+					Id:        id,
+					Name:      "移动",
+					CreatedAt: time.Now().Unix(),
+				}
+
+				return user.ToMap(), nil
+			})
+
+			if err != nil {
+				b.Fatalf("want nil, got %v", err)
+			}
+
+			if user.Int("id") != int64(id) {
+				b.Fatalf("want %d, got %v", id, user.Int("id"))
+			}
+		}
+	})
 }
