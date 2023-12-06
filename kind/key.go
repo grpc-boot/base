@@ -2,7 +2,6 @@ package kind
 
 import (
 	"math"
-	"reflect"
 
 	"github.com/grpc-boot/base/v2/internal"
 )
@@ -11,14 +10,30 @@ type Key interface {
 	~string | Integer
 }
 
-func KeyHash[T Key](t T) uint32 {
-	value := reflect.ValueOf(t)
-	switch value.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return uint32(value.Int() & math.MaxUint32)
-	case reflect.Uint, reflect.Uint8, reflect.Uint32, reflect.Uint64:
-		return uint32(value.Uint() & math.MaxUint32)
-	default:
-		return Uint32Hash(internal.String2Bytes(value.String()))
+func KeyHash(key interface{}) uint32 {
+	switch value := key.(type) {
+	case int:
+		return uint32(value & math.MaxUint32)
+	case int8:
+		return uint32(value) & math.MaxUint32
+	case int16:
+		return uint32(value) & math.MaxUint32
+	case int32:
+		return uint32(value) & math.MaxUint32
+	case int64:
+		return uint32(value) & math.MaxUint32
+	case uint:
+		return uint32(value) & math.MaxUint32
+	case uint8:
+		return uint32(value) & math.MaxUint32
+	case uint16:
+		return uint32(value) & math.MaxUint32
+	case uint32:
+		return uint32(value) & math.MaxUint32
+	case uint64:
+		return uint32(value) & math.MaxUint32
+	case string:
+		return Uint32Hash(internal.String2Bytes(value))
 	}
+	return 0
 }

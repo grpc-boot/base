@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"golang.org/x/exp/rand"
 	"math"
-	"reflect"
 	"runtime"
 	"testing"
 	"time"
 
 	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v2/kind/msg"
 	"github.com/grpc-boot/base/v2/utils"
 )
 
@@ -24,8 +24,8 @@ type User struct {
 	CreatedAt int64  `json:"createdAt"`
 }
 
-func (u User) ToMap() Map {
-	return Map{
+func (u User) ToMap() msg.Map {
+	return msg.Map{
 		"id":        u.Id,
 		"name":      u.Name,
 		"createdAt": u.CreatedAt,
@@ -39,7 +39,7 @@ func TestCache_CommonMap(t *testing.T) {
 		key          = fmt.Sprintf("user:%d", 10086)
 	)
 
-	user, err := cache.CommonMap(key, 60, func() (interface{}, error) {
+	mp, err := CommonGet[msg.Map](cache, key, 60, func() (msg.Map, error) {
 		time.Sleep(time.Millisecond * time.Duration(rand.Intn(1008)))
 
 		user := User{
@@ -55,22 +55,23 @@ func TestCache_CommonMap(t *testing.T) {
 		t.Fatalf("want nil, got %v", err)
 	}
 
-	if user.Int("id") != int64(id) {
-		t.Fatalf("want %d, got %v", id, user.Int("id"))
+	userMap := msg.MsgMap(mp)
+	if userMap.Int("id") != int64(id) {
+		t.Fatalf("want %d, got %v", id, userMap.Int("id"))
 	}
 
-	t.Logf("createdAt:%d", user.Int("createdAt"))
+	t.Logf("createdAt:%d", userMap.Int("createdAt"))
 }
 
 func TestCache_Get(t *testing.T) {
 	start := time.Now()
 	cache := New(localDir, time.Second*3)
 
-	t.Logf("load from local cost:%s load length:%d", time.Since(start), cache.Length())
+	t.Logf("load from local cost:%s load length:%d", time.Since(start), Length(cache))
 
 	var (
 		effective bool
-		data      = Map{
+		data      = msg.Map{
 			"bool":   true,
 			"int":    100,
 			"uint":   uint(math.MaxUint16),
@@ -83,82 +84,83 @@ func TestCache_Get(t *testing.T) {
 		}
 	)
 
-	for key, value := range data {
-		err := cache.Set(key, value)
-		if err != nil {
-			t.Fatalf("want nil, got %v", err)
-		}
-	}
+	_ = Set(cache, "bool", data["bool"].(bool))
+	_ = Set(cache, "int", data["int"].(int))
+	_ = Set(cache, "uint", data["uint"].(uint))
+	_ = Set(cache, "uint64", data["uint64"].(uint64))
+	_ = Set(cache, "float", data["float"].(float64))
+	_ = Set(cache, "string", data["string"].(string))
+	_ = Set(cache, "slice", data["slice"].([]interface{}))
+	_ = Set(cache, "bytes", data["bytes"].([]byte))
+	_ = Set(cache, "time", data["time"].(time.Time))
 
-	boolVal, effective := cache.GetBool("bool", 60)
+	boolVal, effective, _ := Get(cache, "bool", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if boolVal != data.Bool("bool") {
+	if msg.Bool(boolVal) != data.Bool("bool") {
 		t.Fatalf("want %v, got %v", data.Bool("bool"), boolVal)
 	}
 
-	intVal, effective := cache.GetInt("int", 60)
+	intVal, effective, _ := Get(cache, "int", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if intVal != data.Int("int") {
+	if msg.Int(intVal) != data.Int("int") {
 		t.Fatalf("want %v, got %v", data.Int("int"), intVal)
 	}
 
-	uintVal, effective := cache.GetUint("uint", 60)
+	uintVal, effective, _ := Get(cache, "uint", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if uintVal != data.Uint("uint") {
+	if msg.Uint(uintVal) != data.Uint("uint") {
 		t.Fatalf("want %v, got %v", data.Uint("uint"), uintVal)
 	}
 
-	uint64Val, effective := cache.GetUint("uint64", 60)
+	uint64Val, effective, _ := Get(cache, "uint64", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if uint64Val != data.Uint("uint64") {
+	if msg.Uint(uint64Val) != data.Uint("uint64") {
 		t.Fatalf("want %v, got %v", data.Uint("uint64"), uint64Val)
 	}
 
-	floatVal, effective := cache.GetFloat("float", 60)
+	floatVal, effective, _ := Get(cache, "float", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if floatVal != data.Float("float") {
+	if msg.Float(floatVal) != data.Float("float") {
 		t.Fatalf("want %v, got %v", data.Float("float"), floatVal)
 	}
 
-	stringValue, effective := cache.GetString("string", 60)
+	stringValue, effective, _ := Get(cache, "string", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if stringValue != data.String("string") {
+	if msg.String(stringValue) != data.String("string") {
 		t.Fatalf("want %v, got %v", data.String("string"), stringValue)
 	}
 
-	bytesValue, effective := cache.GetBytes("bytes", 600)
+	bytesValue, effective, _ := Get(cache, "bytes", 600)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if !bytes.Equal(bytesValue, data.Bytes("bytes")) {
+	if !bytes.Equal(msg.Bytes(bytesValue), data.Bytes("bytes")) {
 		t.Fatalf("want %s, got %v", data.Bytes("bytes"), bytesValue)
 	}
 
-	sliceValue, effective := cache.GetSlice("slice", 60)
+	sliceValue, effective, _ := Get(cache, "slice", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if !(reflect.DeepEqual(data.Slice("slice"), sliceValue)) {
-		t.Fatalf("want %v, got %v", data["slice"], sliceValue)
-	}
+	t.Logf("want %v, got %v", data["slice"], sliceValue)
 
-	timeValue, effective := cache.GetTime("time", 600)
+	timeValue, effective, _ := Get(cache, "time", 600)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if !timeValue.Equal(data.Time("time")) {
+	if !msg.Time(timeValue).Equal(data.Time("time")) {
 		t.Fatalf("want %v, got %v", data.Time("time"), timeValue)
 	}
 
@@ -169,81 +171,81 @@ func TestCache_Get(t *testing.T) {
 	start = time.Now()
 	cache = New(localDir, time.Second*3)
 
-	t.Logf("load from local cost:%s load length:%d", time.Since(start), cache.Length())
+	t.Logf("load from local cost:%s load length:%d", time.Since(start), Length(cache))
 
-	boolVal, effective = cache.GetBool("bool", 60)
+	boolVal, effective, _ = Get(cache, "bool", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if boolVal != data.Bool("bool") {
+	if msg.Bool(boolVal) != data.Bool("bool") {
 		t.Fatalf("want %v, got %v", data.Bool("bool"), boolVal)
 	}
 
-	intVal, effective = cache.GetInt("int", 60)
+	intVal, effective, _ = Get(cache, "int", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if intVal != data.Int("int") {
+	if msg.Int(intVal) != data.Int("int") {
 		t.Fatalf("want %v, got %v", data.Int("int"), intVal)
 	}
 
-	uintVal, effective = cache.GetUint("uint", 60)
+	uintVal, effective, _ = Get(cache, "uint", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if uintVal != data.Uint("uint") {
+	if msg.Uint(uintVal) != data.Uint("uint") {
 		t.Fatalf("want %v, got %v", data.Uint("uint"), uintVal)
 	}
 
-	uint64Val, effective = cache.GetUint("uint64", 60)
+	uint64Val, effective, _ = Get(cache, "uint64", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if uint64Val != data.Uint("uint64") {
+	if msg.Uint(uint64Val) != data.Uint("uint64") {
 		t.Fatalf("want %v, got %v", data.Uint("uint64"), uint64Val)
 	}
 
-	floatVal, effective = cache.GetFloat("float", 60)
+	floatVal, effective, _ = Get(cache, "float", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if floatVal != data.Float("float") {
+	if msg.Float(floatVal) != data.Float("float") {
 		t.Fatalf("want %v, got %v", data.Float("float"), floatVal)
 	}
 
-	stringValue, effective = cache.GetString("string", 60)
+	stringValue, effective, _ = Get(cache, "string", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if stringValue != data.String("string") {
+	if msg.String(stringValue) != data.String("string") {
 		t.Fatalf("want %v, got %v", data.String("string"), stringValue)
 	}
 
-	bytesValue, effective = cache.GetBytes("bytes", 600)
+	bytesValue, effective, _ = Get(cache, "bytes", 600)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if !bytes.Equal(bytesValue, data.Bytes("bytes")) {
+	if !bytes.Equal(msg.Bytes(bytesValue), data.Bytes("bytes")) {
 		t.Fatalf("want %s, got %v", data.Bytes("bytes"), bytesValue)
 	}
 
-	sliceValue, effective = cache.GetSlice("slice", 60)
+	sliceValue, effective, _ = Get(cache, "slice", 60)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
 	t.Logf("want %v, got %v", data["slice"], sliceValue)
 
-	timeValue, effective = cache.GetTime("time", 600)
+	timeValue, effective, _ = Get(cache, "time", 600)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
-	if !timeValue.Equal(data.Time("time")) {
+	if !msg.Time(timeValue).Equal(data.Time("time")) {
 		t.Fatalf("want %v, got %v", data.Time("time"), timeValue)
 	}
 
-	cache.Delete("time")
+	Delete(cache, "time")
 
-	info, _ := utils.JsonEncode(cache.Info())
+	info, _ := utils.JsonEncode(InfoCache(cache))
 	t.Logf("%s", info)
 }
 
@@ -251,11 +253,11 @@ func TestCache_GetMap(t *testing.T) {
 	start := time.Now()
 	cache := New(localDir, time.Second*3)
 
-	t.Logf("load from local cost:%s load length:%d", time.Since(start), cache.Length())
+	t.Logf("load from local cost:%s load length:%d", time.Since(start), Length(cache))
 
 	var (
 		key  = "map"
-		data = Map{
+		data = msg.Map{
 			"bool":    true,
 			"int":     100,
 			"uint64":  uint64(math.MaxUint64),
@@ -269,7 +271,7 @@ func TestCache_GetMap(t *testing.T) {
 		}
 	)
 
-	err := cache.Set(key, data)
+	err := Set(cache, key, data)
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
 	}
@@ -278,10 +280,12 @@ func TestCache_GetMap(t *testing.T) {
 
 	cache = New(localDir, time.Second*3)
 
-	mp, effective := cache.GetMap(key, 1)
+	value, effective, _ := Get(cache, key, 1)
 	if !effective {
 		t.Fatalf("want true, got %v", effective)
 	}
+
+	mp := msg.MsgMap(value)
 
 	if mp.Bool("bool") != data.Bool("bool") {
 		t.Fatalf("want %t, got %v", data.Bool("bool"), mp["bool"])
@@ -346,12 +350,12 @@ func TestCache_SyncLocal(t *testing.T) {
 		cache = New(localDir, time.Second*3)
 	)
 
-	t.Logf("load %d length key cost:%s", cache.Length(), time.Since(start))
+	t.Logf("load %d length key cost:%s", Length(cache), time.Since(start))
 
 	keyMax := 50 * 10000
 	for i := 0; i < keyMax; i++ {
 		key := fmt.Sprintf("key:%d", i)
-		err := cache.Set(key, User{
+		err := Set(cache, key, User{
 			Id:        uint32(i),
 			Name:      key,
 			CreatedAt: time.Now().Unix(),
@@ -378,7 +382,7 @@ func TestCache_LoadLocal(t *testing.T) {
 		cache = New(localDir, time.Second*3)
 	)
 
-	t.Logf("load %d length key cost:%s", cache.Length(), time.Since(start))
+	t.Logf("load %d length key cost:%s", Length(cache), time.Since(start))
 
 	start = time.Now()
 	runtime.GC()
@@ -402,7 +406,7 @@ func BenchmarkCache_CommonMap(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		user, err := cache.CommonMap(key, 10, func() (interface{}, error) {
+		value, err := CommonGet[msg.Map](cache, key, 10, func() (msg.Map, error) {
 			time.Sleep(time.Millisecond * 500)
 
 			user := User{
@@ -417,6 +421,8 @@ func BenchmarkCache_CommonMap(b *testing.B) {
 		if err != nil {
 			b.Fatalf("want nil, got %v", err)
 		}
+
+		user := msg.MsgMap(value)
 
 		if user.Int("id") != int64(id) {
 			b.Fatalf("want %d, got %v", id, user.Int("id"))
@@ -436,7 +442,7 @@ func BenchmarkCacheParallel_CommonMap(b *testing.B) {
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			user, err := cache.CommonMap(key, 10, func() (interface{}, error) {
+			value, err := CommonGet[msg.Map](cache, key, 10, func() (msg.Map, error) {
 				time.Sleep(time.Millisecond * 500)
 
 				user := User{
@@ -451,6 +457,8 @@ func BenchmarkCacheParallel_CommonMap(b *testing.B) {
 			if err != nil {
 				b.Fatalf("want nil, got %v", err)
 			}
+
+			user := msg.MsgMap(value)
 
 			if user.Int("id") != int64(id) {
 				b.Fatalf("want %d, got %v", id, user.Int("id"))

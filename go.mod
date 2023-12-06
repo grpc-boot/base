@@ -6,6 +6,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/goccy/go-json v0.10.2
 	github.com/golang/protobuf v1.5.2
+	github.com/redis/go-redis/v9 v9.3.0
 	github.com/tinylib/msgp v1.1.6
 	go.uber.org/atomic v1.11.0
 	go.uber.org/zap v1.26.0
@@ -15,6 +16,8 @@ require (
 )
 
 require (
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/philhofer/fwd v1.1.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect

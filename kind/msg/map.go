@@ -1,15 +1,6 @@
-package cache
+package msg
 
-import (
-	"time"
-
-	"github.com/tinylib/msgp/msgp"
-)
-
-type marshaler interface {
-	msgp.Marshaler
-	msgp.Unmarshaler
-}
+import "time"
 
 type Map map[string]interface{}
 
@@ -19,23 +10,19 @@ func (m Map) Strings(key string) []string {
 }
 
 func (m Map) Bool(key string) bool {
-	value, _ := m[key].(bool)
-	return value
+	return Bool(m[key])
 }
 
 func (m Map) String(key string) string {
-	value, _ := m[key].(string)
-	return value
+	return String(m[key])
 }
 
 func (m Map) Slice(key string) []interface{} {
-	value, _ := m[key].([]interface{})
-	return value
+	return Slice(m[key])
 }
 
 func (m Map) Bytes(key string) []byte {
-	value, _ := m[key].([]byte)
-	return value
+	return Bytes(m[key])
 }
 
 func (m Map) Int(key string) int64 {
@@ -111,11 +98,9 @@ func (m Map) Float32s(key string) []float32 {
 }
 
 func (m Map) Time(key string) time.Time {
-	value, _ := m[key].(time.Time)
-	return value
+	return Time(m[key])
 }
 
 func (m Map) Map(key string) Map {
-	value, _ := m[key].(map[string]interface{})
-	return Map(value)
+	return MsgMap(m[key])
 }

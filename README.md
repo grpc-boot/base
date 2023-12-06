@@ -3,6 +3,71 @@
 ### components.cache 本地内存缓存组件，会同步到本地目录，重启后从本地加载到内存
 
 ```go
+package cache
+
+import (
+	"bytes"
+	"fmt"
+	"golang.org/x/exp/rand"
+	"math"
+	"runtime"
+	"testing"
+	"time"
+
+	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v2/kind/msg"
+	"github.com/grpc-boot/base/v2/utils"
+)
+
+var (
+	localDir = "/tmp/cache"
+)
+
+type User struct {
+	Id        uint32 `json:"id"`
+	Name      string `json:"name"`
+	CreatedAt int64  `json:"createdAt"`
+}
+
+func (u User) ToMap() msg.Map {
+	return msg.Map{
+		"id":        u.Id,
+		"name":      u.Name,
+		"createdAt": u.CreatedAt,
+	}
+}
+
+func TestCache_CommonMap(t *testing.T) {
+	var (
+		cache        = New(localDir, time.Second*3)
+		id    uint32 = 10086
+		key          = fmt.Sprintf("user:%d", 10086)
+	)
+
+	mp, err := CommonGet[msg.Map](cache, key, 60, func() (msg.Map, error) {
+		time.Sleep(time.Millisecond * time.Duration(rand.Intn(1008)))
+
+		user := User{
+			Id:        id,
+			Name:      "移动",
+			CreatedAt: time.Now().Unix(),
+		}
+
+		return user.ToMap(), nil
+	})
+
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+
+	userMap := msg.MsgMap(mp)
+	if userMap.Int("id") != int64(id) {
+		t.Fatalf("want %d, got %v", id, userMap.Int("id"))
+	}
+
+	t.Logf("createdAt:%d", userMap.Int("createdAt"))
+}
+
 // BenchmarkCacheParallel_CommonMap-8      20719171                58.49 ns/op            0 B/op          0 allocs/op
 func BenchmarkCacheParallel_CommonMap(b *testing.B) {
 	var (
@@ -15,7 +80,7 @@ func BenchmarkCacheParallel_CommonMap(b *testing.B) {
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			user, err := cache.CommonMap(key, 10, func() (interface{}, error) {
+			value, err := CommonGet[msg.Map](cache, key, 10, func() (msg.Map, error) {
 				time.Sleep(time.Millisecond * 500)
 
 				user := User{
@@ -30,6 +95,8 @@ func BenchmarkCacheParallel_CommonMap(b *testing.B) {
 			if err != nil {
 				b.Fatalf("want nil, got %v", err)
 			}
+
+			user := msg.MsgMap(value)
 
 			if user.Int("id") != int64(id) {
 				b.Fatalf("want %d, got %v", id, user.Int("id"))

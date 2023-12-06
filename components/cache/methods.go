@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/grpc-boot/base/v2/kind/msg"
+
 	"github.com/tinylib/msgp/msgp"
 )
 
@@ -222,9 +224,9 @@ func (e *Entry) save(value interface{}, now int64) (err error) {
 	}()
 
 	switch val := value.(type) {
-	case Map:
+	case msg.Map:
 		e.Value = map[string]interface{}(val)
-	case marshaler,
+	case msg.Marshaler,
 		msgp.Extension,
 		bool,
 		float32,
@@ -255,13 +257,13 @@ func (e *Entry) save(value interface{}, now int64) (err error) {
 	return
 }
 
-func (e *Entry) Val() Map {
+func (e *Entry) Val() msg.Map {
 	val, ok := e.Value.(map[string]interface{})
 	if ok {
-		return Map(val)
+		return msg.Map(val)
 	}
 
-	return Map{}
+	return msg.Map{}
 }
 
 func (e *Entry) effective(timeout, now int64) bool {
