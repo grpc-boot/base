@@ -18,7 +18,13 @@ const (
 	cacheTimeout   = time.Duration(3600*24*7) * time.Second
 )
 
-func GetItemWithCache[V msg.Value](ctx context.Context, red *redis.Client, key string, current, timeoutSecond int64, handler msg.Handler[V]) (item cache.Item, err error) {
+func GetItemWithCacheTimeout[V msg.Value](timeout time.Duration, red *redis.Client, key string, current, cacheSeconds int64, handler msg.Handler[V]) (item cache.Item, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	return GetItemWithCache(ctx, red, key, current, cacheSeconds, handler)
+}
+
+func GetItemWithCache[V msg.Value](ctx context.Context, red *redis.Client, key string, current, cacheSeconds int64, handler msg.Handler[V]) (item cache.Item, err error) {
 	key = fmt.Sprintf(cacheKeyFormat, key)
 	cmd := red.Get(ctx, key)
 	err = DealCmdErr(cmd)
@@ -47,7 +53,7 @@ func GetItemWithCache[V msg.Value](ctx context.Context, red *redis.Client, key s
 	}
 
 	//缓存有效
-	if item.Hit(timeoutSecond, current) {
+	if item.Hit(cacheSeconds, current) {
 		return item, err
 	}
 
