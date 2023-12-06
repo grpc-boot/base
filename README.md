@@ -106,6 +106,97 @@ func BenchmarkCacheParallel_CommonMap(b *testing.B) {
 }
 ```
 
+### `gored`操作redis
+
+> 缓存处理
+
+```go
+package gored
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/grpc-boot/base/v2/kind/msg"
+)
+
+func init() {
+	o := DefaultOptions()
+	SetRedis("redis", o)
+}
+
+func TestGetItemWithCache(t *testing.T) {
+	red, _ := GetRedis("redis")
+	item, err := GetItemWithCacheTimeout(time.Second, red, "cache", time.Now().Unix(), 6, func() (value msg.Map, err error) {
+		value = msg.Map{
+			"id":   10086,
+			"name": "移动",
+		}
+		return
+	})
+
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+
+	t.Logf("value: %v", item.Map())
+}
+```
+
+> 锁
+
+```go
+func TestAcquire(t *testing.T) {
+	red, _ := GetRedis("redis")
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	cmd := Acquire(ctx, red, "acquire", 10)
+	err := DealCmdErr(cmd)
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+
+	token := cmd.Val()
+	if token > 0 {
+		t.Logf("acquire token: %d", token)
+		ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
+		defer cancel1()
+
+		rCmd := Release(ctx1, red, "acquire", token)
+		err = DealCmdErr(rCmd)
+		if err != nil {
+			t.Fatalf("want nil, got %v", err)
+		}
+	} else {
+		t.Logf("do not acquire token")
+	}
+}
+```
+
+> 令牌桶限速
+
+```go
+func TestGetToken(t *testing.T) {
+	red, _ := GetRedis("redis")
+	max := 100
+
+	for i := 0; i < max; i++ {
+		cmd := SecondLimitByToken(context.Background(), red, "token", 3, 1, 6)
+		err := DealCmdErr(cmd)
+		if err != nil {
+			t.Fatalf("want nil, got %v", err)
+		}
+
+		if cmd.Val() {
+			t.Logf("got token")
+		}
+	}
+}
+```
+
 ### 运行时开启关闭pprof，当系统出现问题时可以实时开启pprof定位系统问题
 
 ```go

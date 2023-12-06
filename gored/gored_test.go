@@ -6,20 +6,15 @@ import (
 	"time"
 
 	"github.com/grpc-boot/base/v2/kind/msg"
-
-	"github.com/redis/go-redis/v9"
 )
 
-var (
-	opt = func() redis.Options {
-		o := DefaultOptions()
-		o.Addr = "127.0.0.1:6379"
-		return o
-	}()
-)
+func init() {
+	o := DefaultOptions()
+	SetRedis("redis", o)
+}
 
 func TestGetItemWithCache(t *testing.T) {
-	red := redis.NewClient(&opt)
+	red, _ := GetRedis("redis")
 	item, err := GetItemWithCacheTimeout(time.Second, red, "cache", time.Now().Unix(), 6, func() (value msg.Map, err error) {
 		value = msg.Map{
 			"id":   10086,
@@ -37,7 +32,7 @@ func TestGetItemWithCache(t *testing.T) {
 
 // BenchmarkGetItemWithCache-8   	   21046	     52605 ns/op
 func BenchmarkGetItemWithCache(b *testing.B) {
-	red := redis.NewClient(&opt)
+	red, _ := GetRedis("redis")
 
 	b.ResetTimer()
 
@@ -63,7 +58,7 @@ func BenchmarkGetItemWithCache(b *testing.B) {
 
 // BenchmarkGetItemWithCacheParallel-8   	   18128	     77644 ns/op
 func BenchmarkGetItemWithCacheParallel(b *testing.B) {
-	red := redis.NewClient(&opt)
+	red, _ := GetRedis("redis")
 
 	b.ResetTimer()
 
@@ -90,7 +85,7 @@ func BenchmarkGetItemWithCacheParallel(b *testing.B) {
 }
 
 func TestAcquire(t *testing.T) {
-	red := redis.NewClient(&opt)
+	red, _ := GetRedis("redis")
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -118,7 +113,7 @@ func TestAcquire(t *testing.T) {
 }
 
 func TestAcquireWithTimeout(t *testing.T) {
-	red := redis.NewClient(&opt)
+	red, _ := GetRedis("redis")
 
 	cmd := AcquireWithTimeout(time.Second, red, "acquire", 10)
 	err := DealCmdErr(cmd)
@@ -141,7 +136,7 @@ func TestAcquireWithTimeout(t *testing.T) {
 }
 
 func TestGetToken(t *testing.T) {
-	red := redis.NewClient(&opt)
+	red, _ := GetRedis("redis")
 	max := 100
 
 	for i := 0; i < max; i++ {
@@ -155,12 +150,11 @@ func TestGetToken(t *testing.T) {
 			t.Logf("got token")
 		}
 	}
-
 }
 
 // BenchmarkSecondLimitByToken-8   	   19594	     56544 ns/op
 func BenchmarkSecondLimitByToken(b *testing.B) {
-	red := redis.NewClient(&opt)
+	red, _ := GetRedis("redis")
 
 	b.ResetTimer()
 

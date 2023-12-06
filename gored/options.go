@@ -8,6 +8,7 @@ import (
 
 var DefaultOptions = func() redis.Options {
 	return redis.Options{
+		Addr:                  "127.0.0.1:6379",
 		DB:                    0,
 		MaxRetries:            3,
 		DialTimeout:           time.Second,
