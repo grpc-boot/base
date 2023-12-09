@@ -48,13 +48,13 @@ func New(server Serve, envs []string) *Graceful {
 func (g *Graceful) initListener(addr string) error {
 	if os.Getenv(EnvKey) != "" {
 		g.isChild = true
-
 		f := os.NewFile(uintptr(3), "")
 		l, err := net.FileListener(f)
 		if err != nil {
 			return err
 		}
 
+		g.addr = addr
 		g.listener = l
 		return nil
 	}
@@ -87,6 +87,13 @@ func (g *Graceful) fork() (err error) {
 	if len(g.envs) > 0 {
 		env = append(env, g.envs...)
 	}
+
+	listenerFile, err := g.listener.(*net.TCPListener).File()
+	if err != nil {
+		return err
+	}
+
+	files[0] = listenerFile
 
 	cmd := exec.Command(path, args...)
 	cmd.Stdout = os.Stdout
