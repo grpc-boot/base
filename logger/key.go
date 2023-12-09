@@ -72,7 +72,7 @@ func Duration(duration time.Duration) zap.Field {
 }
 
 func Error(err error) zap.Field {
-	return zap.Error(err)
+	return zap.NamedError("Error", err)
 }
 
 func Args(args ...any) zap.Field {
