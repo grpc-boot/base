@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/grpc-boot/base/v2/kind/msg"
+
+	"github.com/redis/go-redis/v9"
 )
 
 func init() {
@@ -85,12 +87,15 @@ func BenchmarkGetItemWithCacheParallel(b *testing.B) {
 }
 
 func TestAcquire(t *testing.T) {
-	red, _ := GetRedis("redis")
+	var (
+		red, _ = GetRedis("redis")
+		cmd    *redis.IntCmd
+	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
+	TimeoutDo(time.Second, func(ctx context.Context) {
+		cmd = Acquire(ctx, red, "acquire", 10)
+	})
 
-	cmd := Acquire(ctx, red, "acquire", 10)
 	err := DealCmdErr(cmd)
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
@@ -99,10 +104,12 @@ func TestAcquire(t *testing.T) {
 	token := cmd.Val()
 	if token > 0 {
 		t.Logf("acquire token: %d", token)
-		ctx1, cancel1 := context.WithTimeout(context.Background(), time.Second)
-		defer cancel1()
 
-		rCmd := Release(ctx1, red, "acquire", token)
+		var rCmd *redis.IntCmd
+		TimeoutDo(time.Second, func(ctx context.Context) {
+			rCmd = Release(ctx, red, "acquire", token)
+		})
+
 		err = DealCmdErr(rCmd)
 		if err != nil {
 			t.Fatalf("want nil, got %v", err)

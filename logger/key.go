@@ -51,8 +51,20 @@ func Path(path string) zap.Field {
 	return zap.String("Path", path)
 }
 
+func Token(token string) zap.Field {
+	return zap.String("Token", token)
+}
+
+func Sql(sql string) zap.Field {
+	return zap.String("Sql", sql)
+}
+
 func Uri(uri string) zap.Field {
 	return zap.String("Uri", uri)
+}
+
+func Code(code int) zap.Field {
+	return zap.Int("Code", code)
 }
 
 func Duration(duration time.Duration) zap.Field {
