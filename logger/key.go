@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"syscall"
 	"time"
 
 	"go.uber.org/zap"
@@ -8,6 +9,14 @@ import (
 
 func Id(id int64) zap.Field {
 	return zap.Int64("Id", id)
+}
+
+func Pid(pid int) zap.Field {
+	return zap.Int("Pid", pid)
+}
+
+func Signal(sig syscall.Signal) zap.Field {
+	return zap.Int("Signal", int(sig))
 }
 
 func UpdateAt(updatedAt int64) zap.Field {
