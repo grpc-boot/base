@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/grpc-boot/base/v2/internal"
 	"github.com/grpc-boot/base/v2/kind/msg"
 
 	"github.com/redis/go-redis/v9"
@@ -13,6 +14,84 @@ import (
 func init() {
 	o := DefaultOptions()
 	SetRedis("redis", o)
+}
+
+func TestConf_Float(t *testing.T) {
+	var (
+		start    = time.Now()
+		red, _   = GetRedis("redis")
+		interval = time.Second * 3
+		conf     = NewConf("base_conf", interval, red)
+		dp       = map[string]interface{}{
+			"int":    56,
+			"int64":  int64(2313),
+			"bool":   true,
+			"string": `的as2`,
+			"[]byte": []byte("sd都是"),
+			"float":  float32(3434.32),
+		}
+	)
+
+	t.Logf("load conf cost: %s", time.Since(start))
+
+	_, err := SetConf(conf, "int", dp["int"].(int))
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+	_, err = SetConf(conf, "int64", dp["int64"].(int64))
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+	_, err = SetConf(conf, "bool", dp["bool"].(bool))
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+	_, err = SetConf(conf, "string", dp["string"].(string))
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+	_, err = SetConf(conf, "[]byte", dp["[]byte"].([]byte))
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+	_, err = SetConf(conf, "float", dp["float"].(float32))
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+
+	time.Sleep(interval + time.Second)
+
+	time.Sleep(time.Second)
+
+	intVal := conf.Int("int", 1)
+	if intVal != int64(dp["int"].(int)) {
+		t.Fatalf("want %d, got %v", dp["int"].(int), intVal)
+	}
+
+	int64Val := conf.Int("int64", 1)
+	if int64Val != dp["int64"].(int64) {
+		t.Fatalf("want %d, got %v", dp["int64"].(int64), int64Val)
+	}
+
+	boolVal := conf.Bool("bool", false)
+	if boolVal != dp["bool"].(bool) {
+		t.Fatalf("want %t, got %v", dp["bool"].(bool), boolVal)
+	}
+
+	stringVal := conf.String("string", "f")
+	if stringVal != dp["string"].(string) {
+		t.Fatalf("want %s, got %v", dp["string"].(string), stringVal)
+	}
+
+	floatVal := conf.Float("float", 3.1415)
+	if floatVal != float64(dp["float"].(float32)) {
+		t.Fatalf("want %v, got %v", dp["float"].(float32), floatVal)
+	}
+
+	bytesVal := conf.String("[]byte", "sadfas")
+	if bytesVal != internal.Bytes2String(dp["[]byte"].([]byte)) {
+		t.Fatalf("want %s, got %v", dp["[]byte"].([]byte), bytesVal)
+	}
 }
 
 func TestGetItemWithCache(t *testing.T) {
