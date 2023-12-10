@@ -24,6 +24,11 @@ type Conf struct {
 	value    atomic.Value
 }
 
+func NewConfWithOption(key string, interval time.Duration, opt redis.Options) *Conf {
+	red := redis.NewClient(&opt)
+	return NewConf(key, interval, red)
+}
+
 func NewConf(key string, interval time.Duration, red *redis.Client) *Conf {
 	config := &Conf{
 		key:      key,
