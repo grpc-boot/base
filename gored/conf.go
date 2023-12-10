@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v2/logger"
 	"github.com/grpc-boot/base/v2/utils"
 
 	"github.com/redis/go-redis/v9"
@@ -15,13 +16,16 @@ import (
 
 const (
 	MinInterval = time.Second * 3
+	verField    = `cI:Ver`
 )
 
 type Conf struct {
-	key      string
-	red      *redis.Client
-	interval time.Duration
-	value    atomic.Value
+	key       string
+	red       *redis.Client
+	interval  time.Duration
+	value     atomic.Value
+	ver       atomic.Int64
+	updatedAt atomic.Time
 }
 
 func NewConfWithOption(key string, interval time.Duration, opt redis.Options) *Conf {
@@ -46,7 +50,10 @@ func NewConf(key string, interval time.Duration, red *redis.Client) *Conf {
 func SetConf[T kind.RedisValue](c *Conf, key string, value T) (isNew bool, err error) {
 	var cmd *redis.IntCmd
 	TimeoutDo(time.Second*3, func(ctx context.Context) {
-		cmd = c.red.HSet(ctx, c.key, key, value)
+		pipe := c.red.Pipeline()
+		cmd = pipe.HSet(ctx, c.key, key, value)
+		pipe.HIncrBy(ctx, c.key, verField, 1)
+		_, _ = pipe.Exec(ctx)
 	})
 
 	err = DealCmdErr(cmd)
@@ -127,6 +134,11 @@ func (c *Conf) Bool(key string, defaultValue bool) bool {
 	return value
 }
 
+func (c *Conf) Value() map[string]string {
+	m, _ := c.value.Load().(map[string]string)
+	return m
+}
+
 func (c *Conf) autoSync() {
 	if c.interval < MinInterval {
 		c.interval = MinInterval
@@ -141,14 +153,31 @@ func (c *Conf) autoSync() {
 }
 
 func (c *Conf) sync() {
-	var cmd *redis.MapStringStringCmd
-	TimeoutDo(time.Second*3, func(ctx context.Context) {
-		cmd = c.red.HGetAll(ctx, c.key)
+	now := time.Now()
+	logger.ZapInfo("start sync conf")
+
+	TimeoutDo(time.Second*6, func(ctx context.Context) {
+		sCmd := c.red.HGet(ctx, c.key, verField)
+		if err := DealCmdErr(sCmd); err != nil {
+			return
+		}
+
+		if sCmd.Val() == c.ver.String() {
+			return
+		}
+
+		cmd := c.red.HGetAll(ctx, c.key)
+		if err := DealCmdErr(cmd); err != nil {
+			return
+		}
+
+		c.value.Store(cmd.Val())
+		c.updatedAt.Store(time.Now())
+
+		c.ver.Store(c.Int(verField, c.ver.Load()))
 	})
 
-	if err := DealCmdErr(cmd); err != nil {
-		return
-	}
-
-	c.value.Store(cmd.Val())
+	logger.ZapInfo("sync conf done",
+		logger.Duration(time.Since(now)),
+	)
 }
