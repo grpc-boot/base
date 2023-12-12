@@ -22,9 +22,7 @@ var statusPool = sync.Pool{
 func StatusWithCode(code codes.Code) *Status {
 	sts := statusPool.Get().(*Status)
 	sts.Code = code
-	if msg, exists := defaultCodeMsg[code]; exists {
-		sts.Msg = msg
-	}
+	sts.Msg = sts.Code.String()
 
 	return sts
 }
@@ -36,7 +34,7 @@ func StatusWithCodeMsg(code codes.Code, msg string) *Status {
 
 // StatusOk 创建携带数据的Status
 func StatusOk(data any) *Status {
-	return StatusWithCode(OK).WithMsg("ok").WithData(data)
+	return StatusWithCode(utils.OK).WithMsg("ok").WithData(data)
 }
 
 // StatusWithJsonUnmarshal 指定json []byte获取一个Status
@@ -57,7 +55,7 @@ type Status struct {
 }
 
 func (s *Status) reset() {
-	s.Code = OK
+	s.Code = utils.OK
 	s.Msg = ""
 	s.Data = kind.Empty
 	s.Flag = 0
@@ -71,7 +69,7 @@ func (s *Status) Close() {
 
 // IsOK 操作是否OK
 func (s *Status) IsOK() bool {
-	return s.IsCode(OK)
+	return s.IsCode(utils.OK)
 }
 
 // IsCode 判断是否是指定Code
@@ -114,7 +112,7 @@ func (s *Status) ConvertGrpcStatus(details ...proto.Message) (*status.Status, er
 }
 
 func (s *Status) ToError() error {
-	if s.Code == OK {
+	if s.Code == utils.OK {
 		return nil
 	}
 

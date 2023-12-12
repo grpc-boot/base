@@ -1,6 +1,8 @@
-package components
+package utils
 
-import "google.golang.org/grpc/codes"
+import (
+	"google.golang.org/grpc/codes"
+)
 
 const (
 	// OK 成功返回
@@ -57,23 +59,3 @@ const (
 	// CodeUnauthenticated 表示请求没有用于操作的有效身份验证凭据
 	CodeUnauthenticated = codes.Unauthenticated
 )
-
-var defaultCodeMsg = map[codes.Code]string{
-	OK:                     "OK",
-	CodeCanceled:           "CANCELLED",
-	CodeUnknown:            "UNKNOWN",
-	CodeInvalidArgument:    "INVALID_ARGUMENT",
-	CodeDeadlineExceeded:   "DEADLINE_EXCEEDED",
-	CodeNotFound:           "NOT_FOUND",
-	CodeAlreadyExists:      "ALREADY_EXISTS",
-	CodePermissionDenied:   "PERMISSION_DENIED",
-	CodeResourceExhausted:  "RESOURCE_EXHAUSTED",
-	CodeFailedPrecondition: "FAILED_PRECONDITION",
-	CodeAborted:            "ABORTED",
-	CodeOutRange:           "OUT_OF_RANGE",
-	CodeUnimplemented:      "UNIMPLEMENTED",
-	CodeInternal:           "INTERNAL",
-	CodeUnavailable:        "UNAVAILABLE",
-	CodeDataLoss:           "DATA_LOSS",
-	CodeUnauthenticated:    "UNAUTHENTICATED",
-}
