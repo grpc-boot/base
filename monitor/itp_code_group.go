@@ -23,8 +23,9 @@ func NewItpCodeGroup(name string, codeList []codes.Code) *ItpCodeGroup {
 	return ig
 }
 
-func (icg *ItpCodeGroup) Path(path, name string) {
+func (icg *ItpCodeGroup) Path(path, name string) *ItpCodeGroup {
 	icg.groups[path] = NewItpCode(name, icg.codeList)
+	return icg
 }
 
 func (icg *ItpCodeGroup) Add(path string, code codes.Code, delta uint64) (newValue uint64, exists bool) {

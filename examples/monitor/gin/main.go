@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"golang.org/x/exp/rand"
@@ -9,10 +10,14 @@ import (
 
 	"github.com/grpc-boot/base/v2/components"
 	"github.com/grpc-boot/base/v2/components/grace"
+	"github.com/grpc-boot/base/v2/gored"
+	"github.com/grpc-boot/base/v2/logger"
 	"github.com/grpc-boot/base/v2/monitor"
 	"github.com/grpc-boot/base/v2/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -22,8 +27,18 @@ var (
 func init() {
 	rand.Seed(uint64(time.Now().Unix()))
 
+	err := logger.InitZapWithOption(logger.Option{
+		Level:      int8(zapcore.InfoLevel),
+		Path:       "./",
+		TickSecond: 5,
+		MaxDays:    1,
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
 	opt := monitor.DefaultOptions()
-	opt.ResetSeconds = 10
 	opt.CodeGauges = []string{monitor.GaugeRequestCount, monitor.GaugeResponseCount, monitor.GaugeResponseLen}
 
 	m = monitor.NewMonitor(opt)
@@ -53,7 +68,68 @@ func RetJson(ctx *gin.Context, sts *components.Status) {
 }
 
 func main() {
-	engine := gin.Default()
+	var (
+		engine = gin.Default()
+		opt    = gored.DefaultOptions()
+		red    = redis.NewClient(&opt)
+	)
+
+	go func() {
+		ticker := time.NewTicker(time.Second * 60)
+		for range ticker.C {
+			var (
+				prefix              = time.Now().Format("20060102")
+				info                = m.Info()
+				gaugeKeys, codeKeys = info.Keys(prefix)
+				cmdTimeout          = time.Second * 3
+			)
+
+			for _, key := range gaugeKeys {
+				gored.TimeoutDo(cmdTimeout, func(ctx context.Context) {
+					var (
+						cmd = red.HGetAll(ctx, key)
+						err = gored.DealCmdErr(cmd)
+					)
+
+					if err != nil {
+						logger.ZapError("get monitor info failed",
+							logger.Error(err),
+						)
+						return
+					}
+
+					logger.ZapDebug("get monitor info",
+						logger.Key(key),
+						logger.Value(cmd.Val()),
+					)
+				})
+			}
+
+			for _, key := range codeKeys {
+				gored.TimeoutDo(cmdTimeout, func(ctx context.Context) {
+					var (
+						cmd = red.HGetAll(ctx, key)
+						err = gored.DealCmdErr(cmd)
+					)
+
+					if err != nil {
+						logger.ZapError("get monitor info failed",
+							logger.Error(err),
+						)
+						return
+					}
+
+					logger.ZapInfo("get monitor info",
+						logger.Key(key),
+						logger.Value(cmd.Val()),
+					)
+				})
+			}
+		}
+	}()
+
+	// monitor信息同步到redis
+	m.WithStorage(monitor.RedisStorage(red))
 
 	// handler panic
 	engine.Use(func(ctx *gin.Context) {

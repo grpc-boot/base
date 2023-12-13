@@ -66,7 +66,7 @@ func TestMonitor_Add(t *testing.T) {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	time.AfterFunc(time.Second*30, func() {
+	time.AfterFunc(time.Second*60, func() {
 		data, _ := utils.JsonEncode(m.Info())
 		t.Logf("data: %s", data)
 
