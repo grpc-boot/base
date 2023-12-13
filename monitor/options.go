@@ -7,6 +7,7 @@ import (
 )
 
 type Options struct {
+	Name         string       `json:"name" yaml:"name"`
 	Gauges       []string     `json:"gauges" yaml:"gauges"`
 	CodeGauges   []string     `json:"CodeGauges" yaml:"CodeGauges"`
 	ResetSeconds int          `json:"resetSeconds" yaml:"resetSeconds"`
@@ -17,6 +18,7 @@ type Options struct {
 var (
 	DefaultOptions = func() Options {
 		return Options{
+			Name:         "bm",
 			Gauges:       []string{GaugePanicCount},
 			CodeGauges:   []string{GaugeRequestCount, GaugeResponseCount, GaugeRequestLen, GaugeResponseLen},
 			ResetSeconds: defaultResetSeconds,
@@ -46,6 +48,10 @@ var (
 
 func formatOpt(opt Options) Options {
 	defOpt := DefaultOptions()
+
+	if opt.Name == "" {
+		opt.Name = defOpt.Name
+	}
 
 	if opt.ResetSeconds < 1 {
 		opt.ResetSeconds = defOpt.ResetSeconds

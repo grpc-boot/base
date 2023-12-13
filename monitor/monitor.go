@@ -117,14 +117,15 @@ func (m *Monitor) Path(path, name string) *Monitor {
 	return m
 }
 
-func (m *Monitor) Info() MonitorInfo {
-	info := make(map[string][]Info, len(m.codeGauges))
+func (m *Monitor) Info() *MonitorInfo {
+	info := make(map[string][]CodeInfo, len(m.codeGauges))
 
 	for gauge, group := range m.codeGauges {
 		info[gauge] = group.Info()
 	}
 
-	return MonitorInfo{
+	return &MonitorInfo{
+		Name:       m.opt.Name,
 		ResetAt:    m.resetAt.Load().Format(time.DateTime),
 		ResetCount: m.resetCount.Load(),
 		CodesInfo:  info,

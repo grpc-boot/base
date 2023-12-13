@@ -158,6 +158,19 @@ func main() {
 		return
 	})
 
+	BindRoute(engine, http.MethodGet, "/monitor/axis", "折线数据", func(ctx *gin.Context) {
+		var (
+			data     = map[string]any{}
+			prefix   = time.Now().Format("20060102")
+			axisData = utils.MinuteAxis()
+		)
+		data["axisData"] = axisData
+		data["panicCount"], _ = monitor.GaugeLineFromRedis(red, m, prefix, monitor.GaugePanicCount, axisData)
+		data["requestCnt"], data["codeData"], _ = monitor.CodeLineFromRedis(red, m, prefix, monitor.GaugeRequestCount, "GET /user/regis", axisData)
+
+		RetJson(ctx, components.StatusOk(data))
+	})
+
 	BindRoute(engine, http.MethodGet, "/user/regis", "注册接口", func(ctx *gin.Context) {
 		if rand.Int()%2 == 0 {
 			RetJson(ctx, components.StatusOk(map[string]interface{}{

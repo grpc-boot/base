@@ -45,17 +45,20 @@ func (icg *ItpCodeGroup) Reset(times int) {
 	}
 }
 
-func (icg *ItpCodeGroup) Info() (info []Info) {
+func (icg *ItpCodeGroup) Info() (info []CodeInfo) {
 	var (
 		index int
 	)
 
-	info = make([]Info, len(icg.groups))
+	info = make([]CodeInfo, len(icg.groups))
 
 	for path, q := range icg.groups {
 		qInfo := q.Info()
 		qInfo.Path = path
-		info[index] = qInfo
+		info[index] = CodeInfo{
+			GaugeName: icg.name,
+			Info:      qInfo,
+		}
 		index++
 	}
 

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/grpc-boot/base/v2/gored"
+
 	"github.com/redis/go-redis/v9"
 )
 
@@ -13,30 +14,30 @@ var (
 	StorageLifetime = time.Hour * 24 * 7
 )
 
-type Storage func(info MonitorInfo) error
+type Storage func(info *MonitorInfo) error
 
 func RedisStorage(red *redis.Client) Storage {
-	return func(info MonitorInfo) (err error) {
+	return func(info *MonitorInfo) (err error) {
 		var (
 			now     = time.Now()
 			dateStr = now.Format("20060102")
-			timeStr = now.Format("1504")
+			timeStr = now.Format("15:04")
 		)
 
 		if len(info.GaugesInfo) > 0 {
 			gored.TimeoutDo(PipeTimeout, func(ctx context.Context) {
 				pipe := red.Pipeline()
 				for _, gauge := range info.GaugesInfo {
-					key := gauge.Key(dateStr, "")
+					key := gauge.Key(info.Name, dateStr)
 
 					pipe.HIncrBy(
 						ctx,
 						key,
-						gauge.Field(timeStr),
+						timeStr,
 						int64(gauge.Value),
 					)
 
-					if timeStr[2:] == "00" {
+					if timeStr[3:] == "00" {
 						pipe.Expire(ctx, key, StorageLifetime)
 					}
 				}
@@ -50,7 +51,7 @@ func RedisStorage(red *redis.Client) Storage {
 		}
 
 		if len(info.CodesInfo) > 0 {
-			for gaugeName, group := range info.CodesInfo {
+			for _, group := range info.CodesInfo {
 				if len(group) < 1 {
 					continue
 				}
@@ -59,13 +60,13 @@ func RedisStorage(red *redis.Client) Storage {
 					gored.TimeoutDo(PipeTimeout, func(ctx context.Context) {
 						var (
 							pipe = red.Pipeline()
-							key  = gauge.Key(dateStr, gaugeName)
+							key  = gauge.Key(info.Name, dateStr)
 						)
 
 						pipe.HIncrBy(
 							ctx,
 							key,
-							gauge.Field(timeStr),
+							timeStr,
 							int64(gauge.Value),
 						)
 
@@ -80,7 +81,7 @@ func RedisStorage(red *redis.Client) Storage {
 							}
 						}
 
-						if timeStr[2:] == "00" {
+						if timeStr[3:] == "00" {
 							pipe.Expire(ctx, key, StorageLifetime)
 						}
 

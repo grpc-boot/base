@@ -162,6 +162,20 @@ func main() {
 		return nil
 	})
 
+	BindRoute(engine, fiber.MethodGet, "/monitor/axis", "折线数据", func(ctx *fiber.Ctx) error {
+		var (
+			data     = map[string]any{}
+			prefix   = time.Now().Format("20060102")
+			axisData = utils.MinuteAxis()
+		)
+		data["axisData"] = axisData
+		data["panicCount"], _ = monitor.GaugeLineFromRedis(red, m, prefix, monitor.GaugePanicCount, axisData)
+		data["requestCnt"], data["codeData"], _ = monitor.CodeLineFromRedis(red, m, prefix, monitor.GaugeRequestCount, "GET /user/regis", axisData)
+
+		_, _ = RetJson(ctx, components.StatusOk(data))
+		return nil
+	})
+
 	BindRoute(engine, fiber.MethodGet, "/user/regis", "注册接口", func(ctx *fiber.Ctx) error {
 		if rand.Int()%2 == 0 {
 			_, _ = RetJson(ctx, components.StatusOk(map[string]interface{}{

@@ -53,10 +53,6 @@ func (ic *ItpCode) Info() (info Info) {
 	info.Sub = make([]Item, 0, len(ic.data))
 
 	for code, p := range ic.data {
-		if p.Total() < 1 {
-			continue
-		}
-
 		item := Item{
 			Name:  p.name,
 			Code:  code,

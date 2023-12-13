@@ -8,16 +8,15 @@ import (
 )
 
 var (
-	InfoPrefix byte = 'i'
-	ItemPrefix byte = 'c'
-	Seperator  byte = '-'
+	Seperator byte = '-'
 )
 
 type MonitorInfo struct {
-	ResetCount uint64            `json:"resetCount"`
-	ResetAt    string            `json:"resetAt"`
-	CodesInfo  map[string][]Info `json:"codesInfo"`
-	GaugesInfo []Info            `json:"gaugesInfo"`
+	Name       string                `json:"name"`
+	ResetCount uint64                `json:"resetCount"`
+	ResetAt    string                `json:"resetAt"`
+	CodesInfo  map[string][]CodeInfo `json:"codesInfo"`
+	GaugesInfo []Info                `json:"gaugesInfo"`
 }
 
 func (mi *MonitorInfo) Keys(prefix string) (gaugeKeys []string, codeKeys []string) {
@@ -26,17 +25,17 @@ func (mi *MonitorInfo) Keys(prefix string) (gaugeKeys []string, codeKeys []strin
 	index := 0
 
 	for _, gauge := range mi.GaugesInfo {
-		gaugeKeys[index] = gauge.Key(prefix, "")
+		gaugeKeys[index] = gauge.Key(mi.Name, prefix)
 		index++
 	}
 
-	for gaugeName, groups := range mi.CodesInfo {
+	for _, groups := range mi.CodesInfo {
 		if len(groups) < 1 {
 			continue
 		}
 
 		for _, gauge := range groups {
-			codeKeys = append(codeKeys, gauge.Key(prefix, gaugeName))
+			codeKeys = append(codeKeys, gauge.Key(mi.Name, prefix))
 		}
 	}
 
@@ -44,31 +43,40 @@ func (mi *MonitorInfo) Keys(prefix string) (gaugeKeys []string, codeKeys []strin
 }
 
 type Info struct {
-	Path  string `json:"path"`
 	Name  string `json:"name"`
+	Path  string `json:"path"`
 	Total uint64 `json:"total"`
 	Value uint64 `json:"value"`
 	Sub   []Item `json:"sub,omitempty"`
 }
 
-func (i *Info) Key(prefix, gaugeName string) string {
+func (i *Info) Key(appName, prefix string) string {
 	var buffer strings.Builder
-	buffer.Grow(len(prefix) + len(gaugeName) + len(i.Path) + 2)
-	buffer.WriteString(prefix)
+	buffer.Grow(len(appName) + len(prefix) + len(i.Path) + 2)
+	buffer.WriteString(appName)
 	buffer.WriteByte(Seperator)
-	buffer.WriteString(gaugeName)
+	buffer.WriteString(prefix)
 	buffer.WriteByte(Seperator)
 	buffer.WriteString(i.Path)
 	return buffer.String()
 }
 
-func (i *Info) Field(prefix string) string {
+type CodeInfo struct {
+	Info
+
+	GaugeName string `json:"gaugeName"`
+}
+
+func (ci *CodeInfo) Key(appName, prefix string) string {
 	var buffer strings.Builder
-	buffer.Grow(len(prefix) + len(i.Path) + 2)
-	buffer.WriteByte(InfoPrefix)
+	buffer.Grow(len(appName) + len(prefix) + len(ci.GaugeName) + 3)
+	buffer.WriteString(appName)
+	buffer.WriteByte(Seperator)
 	buffer.WriteString(prefix)
 	buffer.WriteByte(Seperator)
-	buffer.WriteString(i.Path)
+	buffer.WriteString(ci.GaugeName)
+	buffer.WriteByte(Seperator)
+	buffer.WriteString(ci.Path)
 	return buffer.String()
 }
 
@@ -85,8 +93,7 @@ func (it *Item) Field(prefix string) string {
 		path   = strconv.FormatUint(uint64(it.Code), 10)
 	)
 
-	buffer.Grow(len(prefix) + len(path) + 2)
-	buffer.WriteByte(ItemPrefix)
+	buffer.Grow(len(prefix) + len(path) + 1)
 	buffer.WriteString(prefix)
 	buffer.WriteByte(Seperator)
 	buffer.WriteString(path)
