@@ -47,6 +47,10 @@ func Method(method string) zap.Field {
 	return zap.String("Method", method)
 }
 
+func Headers(headers map[string]string) zap.Field {
+	return zap.Any("Headers", headers)
+}
+
 func Path(path string) zap.Field {
 	return zap.String("Path", path)
 }
