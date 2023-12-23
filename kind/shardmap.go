@@ -1,9 +1,8 @@
 package kind
 
 import (
-	"math"
-
 	"go.uber.org/atomic"
+	"math"
 )
 
 const shardSize = math.MaxUint8
@@ -22,6 +21,8 @@ type ShardMap[K Key] interface {
 	Length() int64
 	// ShardLength 返回每个分片的长度，可以协助分析元素是否平均分配
 	ShardLength() []int64
+	// Range 按照分片遍历元素
+	Range(handler func(key K, value any) bool)
 }
 
 // NewShardMap 实例化ShardMap
@@ -81,4 +82,12 @@ func (m *shardMap[K]) ShardLength() []int64 {
 		list[i] = t.Length()
 	}
 	return list
+}
+
+func (m *shardMap[K]) Range(handler func(key K, value any) bool) {
+	for _, s := range m.shardList {
+		if !s.Range(handler) {
+			break
+		}
+	}
 }

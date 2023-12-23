@@ -8,6 +8,7 @@ type Shard[K Key] interface {
 	Exists(key K) (exists bool)
 	Delete(keys ...K) (delNum int)
 	Length() int64
+	Range(handler func(key K, value any) bool) bool
 }
 
 func NewShard[K Key](initSize int) Shard[K] {
@@ -66,4 +67,28 @@ func (s *shard[K]) Length() int64 {
 	defer s.mutex.RUnlock()
 
 	return int64(len(s.items))
+}
+
+func (s *shard[K]) Range(handler func(key K, value any) bool) bool {
+	items := make(map[K]any, len(s.items))
+	s.mutex.RLock()
+	if len(s.items) == 0 {
+		s.mutex.RUnlock()
+		return true
+	}
+
+	for k, v := range s.items {
+		items[k] = v
+	}
+	s.mutex.RUnlock()
+
+	for key, value := range items {
+		if !handler(key, value) {
+			items = nil
+			return false
+		}
+	}
+
+	items = nil
+	return true
 }
