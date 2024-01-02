@@ -3,6 +3,8 @@ module github.com/grpc-boot/base/v2
 go 1.20
 
 require (
+	github.com/anthonynsimon/bild v0.13.0
+	github.com/chai2010/webp v1.1.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/goccy/go-json v0.10.2
@@ -14,6 +16,7 @@ require (
 	go.uber.org/atomic v1.11.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/exp v0.0.0-20190121172915-509febef88a4
+	golang.org/x/image v0.0.0-20211028202545-6944b10bf410
 	google.golang.org/grpc v1.50.1
 	gopkg.in/yaml.v3 v3.0.1
 )
