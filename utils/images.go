@@ -16,32 +16,6 @@ func CropThumbnailImage(img image.Image, width, height int) *image.RGBA {
 	return transform.Resize(img, width, height, transform.Linear)
 }
 
-func SubImage(img *image.RGBA, width, height int) image.Image {
-	var (
-		bounds       = img.Bounds()
-		oldW, oldH   = bounds.Max.X - bounds.Min.X, bounds.Max.Y - bounds.Min.Y
-		xDiff, yDiff = 0, 0
-	)
-
-	if oldW == width && oldH == height {
-		return img
-	}
-
-	if oldW > width && oldH > height {
-		for oldW-2*xDiff > width {
-			xDiff++
-		}
-
-		for oldH-2*yDiff > width {
-			yDiff++
-		}
-
-		return img.SubImage(image.Rect(bounds.Min.X+xDiff, bounds.Min.Y+yDiff, bounds.Min.X+xDiff+width, bounds.Min.Y+yDiff+height))
-	}
-
-	return img
-}
-
 func Bytes2JpgBytes(input []byte, quality int) ([]byte, error) {
 	img, _, err := image.Decode(bytes.NewBuffer(input))
 	if err != nil {
