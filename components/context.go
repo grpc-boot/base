@@ -4,6 +4,12 @@ import (
 	"math"
 	"sync"
 	"time"
+
+	"github.com/grpc-boot/base/v2/utils"
+)
+
+const (
+	eventKey = `core:ent`
 )
 
 const (
@@ -61,78 +67,104 @@ func (c *Context) Set(key string, value any) {
 	c.data[key] = value
 }
 
+func (c *Context) SetEvent(event *Event) {
+	c.Set(eventKey, event)
+}
+
+func (c *Context) Event() *Event {
+	value := c.Get(eventKey, nil)
+	event, _ := value.(*Event)
+	return event
+}
+
 // Get 获取数据
-func (c *Context) Get(key string) (value any, exists bool) {
+func (c *Context) Get(key string, defaultVal any) (value any) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
-	value, exists = c.data[key]
-	return
-}
-
-// GetInt64 获取int64值
-func (c *Context) GetInt64(key string) (value int64, exists bool) {
-	var val any
-	val, ok := c.Get(key)
-	if !ok {
-		return 0, ok
+	if _, exists := c.data[key]; !exists {
+		return defaultVal
 	}
 
-	value, ok = val.(int64)
-
-	return value, ok
+	return c.data[key]
 }
 
-// GetInt 获取int值
-func (c *Context) GetInt(key string) (value int, exists bool) {
-	var val any
-	val, ok := c.Get(key)
-	if !ok {
-		return 0, ok
+// GetInt 获取int64值
+func (c *Context) GetInt(key string, defaultVal int64) (value int64) {
+	val := c.Get(key, nil)
+	if val == nil {
+		return defaultVal
 	}
 
-	value, ok = val.(int)
-
-	return value, ok
+	switch v := val.(type) {
+	case int64:
+		return v
+	case int:
+		return int64(v)
+	case int8:
+		return int64(v)
+	case int16:
+		return int64(v)
+	case int32:
+		return int64(v)
+	default:
+		return defaultVal
+	}
 }
 
-// GetInt8 获取bool值
-func (c *Context) GetInt8(key string) (value int8, exists bool) {
-	var val any
-	val, ok := c.Get(key)
-	if !ok {
-		return 0, ok
+// GetUint 获取uint64值
+func (c *Context) GetUint(key string, defaultVal uint64) (value uint64) {
+	val := c.Get(key, nil)
+	if val == nil {
+		return defaultVal
 	}
 
-	value, ok = val.(int8)
-
-	return value, ok
+	switch v := val.(type) {
+	case uint64:
+		return v
+	case uint:
+		return uint64(v)
+	case uint8:
+		return uint64(v)
+	case uint16:
+		return uint64(v)
+	case uint32:
+		return uint64(v)
+	default:
+		return defaultVal
+	}
 }
 
 // GetBool 获取bool值
-func (c *Context) GetBool(key string) (value bool, exists bool) {
-	var val any
-	val, ok := c.Get(key)
-	if !ok {
-		return false, ok
+func (c *Context) GetBool(key string, defaultVal bool) (value bool) {
+	val := c.Get(key, nil)
+	if val == nil {
+		return defaultVal
 	}
 
-	value, ok = val.(bool)
-
-	return value, ok
+	switch v := val.(type) {
+	case bool:
+		return v
+	default:
+		return defaultVal
+	}
 }
 
 // GetString 获取string值
-func (c *Context) GetString(key string) (value string, exists bool) {
-	var val any
-	val, ok := c.Get(key)
-	if !ok {
-		return "", ok
+func (c *Context) GetString(key, defaultVal string) (value string) {
+	val := c.Get(key, nil)
+	if val == nil {
+		return defaultVal
 	}
 
-	value, ok = val.(string)
-
-	return value, ok
+	switch v := val.(type) {
+	case string:
+		return v
+	case []byte:
+		return utils.Bytes2String(v)
+	default:
+		return defaultVal
+	}
 }
 
 func (c *Context) Next() {
@@ -169,8 +201,8 @@ func (c *Context) Err() error {
 
 func (c *Context) Value(key any) any {
 	if k, ok := key.(string); ok {
-		v, exists := c.Get(k)
-		if exists {
+		v := c.Get(k, nil)
+		if v != nil {
 			return v
 		}
 	}
