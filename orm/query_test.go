@@ -1,12 +1,57 @@
-package query
+package orm
 
 import (
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/grpc-boot/base/v2/kind"
-	"github.com/grpc-boot/base/v2/query/condition"
+	"github.com/grpc-boot/base/v2/orm/base"
+	"github.com/grpc-boot/base/v2/orm/condition"
+	"github.com/grpc-boot/base/v2/orm/mysql"
 )
+
+var (
+	db *mysql.Db
+)
+
+func init() {
+	opts := mysql.DefaultMysqlOption()
+	opts.Password = "12345678"
+	opts.UserName = "root"
+	opts.Host = "127.0.0.1"
+	opts.Port = 3306
+	opts.DbName = "users"
+
+	var err error
+	db, err = mysql.NewDb(opts)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestMysql_GenerateCode(t *testing.T) {
+	tables, err := db.ShowTables("")
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+
+	for _, table := range tables {
+		tab, err := db.LoadTableSchema(table)
+		if err != nil {
+			t.Fatalf("want nil, got %v", err)
+		}
+
+		f, err := os.Create(fmt.Sprintf("./models/%s.go", table))
+		if err != nil {
+			t.Fatalf("want nil, got %v", err)
+		}
+
+		f.WriteString(tab.GenerateCode(base.ModelTemplate, "models"))
+		f.Close()
+	}
+}
 
 func TestInsert(t *testing.T) {
 	current := time.Now().Unix()
@@ -43,7 +88,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestMysqlQuery_Sql(t *testing.T) {
-	query1 := Acquire4Mysql().
+	query1 := mysql.AcquireQuery().
 		Select("*").
 		From("`user`").
 		Where(condition.In[uint8]{"id", kind.Slice[uint8]{3, 5}})
@@ -52,7 +97,7 @@ func TestMysqlQuery_Sql(t *testing.T) {
 
 	t.Logf("sql1: %s with args:%+v", sql1, args1)
 
-	query2 := Acquire4Mysql().
+	query2 := mysql.AcquireQuery().
 		Select("*").
 		From("`user`").
 		Where(condition.Equal{"id", 5})
@@ -61,7 +106,7 @@ func TestMysqlQuery_Sql(t *testing.T) {
 
 	t.Logf("sql2: %s with args:%+v", sql2, args2)
 
-	query3 := Acquire4Mysql().
+	query3 := mysql.AcquireQuery().
 		Select("*").
 		From("`user`").
 		Where(condition.And{
@@ -74,7 +119,7 @@ func TestMysqlQuery_Sql(t *testing.T) {
 
 	t.Logf("sql3: %s with args:%+v", sql3, args3)
 
-	query4 := Acquire4Mysql().
+	query4 := mysql.AcquireQuery().
 		Select("*").
 		From("`user`").
 		Where(condition.Or{
@@ -95,7 +140,7 @@ func TestMysqlQuery_Sql(t *testing.T) {
 
 	t.Logf("sql4: %s with args:%+v", sql4, args4)
 
-	query5 := Acquire4Mysql().
+	query5 := mysql.AcquireQuery().
 		Select("COUNT(id) AS num", "name").
 		From("`user`").
 		Where(condition.And{
@@ -108,7 +153,7 @@ func TestMysqlQuery_Sql(t *testing.T) {
 
 	t.Logf("sql5: %s with args:%+v", sql5, args5)
 
-	query6 := Acquire4Mysql().
+	query6 := mysql.AcquireQuery().
 		Select("COUNT(`id`) AS `num`", "`name`").
 		From("`user`").
 		Where(condition.And{
@@ -124,7 +169,7 @@ func TestMysqlQuery_Sql(t *testing.T) {
 
 	t.Logf("sql6: %s with args:%+v", sql6, args6)
 
-	query7 := Acquire4Mysql().
+	query7 := mysql.AcquireQuery().
 		Select("COUNT(`id`) AS `num`", "`name`").
 		From("`user`").
 		Where(condition.And{

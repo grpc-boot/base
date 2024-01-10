@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -59,4 +60,57 @@ func LcFirst(str string) string {
 
 func UcFirst(str string) string {
 	return internal.UcFirst(str)
+}
+
+func SmallCamelByChar(str string, char byte) string {
+	if str == "" {
+		return str
+	}
+
+	name := []byte(str)
+	j := 0
+	u := false
+	for index, b := range name {
+		if b == char {
+			u = true
+			continue
+		}
+
+		if u {
+			name[j] = bytes.ToUpper(name[index : index+1])[0]
+		} else {
+			name[j] = b
+		}
+		j++
+		u = false
+	}
+
+	return Bytes2String(name[:j])
+}
+
+func BigCamelByChar(str string, char byte) string {
+	if str == "" {
+		return str
+	}
+
+	name := []byte(str)
+	name[0] = bytes.ToUpper(name[:1])[0]
+	j := 0
+	u := false
+	for index, b := range name {
+		if b == char {
+			u = true
+			continue
+		}
+
+		if u {
+			name[j] = bytes.ToUpper(name[index : index+1])[0]
+		} else {
+			name[j] = b
+		}
+		j++
+		u = false
+	}
+
+	return Bytes2String(name[:j])
 }

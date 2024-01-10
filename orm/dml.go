@@ -1,9 +1,9 @@
-package query
+package orm
 
 import (
 	"strings"
 
-	"github.com/grpc-boot/base/v2/query/condition"
+	"github.com/grpc-boot/base/v2/orm/condition"
 )
 
 type Row []any
