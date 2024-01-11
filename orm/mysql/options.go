@@ -3,6 +3,7 @@ package mysql
 import (
 	"fmt"
 
+	"github.com/grpc-boot/base/v2/orm/basis"
 	"github.com/grpc-boot/base/v2/utils"
 )
 
@@ -14,6 +15,19 @@ func DefaultMysqlOption() Options {
 		ConnMaxLifetimeSecond: 600,
 		ConnMaxIdleTimeSecond: 60,
 	}
+}
+
+func Flag2Options(f *basis.Flag) Options {
+	opt := DefaultMysqlOption()
+
+	opt.UserName = f.UserName()
+	opt.Password = f.Password()
+	opt.Host = f.Host()
+	opt.Port = f.Port()
+	opt.DbName = f.DbName()
+	opt.CharSet = f.Charset()
+
+	return opt
 }
 
 func OptionsWithJson(conf string) (opt Options, err error) {

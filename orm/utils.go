@@ -338,7 +338,7 @@ func Exec(ctx context.Context, executor basis.Executor, query string, args ...an
 		)
 	}
 
-	res, err := executor.ExecContext(ctx, query)
+	res, err := executor.ExecContext(ctx, query, args...)
 	if err != nil {
 		logger.ZapError("exec sql failed",
 			logger.Event("exec error"),
@@ -431,16 +431,16 @@ func Update(ctx context.Context, executor basis.Executor, table string, setter b
 	return res.RowsAffected()
 }
 
-func UpdateModel(ctx context.Context, executor basis.Executor, setter basis.Setter, model basis.Model, updater basis.Update) (rowsAffected int64, err error) {
+func UpdateModel(ctx context.Context, executor basis.Executor, setter basis.Setter, model basis.Model) (rowsAffected int64, err error) {
 	return Update(ctx, executor, model.TableName(), setter, condition.Equal{
 		Field: model.PrimaryField(),
 		Value: model.PrimaryValue(),
-	}, updater)
+	}, model.Updater())
 }
 
-func DeleteModel(ctx context.Context, executor basis.Executor, model basis.Model, deleter basis.Delete) (rowsAffected int64, err error) {
+func DeleteModel(ctx context.Context, executor basis.Executor, model basis.Model) (rowsAffected int64, err error) {
 	return Delete(ctx, executor, model.TableName(), condition.Equal{
 		Field: model.PrimaryField(),
 		Value: model.PrimaryValue(),
-	}, deleter)
+	}, model.Deleter())
 }

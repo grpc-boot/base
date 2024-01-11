@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -95,7 +96,9 @@ func (l *Logger) flagFileName(level, flag string) string {
 }
 
 func (l *Logger) flagFile(level, flag string) (*os.File, error) {
-	return os.OpenFile(l.flagFileName(level, flag), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	fileName := l.flagFileName(level, flag)
+	_ = internal.MkDir(path.Dir(fileName), 0766)
+	return os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0766)
 }
 
 func (l *Logger) levelEnabler(level zapcore.Level) zap.LevelEnablerFunc {

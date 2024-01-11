@@ -24,3 +24,7 @@ func TestMapSetter_Build(t *testing.T) {
 
 	t.Logf("ms: %s", str)
 }
+
+func BenchmarkParseMapping(b *testing.B) {
+
+}

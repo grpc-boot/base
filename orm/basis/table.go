@@ -98,7 +98,6 @@ func (t *Table) GenerateCode(template, packageName string) string {
 		primaryProperty = t.primary.Name()
 	}
 
-	code = strings.ReplaceAll(code, "{struct}", t.StructName())
 	code = strings.ReplaceAll(code, "{this}", t.getThis())
 	code = strings.ReplaceAll(code, "{table}", t.name)
 	code = strings.ReplaceAll(code, "{primary}", primaryField)
@@ -108,6 +107,7 @@ func (t *Table) GenerateCode(template, packageName string) string {
 	code = strings.ReplaceAll(code, "{rows}", t.buildRows(true))
 	code = strings.ReplaceAll(code, "{assignment}", t.buildAssignment())
 
+	code = strings.ReplaceAll(code, "{struct}", t.StructName())
 	return strings.ReplaceAll(code, "{smallCamel}", utils.SmallCamelByChar(t.name, '_'))
 }
 
@@ -120,7 +120,7 @@ func (t *Table) buildColumns(skipPrimary bool) string {
 		}
 
 		buf.WriteString("\n\t\t")
-		buf.WriteString("fm.Field(\"")
+		buf.WriteString("{struct}Mapping.Field(\"")
 		buf.WriteString(col.Name())
 		buf.WriteString("\"),")
 	}
@@ -188,7 +188,7 @@ func (t *Table) buildAssignment() string {
 		buf.WriteString(col.Name())
 		buf.WriteByte(':')
 		buf.WriteString(t.convertCode(col))
-		buf.WriteString("(fm.Field(\"")
+		buf.WriteString("({struct}Mapping.Field(\"")
 		buf.WriteString(col.Name())
 		buf.WriteString("\")),")
 	}
