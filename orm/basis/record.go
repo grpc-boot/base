@@ -1,4 +1,4 @@
-package orm
+package basis
 
 import (
 	"database/sql"

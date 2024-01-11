@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/grpc-boot/base/v2/orm/base"
+	"github.com/grpc-boot/base/v2/orm/basis"
 	"github.com/grpc-boot/base/v2/orm/condition"
 )
 
@@ -18,8 +18,8 @@ var (
 )
 
 // AcquireQuery 获取mysqlQuery对象
-func AcquireQuery() base.Query {
-	return queryPool.Get().(base.Query)
+func AcquireQuery() basis.Query {
+	return queryPool.Get().(basis.Query)
 }
 
 type query struct {
@@ -33,7 +33,7 @@ type query struct {
 	limit   int64
 }
 
-func (q *query) reset() base.Query {
+func (q *query) reset() basis.Query {
 	q.table = ""
 	q.columns = ""
 	q.offset = 0
@@ -46,42 +46,42 @@ func (q *query) reset() base.Query {
 	return q
 }
 
-func (q *query) Select(columns ...string) base.Query {
+func (q *query) Select(columns ...string) basis.Query {
 	q.columns = strings.Join(columns, ",")
 	return q
 }
 
-func (q *query) From(table string) base.Query {
+func (q *query) From(table string) basis.Query {
 	q.table = table
 	return q
 }
 
-func (q *query) Where(condition condition.Condition) base.Query {
+func (q *query) Where(condition condition.Condition) basis.Query {
 	q.where = condition
 	return q
 }
 
-func (q *query) Group(fields ...string) base.Query {
+func (q *query) Group(fields ...string) basis.Query {
 	q.group = " GROUP BY " + strings.Join(fields, ",")
 	return q
 }
 
-func (q *query) Having(having string) base.Query {
+func (q *query) Having(having string) basis.Query {
 	q.having = " HAVING " + having
 	return q
 }
 
-func (q *query) Order(orders ...string) base.Query {
+func (q *query) Order(orders ...string) basis.Query {
 	q.order = " ORDER BY " + strings.Join(orders, ",")
 	return q
 }
 
-func (q *query) Offset(offset int64) base.Query {
+func (q *query) Offset(offset int64) basis.Query {
 	q.offset = offset
 	return q
 }
 
-func (q *query) Limit(limit int64) base.Query {
+func (q *query) Limit(limit int64) basis.Query {
 	q.limit = limit
 	return q
 }

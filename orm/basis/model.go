@@ -1,6 +1,4 @@
-package orm
-
-import "github.com/grpc-boot/base/v2/orm/base"
+package basis
 
 type Model interface {
 	TableName() string
@@ -10,5 +8,8 @@ type Model interface {
 	GetLabel(name string) string
 	GetEnums(name string) []string
 	GetSize(name string) int
-	Query() base.Query
+	Query() Query
+	Deleter() Delete
+	Inserter() Insert
+	Updater() Update
 }

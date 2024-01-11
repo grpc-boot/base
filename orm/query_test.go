@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/grpc-boot/base/v2/kind"
-	"github.com/grpc-boot/base/v2/orm/base"
+	"github.com/grpc-boot/base/v2/orm/basis"
 	"github.com/grpc-boot/base/v2/orm/condition"
 	"github.com/grpc-boot/base/v2/orm/mysql"
 )
@@ -48,41 +48,41 @@ func TestMysql_GenerateCode(t *testing.T) {
 			t.Fatalf("want nil, got %v", err)
 		}
 
-		f.WriteString(tab.GenerateCode(base.ModelTemplate, "models"))
+		f.WriteString(tab.GenerateCode(basis.DefaultModelTemplate(), "models"))
 		f.Close()
 	}
 }
 
 func TestInsert(t *testing.T) {
 	current := time.Now().Unix()
-	sql1, args1 := Insert("`user`", Columns{"name", "is_on", "created_at", "updated_at"}, []Row{
+	sql1, args1 := mysql.Insert("`user`", basis.Columns{"name", "is_on", "created_at", "updated_at"}, []basis.Row{
 		{"mads", 1, current, current},
 		{"asdf", 0, current, current},
 	}, false)
 
 	t.Logf("sql1: %s with args:%+v", sql1, args1)
 
-	sql2, args2 := Insert("`user`", Columns{"name", "is_on"}, []Row{
+	sql2, args2 := mysql.Insert("`user`", basis.Columns{"name", "is_on"}, []basis.Row{
 		{"asdf", 1},
 	}, true)
 	t.Logf("sql2: %s with args:%+v", sql2, args2)
 }
 
 func TestUpdate(t *testing.T) {
-	sql1, args1 := Update("`user`", "is_on=1", condition.Equal{"id", 2})
+	sql1, args1 := mysql.Update("`user`", "is_on=1", condition.Equal{"id", 2})
 	t.Logf("sql1: %s with args:%+v", sql1, args1)
 
-	sql2, args2 := Update("`user`", "amount=amount+1", condition.In[int]{"id", kind.Slice[int]{45, 6, 7}})
+	sql2, args2 := mysql.Update("`user`", "amount=amount+1", condition.In[int]{"id", kind.Slice[int]{45, 6, 7}})
 
 	t.Logf("sql2: %s with args:%+v", sql2, args2)
 }
 
 func TestDelete(t *testing.T) {
-	sql1, args1 := Delete("`user`", condition.Equal{"id", 1})
+	sql1, args1 := mysql.Delete("`user`", condition.Equal{"id", 1})
 
 	t.Logf("sql1: %s with args:%+v", sql1, args1)
 
-	sql2, args2 := Delete("`user`", condition.In[uint8]{"id", kind.Slice[uint8]{45, 6, 7}})
+	sql2, args2 := mysql.Delete("`user`", condition.In[uint8]{"id", kind.Slice[uint8]{45, 6, 7}})
 
 	t.Logf("sql2: %s with args:%+v", sql2, args2)
 }

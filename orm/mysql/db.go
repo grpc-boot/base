@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/grpc-boot/base/v2/orm/base"
+	"github.com/grpc-boot/base/v2/orm/basis"
 	"github.com/grpc-boot/base/v2/utils"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -20,18 +20,18 @@ func (db *Db) Options() Options {
 	return db.opts
 }
 
-func (db *Db) LoadTableSchema(table string) (t *base.Table, err error) {
-	var columns []base.Column
+func (db *Db) LoadTableSchema(table string) (t *basis.Table, err error) {
+	var columns []basis.Column
 	columns, err = db.FetchColumns(table)
 	if err != nil {
 		return
 	}
 
-	t = base.NewTable(table, columns)
+	t = basis.NewTable(table, columns)
 	return
 }
 
-func (db *Db) FetchColumns(table string) (columns []base.Column, err error) {
+func (db *Db) FetchColumns(table string) (columns []basis.Column, err error) {
 	var rows *sql.Rows
 	rows, err = db.Query(fmt.Sprintf("SHOW FULL COLUMNS FROM %s", table))
 	if err != nil {
@@ -40,7 +40,7 @@ func (db *Db) FetchColumns(table string) (columns []base.Column, err error) {
 
 	defer rows.Close()
 
-	columns = []base.Column{}
+	columns = []basis.Column{}
 
 	var (
 		f  []byte

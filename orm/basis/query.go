@@ -1,4 +1,4 @@
-package base
+package basis
 
 import (
 	"github.com/grpc-boot/base/v2/orm/condition"

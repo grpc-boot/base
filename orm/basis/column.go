@@ -1,4 +1,4 @@
-package base
+package basis
 
 type Column interface {
 	Unsigned() bool

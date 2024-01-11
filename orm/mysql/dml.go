@@ -1,14 +1,11 @@
-package orm
+package mysql
 
 import (
 	"strings"
 
+	"github.com/grpc-boot/base/v2/orm/basis"
 	"github.com/grpc-boot/base/v2/orm/condition"
 )
-
-type Row []any
-
-type Columns []string
 
 func repeatAndJoin(word, sep string, count int) string {
 	if count < 1 {
@@ -31,7 +28,7 @@ func repeatAndJoin(word, sep string, count int) string {
 	return buffer.String()
 }
 
-func Replace(table string, columns Columns, rows []Row) (sql string, args []any) {
+func Replace(table string, columns basis.Columns, rows []basis.Row) (sql string, args []any) {
 	if len(columns) == 0 || len(rows) == 0 {
 		return
 	}
@@ -68,7 +65,7 @@ func Replace(table string, columns Columns, rows []Row) (sql string, args []any)
 	return buffer.String(), args
 }
 
-func Insert(table string, columns Columns, rows []Row, ignore bool) (sql string, args []any) {
+func Insert(table string, columns basis.Columns, rows []basis.Row, ignore bool) (sql string, args []any) {
 	if len(columns) == 0 || len(rows) == 0 {
 		return
 	}
