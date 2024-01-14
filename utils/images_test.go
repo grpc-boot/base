@@ -34,7 +34,7 @@ func TestThumbnailImage(t *testing.T) {
 		t.Fatalf("want nil, got %v", err)
 	}
 
-	// only in linux
+	// only at linux
 	/*webpData, err := Bytes2WebpBytes(buf.Bytes(), jpeg.DefaultQuality)
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
