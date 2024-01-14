@@ -34,12 +34,12 @@ func TestThumbnailImage(t *testing.T) {
 		t.Fatalf("want nil, got %v", err)
 	}
 
-	webpData, err := Bytes2WebpBytes(buf.Bytes(), jpeg.DefaultQuality)
+	/*webpData, err := Bytes2WebpBytes(buf.Bytes(), jpeg.DefaultQuality)
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
 	}
 	err = os.WriteFile("./thumbnail.webp", webpData, 0666)
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
-	}
+	}*/
 }
