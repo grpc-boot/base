@@ -15,11 +15,7 @@ var (
 type column struct {
 	f string
 	t string
-	n string
-	k string
 	d string
-	e string
-	c string
 
 	_type          string
 	_primaryKey    bool
@@ -27,30 +23,21 @@ type column struct {
 	_unsigned      bool
 	_size          int
 	_scale         int
-	_enumValues    []string
 }
 
 func (c *column) format() {
-	c._autoIncrement = strings.Contains(c.e, "auto_increment")
-	c._primaryKey = strings.Contains(c.k, "PRI")
+	c._autoIncrement = strings.Contains(c.t, "autoincrement")
+	c._primaryKey = strings.Contains(c.t, "primary key")
 	c._unsigned = strings.Contains(c.t, "unsigned")
 
 	matches := typeRegexp.FindStringSubmatch(c.t)
 	if len(matches) > 1 {
-		c._type = strings.ToLower(matches[1])
-
+		c._type = matches[1]
 		if len(matches) > 2 {
 			items := strings.Split(matches[2], ",")
-			if c._type == "enum" {
-				c._enumValues = make([]string, len(items))
-				for i := 0; i < len(items); i++ {
-					c._enumValues[i] = strings.Trim(items[i], "'")
-				}
-			} else {
-				c._size, _ = strconv.Atoi(items[0])
-				if len(items) > 1 {
-					c._scale, _ = strconv.Atoi(items[1])
-				}
+			c._size, _ = strconv.Atoi(items[0])
+			if len(items) > 1 {
+				c._scale, _ = strconv.Atoi(items[1])
 			}
 		}
 	}
@@ -61,7 +48,7 @@ func (c *column) Unsigned() bool {
 }
 
 func (c *column) Comment() string {
-	return c.c
+	return ""
 }
 
 func (c *column) Field() string {
@@ -73,7 +60,7 @@ func (c *column) Name() string {
 }
 
 func (c *column) CanNull() bool {
-	return c.n == "YES"
+	return !strings.Contains(c.t, "not null")
 }
 
 func (c *column) Size() int {
@@ -85,7 +72,7 @@ func (c *column) Scale() int {
 }
 
 func (c *column) Extra() string {
-	return c.e
+	return ""
 }
 
 func (c *column) IsPrimaryKey() bool {
@@ -98,12 +85,7 @@ func (c *column) AutoIncrement() bool {
 
 func (c *column) GoType() string {
 	switch c._type {
-	case "bit":
-		if c._size > 32 {
-			return "uint64"
-		}
-		return "uint32"
-	case "tinyint":
+	case "tinyint", "int8", "int2":
 		if c._unsigned {
 			return "uint8"
 		}
@@ -113,24 +95,25 @@ func (c *column) GoType() string {
 			return "uint32"
 		}
 		return "int32"
-	case "bigint":
+	case "bigint", "integer":
 		if c._unsigned {
 			return "uint64"
 		}
 		return "int64"
 	case "float", "double", "real", "decimal", "numeric":
 		return "float64"
-	case "tinytext", "mediumtext", "longtext", "text", "varchar", "char", "enum", "json", "datetime", "year", "date", "time", "timestamp":
-		return "string"
-	case "blob", "longblob", "varbinary":
+	case "BLOB":
 		return "[]byte"
 	default:
-		return ""
+		return "string"
 	}
 }
 
 func (c *column) Key() string {
-	return c.k
+	if c._primaryKey {
+		return "PRI"
+	}
+	return ""
 }
 
 func (c *column) Default() string {
@@ -138,5 +121,5 @@ func (c *column) Default() string {
 }
 
 func (c *column) Enums() []string {
-	return c._enumValues
+	return nil
 }

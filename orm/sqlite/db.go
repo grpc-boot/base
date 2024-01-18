@@ -3,8 +3,10 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/grpc-boot/base/v2/orm/basis"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -30,6 +32,50 @@ func (db *Db) ShowCreateTable(table string) (tableSql string, err error) {
 		if err = rows.Scan(&tableSql); err != nil {
 			return
 		}
+	}
+
+	return
+}
+
+func (db *Db) LoadTableSchema(table string) (t *basis.Table, err error) {
+	var columns []basis.Column
+	columns, err = db.FetchColumns(table)
+	if err != nil {
+		return
+	}
+
+	t = basis.NewTable(table, columns)
+	return
+}
+
+func (db *Db) FetchColumns(table string) (columns []basis.Column, err error) {
+	tableSql, err := db.ShowCreateTable(table)
+	if err != nil {
+		return
+	}
+
+	if len(tableSql) < 1 {
+		return
+	}
+
+	start := strings.Index(tableSql, "(")
+	tableSql = strings.TrimSuffix(tableSql, ")")
+	tableSql = strings.ReplaceAll(tableSql[start+1:], "\n", "")
+	tableSql = strings.ReplaceAll(tableSql, "\r\n", "")
+	tableSql = strings.ReplaceAll(tableSql, "\t", "")
+	items := strings.Split(strings.TrimSpace(tableSql), ",")
+
+	columns = make([]basis.Column, 0, len(items))
+
+	for _, item := range items {
+		info := strings.SplitN(strings.TrimSpace(item), " ", 2)
+		col := &column{
+			f: info[0],
+			t: strings.ToLower(strings.TrimSpace(info[1])),
+		}
+		col.format()
+
+		columns = append(columns, col)
 	}
 
 	return

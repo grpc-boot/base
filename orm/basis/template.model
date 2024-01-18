@@ -7,7 +7,7 @@ import (
 	"github.com/grpc-boot/base/v2/orm"
     "github.com/grpc-boot/base/v2/orm/basis"
     "github.com/grpc-boot/base/v2/orm/condition"
-    "github.com/grpc-boot/base/v2/orm/mysql"
+    "github.com/grpc-boot/base/v2/orm/{driver}"
 )
 
 var (
@@ -51,20 +51,20 @@ func ({this} *{struct}) GetSize(name string) int {
 	return {struct}Mapping.Size(name)
 }
 
-func ({this} *{struct}) Query() basis.Query {
-	return mysql.AcquireQuery()
+func ({this} *{struct}) Query() *{driver}.Query {
+	return {driver}.AcquireQuery()
 }
 
 func ({this} *{struct}) Deleter() basis.Delete {
-	return mysql.Delete
+	return {driver}.Delete
 }
 
 func ({this} *{struct}) Inserter() basis.Insert {
-	return mysql.Insert
+	return {driver}.Insert
 }
 
 func ({this} *{struct}) Updater() basis.Update {
-	return mysql.Update
+	return {driver}.Update
 }
 
 func ({this} *{struct}) Add(ctx context.Context, executor basis.Executor, {smallCamel} {struct}) (lastInsertId int64, err error) {

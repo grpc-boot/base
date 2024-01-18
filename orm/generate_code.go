@@ -1,20 +1,41 @@
 package orm
 
 import (
+	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/grpc-boot/base/v2/orm/basis"
 	"github.com/grpc-boot/base/v2/orm/mysql"
+	"github.com/grpc-boot/base/v2/orm/sqlite"
 	"github.com/grpc-boot/base/v2/utils"
 )
 
+var (
+	generatorMap = map[string]func(f *basis.Flag) (basis.Generator, error){
+		"mysql":  mysql.Flag2Generator,
+		"sqlite": sqlite.Flag2Generator,
+	}
+)
+
 func GenerateCodeWithMysql(f *basis.Flag) {
+	gen, exists := generatorMap[f.DriveName()]
+	if !exists {
+		utils.Red("unsupported driver Name")
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	generator, err := gen(f)
+	if err != nil {
+		utils.RedFatal("init generator failed with error: %v", err)
+	}
+
 	var (
 		templateFile  = f.TemplateFile()
 		outDir        = f.OutDir()
-		opt           = mysql.Flag2Options(f)
 		templateModel = basis.DefaultModelTemplate()
 	)
 
@@ -30,17 +51,12 @@ func GenerateCodeWithMysql(f *basis.Flag) {
 		templateModel = utils.Bytes2String(data)
 	}
 
-	err := utils.MkDir(outDir, 0766)
+	err = utils.MkDir(outDir, 0766)
 	if err != nil {
 		utils.RedFatal("create dir: %s failed with error:%v", outDir, err)
 	}
 
-	db, err := mysql.NewDb(opt)
-	if err != nil {
-		utils.RedFatal("init db failed with error: %v", err)
-	}
-
-	tables, err := db.ShowTables("")
+	tables, err := generator.ShowTables("")
 	if err != nil {
 		utils.RedFatal("show tables with error: %v", err)
 	}
@@ -54,15 +70,22 @@ func GenerateCodeWithMysql(f *basis.Flag) {
 	}
 
 	var (
-		index int
-		read  = true
+		index    int
+		inputStr string
+		read     = true
 	)
 
 	for read {
 		utils.Green("please enter the index of table：")
-		_, err = fmt.Scanln(&index)
+		_, err = fmt.Scanln(&inputStr)
 		if err != nil {
 			utils.Red("read failed with error: %v", err)
+			continue
+		}
+
+		index, err = strconv.Atoi(inputStr)
+		if err != nil {
+			utils.Red("parse index failed with error: %v", err)
 			continue
 		}
 
@@ -74,13 +97,13 @@ func GenerateCodeWithMysql(f *basis.Flag) {
 		read = false
 	}
 
-	t, err := db.LoadTableSchema(tables[index])
+	t, err := generator.LoadTableSchema(tables[index])
 	if err != nil {
 		utils.RedFatal("read table schema failed with error: %v\n", err)
 	}
 
 	var (
-		code    = t.GenerateCode(templateModel, f.PkgName())
+		code    = t.GenerateCode(f.DriveName(), templateModel, f.PkgName())
 		outFile = fmt.Sprintf("%s/%s.go", strings.TrimSuffix(outDir, "/"), tables[index])
 		file    *os.File
 	)

@@ -30,6 +30,10 @@ func Flag2Options(f *basis.Flag) Options {
 	return opt
 }
 
+func Flag2Generator(f *basis.Flag) (basis.Generator, error) {
+	return NewDb(Flag2Options(f))
+}
+
 func OptionsWithJson(conf string) (opt Options, err error) {
 	opt = DefaultMysqlOption()
 	err = utils.JsonDecode(conf, &opt)

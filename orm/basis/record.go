@@ -3,11 +3,12 @@ package basis
 import (
 	"database/sql"
 	"reflect"
+	"strconv"
 
-	"github.com/grpc-boot/base/v2/internal"
+	"github.com/grpc-boot/base/v2/utils"
 )
 
-type Record map[string][]byte
+type Record map[string]string
 
 func (r Record) Exists(key string) bool {
 	_, exists := r[key]
@@ -16,12 +17,12 @@ func (r Record) Exists(key string) bool {
 
 func (r Record) Bytes(key string) []byte {
 	value, _ := r[key]
-	return value
+	return []byte(value)
 }
 
 func (r Record) String(key string) string {
 	value, _ := r[key]
-	return internal.Bytes2String(value)
+	return value
 }
 
 func (r Record) Bool(key string) bool {
@@ -30,7 +31,8 @@ func (r Record) Bool(key string) bool {
 		return false
 	}
 
-	return internal.Bytes2Bool(value)
+	val, _ := strconv.ParseBool(value)
+	return val
 }
 
 func (r Record) Float64(key string) float64 {
@@ -39,7 +41,8 @@ func (r Record) Float64(key string) float64 {
 		return 0
 	}
 
-	return internal.Bytes2Float64(value)
+	val, _ := strconv.ParseFloat(value, 64)
+	return val
 }
 
 func (r Record) Float32(key string) float32 {
@@ -48,7 +51,8 @@ func (r Record) Float32(key string) float32 {
 		return 0
 	}
 
-	return float32(internal.Bytes2Float64(value))
+	val, _ := strconv.ParseFloat(value, 32)
+	return float32(val)
 }
 
 func (r Record) Int64(key string) int64 {
@@ -57,7 +61,8 @@ func (r Record) Int64(key string) int64 {
 		return 0
 	}
 
-	return internal.Bytes2Int64(value)
+	val, _ := strconv.ParseInt(value, 10, 64)
+	return val
 }
 
 func (r Record) Uint64(key string) uint64 {
@@ -66,7 +71,8 @@ func (r Record) Uint64(key string) uint64 {
 		return 0
 	}
 
-	return internal.Bytes2Uint64(value)
+	val, _ := strconv.ParseUint(value, 10, 64)
+	return val
 }
 
 func (r Record) Int(key string) int {
@@ -83,7 +89,8 @@ func (r Record) Int32(key string) int32 {
 		return 0
 	}
 
-	return internal.Bytes2Int32(value)
+	val, _ := strconv.ParseInt(value, 10, 32)
+	return int32(val)
 }
 
 func (r Record) Uint32(key string) uint32 {
@@ -92,7 +99,8 @@ func (r Record) Uint32(key string) uint32 {
 		return 0
 	}
 
-	return internal.Bytes2Uint32(value)
+	val, _ := strconv.ParseUint(value, 10, 32)
+	return uint32(val)
 }
 
 func (r Record) Int16(key string) int16 {
@@ -101,7 +109,8 @@ func (r Record) Int16(key string) int16 {
 		return 0
 	}
 
-	return internal.Bytes2Int16(value)
+	val, _ := strconv.ParseInt(value, 10, 16)
+	return int16(val)
 }
 
 func (r Record) Uint16(key string) uint16 {
@@ -110,7 +119,8 @@ func (r Record) Uint16(key string) uint16 {
 		return 0
 	}
 
-	return internal.Bytes2Uint16(value)
+	val, _ := strconv.ParseUint(value, 10, 16)
+	return uint16(val)
 }
 
 func (r Record) Int8(key string) int8 {
@@ -119,7 +129,8 @@ func (r Record) Int8(key string) int8 {
 		return 0
 	}
 
-	return internal.Bytes2Int8(value)
+	val, _ := strconv.ParseInt(value, 10, 8)
+	return int8(val)
 }
 
 func (r Record) Uint8(key string) uint8 {
@@ -128,7 +139,8 @@ func (r Record) Uint8(key string) uint8 {
 		return 0
 	}
 
-	return internal.Bytes2Uint8(value)
+	val, _ := strconv.ParseUint(value, 10, 8)
+	return uint8(val)
 }
 
 func (r Record) Convert(out any) (err error) {
@@ -177,10 +189,11 @@ func ScanRecords(rows *sql.Rows) (records []Record, err error) {
 			return nil, err
 		}
 
-		record := make(map[string][]byte, len(fields))
+		record := make(map[string]string, len(fields))
 		for index, field := range fields {
-			record[field] = *values[index].(*[]byte)
+			record[field] = utils.Bytes2String(*values[index].(*[]byte))
 		}
+
 		records = append(records, record)
 	}
 	return

@@ -23,7 +23,7 @@ func main() {
 	orm.GenerateCodeWithMysql(f)
 
 	// use model
-	testModel()
+	//testModel()
 }
 
 func testModel() {

@@ -19,8 +19,11 @@ func DefaultOption() Options {
 func Flag2Options(f *basis.Flag) Options {
 	opt := DefaultOption()
 	opt.DbName = f.DbName()
-
 	return opt
+}
+
+func Flag2Generator(f *basis.Flag) (basis.Generator, error) {
+	return NewDb(Flag2Options(f))
 }
 
 func OptionsWithJson(conf string) (opt Options, err error) {

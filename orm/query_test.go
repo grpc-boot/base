@@ -48,7 +48,7 @@ func TestMysql_GenerateCode(t *testing.T) {
 			t.Fatalf("want nil, got %v", err)
 		}
 
-		f.WriteString(tab.GenerateCode(basis.DefaultModelTemplate(), "models"))
+		f.WriteString(tab.GenerateCode("mysql", basis.DefaultModelTemplate(), "models"))
 		f.Close()
 	}
 }
