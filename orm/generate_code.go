@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -23,7 +22,7 @@ var (
 func Flag2Generator(f *basis.Flag) (basis.Generator, error) {
 	gen, exists := generatorMap[f.DriveName()]
 	if !exists {
-		return nil, errors.New("unsupported driver Name")
+		return nil, basis.ErrUnsupportedDriver
 	}
 
 	return gen(f)

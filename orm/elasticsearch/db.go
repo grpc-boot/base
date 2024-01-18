@@ -1,13 +1,12 @@
 package elasticsearch
 
 import (
+	"context"
 	"database/sql"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/grpc-boot/base/v2/orm/basis"
-	"github.com/grpc-boot/base/v2/utils"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -33,74 +32,10 @@ func (db *Db) LoadTableSchema(table string) (t *basis.Table, err error) {
 }
 
 func (db *Db) FetchColumns(table string) (columns []basis.Column, err error) {
-	var rows *sql.Rows
-	rows, err = db.Query(fmt.Sprintf("SHOW FULL COLUMNS FROM %s", table))
-	if err != nil {
-		return
-	}
-
-	defer rows.Close()
-
-	columns = []basis.Column{}
-
-	var (
-		f  []byte
-		t  []byte
-		_c []byte
-		n  []byte
-		k  []byte
-		d  []byte
-		e  []byte
-		_p []byte
-		c  []byte
-	)
-
-	for rows.Next() {
-		if err = rows.Scan(&f, &t, &_c, &n, &k, &d, &e, &_p, &c); err != nil {
-			return
-		}
-		col := &column{
-			f: utils.Bytes2String(f),
-			t: utils.Bytes2String(t),
-			n: utils.Bytes2String(n),
-			k: utils.Bytes2String(k),
-			d: utils.Bytes2String(d),
-			e: utils.Bytes2String(e),
-			c: utils.Bytes2String(c),
-		}
-		col.format()
-
-		columns = append(columns, col)
-	}
-
 	return
 }
 
 func (db *Db) ShowTables(pattern string) (tables []string, err error) {
-	var rows *sql.Rows
-	if pattern == "" {
-		rows, err = db.Query("SHOW TABLES")
-	} else {
-		rows, err = db.Query(fmt.Sprintf("SHOW TABLES LIKE '%s'", pattern))
-	}
-
-	if err != nil {
-		return
-	}
-
-	defer rows.Close()
-
-	tables = []string{}
-
-	for rows.Next() {
-		var tbl string
-		if err = rows.Scan(&tbl); err != nil {
-			return
-		}
-
-		tables = append(tables, tbl)
-	}
-
 	return
 }
 
@@ -126,5 +61,25 @@ func NewDb(opt Options) (mysql *Db, err error) {
 		db.SetConnMaxLifetime(time.Duration(opt.ConnMaxLifetimeSecond) * time.Second)
 	}
 
-	return &Db{DB: db, opts: opt}, nil
+	return &Db{client: &http.Client{}, opts: opt}, nil
+}
+
+func (db *Db) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
+	return nil, basis.ErrUnsupportedDriver
+}
+
+func (db *Db) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	return nil, basis.ErrUnsupportedDriver
+}
+
+func (db *Db) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
+	return nil
+}
+
+func (db *Db) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+	return nil, basis.ErrUnsupportedDriver
+}
+
+func (db *Db) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+	return nil, basis.ErrUnsupportedDriver
 }
