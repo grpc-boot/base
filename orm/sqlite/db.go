@@ -69,6 +69,10 @@ func (db *Db) FetchColumns(table string) (columns []basis.Column, err error) {
 
 	for _, item := range items {
 		info := strings.SplitN(strings.TrimSpace(item), " ", 2)
+		if len(info) == 1 {
+			continue
+		}
+
 		col := &column{
 			f: info[0],
 			t: strings.ToLower(strings.TrimSpace(info[1])),

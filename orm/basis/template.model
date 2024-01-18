@@ -92,7 +92,6 @@ func ({this} *{struct}) FindOne(ctx context.Context, executor basis.Executor, {s
 
 func ({this} *{struct}) FindSome(ctx context.Context, executor basis.Executor, idList ...any) ([]{struct}, error) {
 	qObj := {this}.Query().
-		From({this}.TableName()).
 		Where(condition.In[any]{
 			Field: "id",
 			Value: idList,
@@ -103,6 +102,10 @@ func ({this} *{struct}) FindSome(ctx context.Context, executor basis.Executor, i
 }
 
 func ({this} *{struct}) FindByQuery(ctx context.Context, executor basis.Executor, query basis.Query) ([]{struct}, error) {
+	if !query.HasFrom() {
+        query.From({this}.TableName())
+    }
+
 	rows, err := orm.QueryWithQuery(ctx, executor, query)
 	if err != nil {
 		return nil, err

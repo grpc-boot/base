@@ -1,7 +1,7 @@
 package orm
 
 import (
-	"flag"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -20,25 +20,22 @@ var (
 	}
 )
 
-func GenerateCodeWithMysql(f *basis.Flag) {
+func Flag2Generator(f *basis.Flag) (basis.Generator, error) {
 	gen, exists := generatorMap[f.DriveName()]
 	if !exists {
-		utils.Red("unsupported driver Name")
-		flag.Usage()
-		os.Exit(1)
+		return nil, errors.New("unsupported driver Name")
 	}
 
-	generator, err := gen(f)
+	return gen(f)
+}
+
+func GenerateCode(driveName, tableName, pkgName, outDir, templateFile string, generator basis.Generator) {
+	t, err := generator.LoadTableSchema(tableName)
 	if err != nil {
-		utils.RedFatal("init generator failed with error: %v", err)
+		utils.RedFatal("read table schema failed with error: %v\n", err)
 	}
 
-	var (
-		templateFile  = f.TemplateFile()
-		outDir        = f.OutDir()
-		templateModel = basis.DefaultModelTemplate()
-	)
-
+	var templateModel = basis.DefaultModelTemplate()
 	if templateFile != "" {
 		if exists, _ := utils.FileExists(templateFile); !exists {
 			utils.RedFatal("file: %s not exists", templateFile)
@@ -54,6 +51,33 @@ func GenerateCodeWithMysql(f *basis.Flag) {
 	err = utils.MkDir(outDir, 0766)
 	if err != nil {
 		utils.RedFatal("create dir: %s failed with error:%v", outDir, err)
+	}
+
+	var (
+		code    = t.GenerateCode(driveName, templateModel, pkgName)
+		outFile = fmt.Sprintf("%s/%s.go", strings.TrimSuffix(outDir, "/"), tableName)
+		file    *os.File
+	)
+
+	file, err = os.Create(outFile)
+	if err != nil {
+		utils.RedFatal("create file: %s failed with error: %v", outFile, err)
+	}
+
+	defer file.Close()
+
+	_, err = file.WriteString(code)
+	if err != nil {
+		utils.RedFatal("write code failed with error: %v", err)
+	}
+
+	utils.Green("The code has been written to the file：%s", outFile)
+}
+
+func GenerateCodeWithFlag(f *basis.Flag) {
+	generator, err := Flag2Generator(f)
+	if err != nil {
+		utils.RedFatal("init generator failed with error: %v", err)
 	}
 
 	tables, err := generator.ShowTables("")
@@ -97,28 +121,5 @@ func GenerateCodeWithMysql(f *basis.Flag) {
 		read = false
 	}
 
-	t, err := generator.LoadTableSchema(tables[index])
-	if err != nil {
-		utils.RedFatal("read table schema failed with error: %v\n", err)
-	}
-
-	var (
-		code    = t.GenerateCode(f.DriveName(), templateModel, f.PkgName())
-		outFile = fmt.Sprintf("%s/%s.go", strings.TrimSuffix(outDir, "/"), tables[index])
-		file    *os.File
-	)
-
-	file, err = os.Create(outFile)
-	if err != nil {
-		utils.RedFatal("create file: %s failed with error: %v", outFile, err)
-	}
-
-	defer file.Close()
-
-	_, err = file.WriteString(code)
-	if err != nil {
-		utils.RedFatal("write code failed with error: %v", err)
-	}
-
-	utils.Green("The code has been written to the file：%s", outFile)
+	GenerateCode(f.DriveName(), tables[index], f.PkgName(), f.OutDir(), f.TemplateFile(), generator)
 }

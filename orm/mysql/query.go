@@ -56,6 +56,10 @@ func (q *Query) From(table string) basis.Query {
 	return q
 }
 
+func (q *Query) HasFrom() bool {
+	return q.table != ""
+}
+
 func (q *Query) Where(condition condition.Condition) basis.Query {
 	q.where = condition
 	return q

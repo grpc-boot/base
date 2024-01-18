@@ -18,8 +18,8 @@ var (
 )
 
 // AcquireQuery 获取sqliteQuery对象
-func AcquireQuery() Query {
-	return queryPool.Get().(Query)
+func AcquireQuery() *Query {
+	return queryPool.Get().(*Query)
 }
 
 type Query struct {
@@ -55,6 +55,10 @@ func (q *Query) Select(columns ...string) basis.Query {
 func (q *Query) From(table string) basis.Query {
 	q.table = table
 	return q
+}
+
+func (q *Query) HasFrom() bool {
+	return q.table != ""
 }
 
 func (q *Query) IndexBy(indexName string) *Query {
