@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/grpc-boot/base/v2/orm/basis"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -128,11 +128,11 @@ func NewDb(opt Options) (sqlite *Db, err error) {
 	}
 
 	if opt.ConnMaxIdleTimeSecond > 0 {
-		db.SetConnMaxIdleTime(time.Duration(opt.ConnMaxIdleTimeSecond) * time.Second)
+		db.SetConnMaxIdleTime(opt.ConnMaxIdleTime())
 	}
 
 	if opt.ConnMaxLifetimeSecond > 0 {
-		db.SetConnMaxLifetime(time.Duration(opt.ConnMaxLifetimeSecond) * time.Second)
+		db.SetConnMaxLifetime(opt.ConnMaxLifetime())
 	}
 
 	return &Db{DB: db, opts: opt}, nil

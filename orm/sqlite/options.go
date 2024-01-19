@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/grpc-boot/base/v2/orm/basis"
 	"github.com/grpc-boot/base/v2/utils"
@@ -44,6 +45,14 @@ type Options struct {
 	MaxOpenConns          int    `json:"maxOpenConns" yaml:"maxOpenConns"`
 	ConnMaxIdleTimeSecond int64  `json:"connMaxIdleTimeSecond" yaml:"connMaxIdleTimeSecond"`
 	ConnMaxLifetimeSecond int64  `json:"connMaxLifetimeSecond" yaml:"connMaxLifetimeSecond"`
+}
+
+func (o *Options) ConnMaxIdleTime() time.Duration {
+	return time.Duration(o.ConnMaxIdleTimeSecond) * time.Second
+}
+
+func (o *Options) ConnMaxLifetime() time.Duration {
+	return time.Duration(o.ConnMaxLifetimeSecond) * time.Second
 }
 
 func (o *Options) Dsn() string {

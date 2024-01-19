@@ -3,7 +3,6 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-	"time"
 
 	"github.com/grpc-boot/base/v2/orm/basis"
 	"github.com/grpc-boot/base/v2/utils"
@@ -118,11 +117,11 @@ func NewDb(opt Options) (mysql *Db, err error) {
 	}
 
 	if opt.ConnMaxIdleTimeSecond > 0 {
-		db.SetConnMaxIdleTime(time.Duration(opt.ConnMaxIdleTimeSecond) * time.Second)
+		db.SetConnMaxIdleTime(opt.ConnMaxIdleTime())
 	}
 
 	if opt.ConnMaxLifetimeSecond > 0 {
-		db.SetConnMaxLifetime(time.Duration(opt.ConnMaxLifetimeSecond) * time.Second)
+		db.SetConnMaxLifetime(opt.ConnMaxLifetime())
 	}
 
 	return &Db{DB: db, opts: opt}, nil

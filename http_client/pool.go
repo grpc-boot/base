@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
@@ -13,88 +14,91 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type Client struct {
+type Pool struct {
 	client *http.Client
 	opt    *Options
 }
 
-func NewClient(opt Options) *Client {
-	c := &Client{
+func NewPool(opt Options) *Pool {
+	transport := &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   opt.DialTimeout(),
+			KeepAlive: opt.KeepaliveTime(),
+		}).DialContext,
+		MaxIdleConns:        opt.MaxIdleConns,
+		MaxIdleConnsPerHost: opt.MaxIdleConnsPerHost,
+		MaxConnsPerHost:     opt.MaxConnsPerHost,
+		IdleConnTimeout:     opt.IdleConnTimeout(),
+		WriteBufferSize:     opt.WriteBufferSize,
+		ReadBufferSize:      opt.ReadBufferSize,
+		DisableKeepAlives:   opt.DisableKeepAlives,
+		DisableCompression:  opt.DisableCompression,
+	}
+
+	return &Pool{
 		opt: &opt,
-	}
-
-	c.client = &http.Client{
-		Transport: &http.Transport{
-			DisableKeepAlives:   c.opt.DisableKeepAlives,
-			DisableCompression:  c.opt.DisableCompression,
-			MaxIdleConns:        c.opt.MaxIdleConns,
-			MaxIdleConnsPerHost: c.opt.MaxIdleConnsPerHost,
-			MaxConnsPerHost:     c.opt.MaxConnsPerHost,
-			IdleConnTimeout:     c.opt.IdleConnTimeout(),
-			WriteBufferSize:     c.opt.WriteBufferSize,
-			ReadBufferSize:      c.opt.ReadBufferSize,
+		client: &http.Client{
+			Transport: transport,
+			Timeout:   opt.Timeout(),
 		},
-		Timeout: c.opt.Timeout(),
 	}
-
-	return c
 }
 
-func (c *Client) OptionsTimeout(timeout time.Duration, url string, headers Headers) (rp *Response, err error) {
+func (c *Pool) OptionsTimeout(timeout time.Duration, url string, headers Headers) (rp *Response, err error) {
 	return c.RequestTimeout(timeout, http.MethodOptions, url, nil, headers)
 }
 
-func (c *Client) Options(ctx context.Context, url string, headers Headers) (rp *Response, err error) {
+func (c *Pool) Options(ctx context.Context, url string, headers Headers) (rp *Response, err error) {
 	return c.Request(ctx, http.MethodOptions, url, nil, headers)
 }
 
-func (c *Client) HeadTimeout(timeout time.Duration, url string, headers Headers) (rp *Response, err error) {
+func (c *Pool) HeadTimeout(timeout time.Duration, url string, headers Headers) (rp *Response, err error) {
 	return c.RequestTimeout(timeout, http.MethodHead, url, nil, headers)
 }
 
-func (c *Client) Head(ctx context.Context, url string, headers Headers) (rp *Response, err error) {
+func (c *Pool) Head(ctx context.Context, url string, headers Headers) (rp *Response, err error) {
 	return c.Request(ctx, http.MethodHead, url, nil, headers)
 }
 
-func (c *Client) GetTimeout(timeout time.Duration, url string, headers Headers) (rp *Response, err error) {
+func (c *Pool) GetTimeout(timeout time.Duration, url string, headers Headers) (rp *Response, err error) {
 	return c.RequestTimeout(timeout, http.MethodGet, url, nil, headers)
 }
 
-func (c *Client) Get(ctx context.Context, url string, headers Headers) (rp *Response, err error) {
+func (c *Pool) Get(ctx context.Context, url string, headers Headers) (rp *Response, err error) {
 	return c.Request(ctx, http.MethodGet, url, nil, headers)
 }
 
-func (c *Client) PostTimeout(timeout time.Duration, url string, body []byte, headers Headers) (rp *Response, err error) {
+func (c *Pool) PostTimeout(timeout time.Duration, url string, body []byte, headers Headers) (rp *Response, err error) {
 	return c.RequestTimeout(timeout, http.MethodPost, url, body, headers)
 }
 
-func (c *Client) Post(ctx context.Context, url string, body []byte, headers Headers) (rp *Response, err error) {
+func (c *Pool) Post(ctx context.Context, url string, body []byte, headers Headers) (rp *Response, err error) {
 	return c.Request(ctx, http.MethodPost, url, body, headers)
 }
 
-func (c *Client) PutTimeout(timeout time.Duration, url string, body []byte, headers Headers) (rp *Response, err error) {
+func (c *Pool) PutTimeout(timeout time.Duration, url string, body []byte, headers Headers) (rp *Response, err error) {
 	return c.RequestTimeout(timeout, http.MethodPut, url, body, headers)
 }
 
-func (c *Client) Put(ctx context.Context, url string, body []byte, headers Headers) (rp *Response, err error) {
+func (c *Pool) Put(ctx context.Context, url string, body []byte, headers Headers) (rp *Response, err error) {
 	return c.Request(ctx, http.MethodPut, url, body, headers)
 }
 
-func (c *Client) DeleteTimeout(timeout time.Duration, url string, headers Headers) (rp *Response, err error) {
+func (c *Pool) DeleteTimeout(timeout time.Duration, url string, headers Headers) (rp *Response, err error) {
 	return c.RequestTimeout(timeout, http.MethodDelete, url, nil, headers)
 }
 
-func (c *Client) Delete(ctx context.Context, url string, headers Headers) (rp *Response, err error) {
+func (c *Pool) Delete(ctx context.Context, url string, headers Headers) (rp *Response, err error) {
 	return c.Request(ctx, http.MethodDelete, url, nil, headers)
 }
 
-func (c *Client) RequestTimeout(timeout time.Duration, method, url string, body []byte, headers Headers) (rp *Response, err error) {
+func (c *Pool) RequestTimeout(timeout time.Duration, method, url string, body []byte, headers Headers) (rp *Response, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	return c.Request(ctx, method, url, body, headers)
 }
 
-func (c *Client) Request(ctx context.Context, method, url string, body []byte, headers Headers) (rp *Response, err error) {
+func (c *Pool) Request(ctx context.Context, method, url string, body []byte, headers Headers) (rp *Response, err error) {
 	var (
 		start = time.Now()
 		req   *http.Request
@@ -156,7 +160,7 @@ func (c *Client) Request(ctx context.Context, method, url string, body []byte, h
 	return
 }
 
-func (c *Client) Do(req *http.Request) (rp *Response, err error) {
+func (c *Pool) Do(req *http.Request) (rp *Response, err error) {
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return

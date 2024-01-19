@@ -1,11 +1,9 @@
 package elasticsearch
 
 import (
-	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/grpc-boot/base/v2/orm/basis"
 	"github.com/grpc-boot/base/v2/orm/condition"
 )
 
@@ -29,14 +27,12 @@ type Query struct {
 	group   string
 	having  string
 	order   string
-	offset  int64
 	limit   int64
 }
 
 func (q *Query) reset() *Query {
 	q.table = ""
 	q.columns = ""
-	q.offset = 0
 	q.limit = 0
 	q.group = ""
 	q.having = ""
@@ -46,12 +42,12 @@ func (q *Query) reset() *Query {
 	return q
 }
 
-func (q *Query) Select(columns ...string) basis.Query {
+func (q *Query) Select(columns ...string) *Query {
 	q.columns = strings.Join(columns, ",")
 	return q
 }
 
-func (q *Query) From(table string) basis.Query {
+func (q *Query) From(table string) *Query {
 	q.table = table
 	return q
 }
@@ -60,32 +56,27 @@ func (q *Query) HasFrom() bool {
 	return q.table != ""
 }
 
-func (q *Query) Where(condition condition.Condition) basis.Query {
+func (q *Query) Where(condition condition.Condition) *Query {
 	q.where = condition
 	return q
 }
 
-func (q *Query) Group(fields ...string) basis.Query {
+func (q *Query) Group(fields ...string) *Query {
 	q.group = " GROUP BY " + strings.Join(fields, ",")
 	return q
 }
 
-func (q *Query) Having(having string) basis.Query {
+func (q *Query) Having(having string) *Query {
 	q.having = " HAVING " + having
 	return q
 }
 
-func (q *Query) Order(orders ...string) basis.Query {
+func (q *Query) Order(orders ...string) *Query {
 	q.order = " ORDER BY " + strings.Join(orders, ",")
 	return q
 }
 
-func (q *Query) Offset(offset int64) basis.Query {
-	q.offset = offset
-	return q
-}
-
-func (q *Query) Limit(limit int64) basis.Query {
+func (q *Query) Limit(limit int64) *Query {
 	q.limit = limit
 	return q
 }
@@ -123,14 +114,6 @@ func (q *Query) Sql() (sql string, args []any) {
 	sqlBuffer.WriteString(q.having)
 	sqlBuffer.WriteString(q.order)
 
-	if q.limit < 1 {
-		return sqlBuffer.String(), args
-	}
-
-	sqlBuffer.WriteString(" LIMIT ")
-	sqlBuffer.WriteString(strconv.FormatInt(q.offset, 10))
-	sqlBuffer.WriteByte(',')
-	sqlBuffer.WriteString(strconv.FormatInt(q.limit, 10))
 	return sqlBuffer.String(), args
 }
 

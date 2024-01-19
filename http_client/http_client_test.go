@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	c = NewClient(DefaultOptions())
+	c = NewPool(DefaultOptions())
 )
 
 func TestClient_GetTimeout(t *testing.T) {
