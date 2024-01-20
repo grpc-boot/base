@@ -86,7 +86,7 @@ func (t *Table) convertCode(column Column) string {
 	}
 }
 
-func (t *Table) GenerateCode(template, packageName string) string {
+func (t *Table) GenerateCode(driverName, template, packageName string) string {
 	var (
 		code            = strings.ReplaceAll(template, "{package}", packageName)
 		primaryField    = "id"
@@ -98,6 +98,7 @@ func (t *Table) GenerateCode(template, packageName string) string {
 		primaryProperty = t.primary.Name()
 	}
 
+	code = strings.ReplaceAll(code, "{driver}", driverName)
 	code = strings.ReplaceAll(code, "{this}", t.getThis())
 	code = strings.ReplaceAll(code, "{table}", t.name)
 	code = strings.ReplaceAll(code, "{primary}", primaryField)

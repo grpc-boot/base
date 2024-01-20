@@ -1,4 +1,4 @@
-package mysql
+package sqlite
 
 import (
 	"strconv"
@@ -17,13 +17,14 @@ var (
 	}
 )
 
-// AcquireQuery 获取mysqlQuery对象
+// AcquireQuery 获取sqliteQuery对象
 func AcquireQuery() *Query {
 	return queryPool.Get().(*Query)
 }
 
 type Query struct {
 	table   string
+	indexBy string
 	columns string
 	where   condition.Condition
 	group   string
@@ -58,6 +59,11 @@ func (q *Query) From(table string) basis.Query {
 
 func (q *Query) HasFrom() bool {
 	return q.table != ""
+}
+
+func (q *Query) IndexBy(indexName string) *Query {
+	q.indexBy = indexName
+	return q
 }
 
 func (q *Query) Where(condition condition.Condition) basis.Query {
@@ -110,6 +116,11 @@ func (q *Query) Sql() (sql string, args []any) {
 
 	sqlBuffer.WriteString(` FROM `)
 	sqlBuffer.WriteString(q.table)
+
+	if q.indexBy != "" {
+		sqlBuffer.WriteString(" INDEXED BY ")
+		sqlBuffer.WriteString(q.indexBy)
+	}
 
 	if q.where != nil {
 		whereStr, args = q.where.Build()

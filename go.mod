@@ -10,6 +10,7 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/gofiber/fiber/v2 v2.51.0
 	github.com/golang/protobuf v1.5.2
+	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/tinylib/msgp v1.1.8
 	github.com/valyala/fasthttp v1.51.0

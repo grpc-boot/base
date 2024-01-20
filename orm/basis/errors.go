@@ -3,6 +3,7 @@ package basis
 import "errors"
 
 var (
-	ErrNoSetter   = errors.New("setter is empty")
-	ErrDataFormat = errors.New("invalid data format")
+	ErrNoSetter          = errors.New("setter is empty")
+	ErrDataFormat        = errors.New("invalid data format")
+	ErrUnsupportedDriver = errors.New("unsupported driver")
 )

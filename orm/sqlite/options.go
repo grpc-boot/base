@@ -1,4 +1,4 @@
-package mysql
+package sqlite
 
 import (
 	"fmt"
@@ -8,9 +8,8 @@ import (
 	"github.com/grpc-boot/base/v2/utils"
 )
 
-func DefaultMysqlOption() Options {
+func DefaultOption() Options {
 	return Options{
-		CharSet:               "utf8",
 		MaxOpenConns:          8,
 		MaxIdleConns:          2,
 		ConnMaxLifetimeSecond: 600,
@@ -19,15 +18,8 @@ func DefaultMysqlOption() Options {
 }
 
 func Flag2Options(f *basis.Flag) Options {
-	opt := DefaultMysqlOption()
-
-	opt.UserName = f.UserName()
-	opt.Password = f.Password()
-	opt.Host = f.Host()
-	opt.Port = f.Port()
+	opt := DefaultOption()
 	opt.DbName = f.DbName()
-	opt.CharSet = f.Charset()
-
 	return opt
 }
 
@@ -36,24 +28,19 @@ func Flag2Generator(f *basis.Flag) (basis.Generator, error) {
 }
 
 func OptionsWithJson(conf string) (opt Options, err error) {
-	opt = DefaultMysqlOption()
+	opt = DefaultOption()
 	err = utils.JsonDecode(conf, &opt)
 	return
 }
 
 func OptionsWithYaml(conf string) (opt Options, err error) {
-	opt = DefaultMysqlOption()
+	opt = DefaultOption()
 	err = utils.YamlDecode(conf, &opt)
 	return
 }
 
 type Options struct {
 	DbName                string `json:"dbName" yaml:"dbName"`
-	Host                  string `json:"host" yaml:"host"`
-	Port                  uint32 `json:"port" yaml:"port"`
-	UserName              string `json:"userName" yaml:"userName"`
-	Password              string `json:"password" yaml:"password"`
-	CharSet               string `json:"charSet" yaml:"charSet"`
 	MaxIdleConns          int    `json:"maxIdleConns" yaml:"maxIdleConns"`
 	MaxOpenConns          int    `json:"maxOpenConns" yaml:"maxOpenConns"`
 	ConnMaxIdleTimeSecond int64  `json:"connMaxIdleTimeSecond" yaml:"connMaxIdleTimeSecond"`
@@ -69,12 +56,7 @@ func (o *Options) ConnMaxLifetime() time.Duration {
 }
 
 func (o *Options) Dsn() string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True",
-		o.UserName,
-		o.Password,
-		o.Host,
-		o.Port,
+	return fmt.Sprintf("%s?parseTime=True",
 		o.DbName,
-		o.CharSet,
 	)
 }

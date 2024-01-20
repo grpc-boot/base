@@ -7,7 +7,7 @@ import (
 	"github.com/grpc-boot/base/v2/orm"
     "github.com/grpc-boot/base/v2/orm/basis"
     "github.com/grpc-boot/base/v2/orm/condition"
-    "github.com/grpc-boot/base/v2/orm/mysql"
+    "github.com/grpc-boot/base/v2/orm/{driver}"
 )
 
 var (
@@ -51,20 +51,20 @@ func ({this} *{struct}) GetSize(name string) int {
 	return {struct}Mapping.Size(name)
 }
 
-func ({this} *{struct}) Query() basis.Query {
-	return mysql.AcquireQuery()
+func ({this} *{struct}) Query() *{driver}.Query {
+	return {driver}.AcquireQuery()
 }
 
 func ({this} *{struct}) Deleter() basis.Delete {
-	return mysql.Delete
+	return {driver}.Delete
 }
 
 func ({this} *{struct}) Inserter() basis.Insert {
-	return mysql.Insert
+	return {driver}.Insert
 }
 
 func ({this} *{struct}) Updater() basis.Update {
-	return mysql.Update
+	return {driver}.Update
 }
 
 func ({this} *{struct}) Add(ctx context.Context, executor basis.Executor, {smallCamel} {struct}) (lastInsertId int64, err error) {
@@ -92,7 +92,6 @@ func ({this} *{struct}) FindOne(ctx context.Context, executor basis.Executor, {s
 
 func ({this} *{struct}) FindSome(ctx context.Context, executor basis.Executor, idList ...any) ([]{struct}, error) {
 	qObj := {this}.Query().
-		From({this}.TableName()).
 		Where(condition.In[any]{
 			Field: "id",
 			Value: idList,
@@ -103,6 +102,10 @@ func ({this} *{struct}) FindSome(ctx context.Context, executor basis.Executor, i
 }
 
 func ({this} *{struct}) FindByQuery(ctx context.Context, executor basis.Executor, query basis.Query) ([]{struct}, error) {
+	if !query.HasFrom() {
+        query.From({this}.TableName())
+    }
+
 	rows, err := orm.QueryWithQuery(ctx, executor, query)
 	if err != nil {
 		return nil, err

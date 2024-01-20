@@ -9,6 +9,7 @@ import (
 )
 
 type Flag struct {
+	driverName   string
 	host         string
 	password     string
 	userName     string
@@ -27,6 +28,10 @@ func (f *Flag) Host() string {
 func (f *Flag) Port() uint32 {
 	port, _ := strconv.ParseUint(f.port, 10, 32)
 	return uint32(port)
+}
+
+func (f *Flag) DriveName() string {
+	return f.driverName
 }
 
 func (f *Flag) DbName() string {
@@ -64,13 +69,8 @@ func (f *Flag) Check() {
 		os.Exit(1)
 	}
 
-	if f.password == "" {
-		utils.Red("required: -p")
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	utils.Green("using\ndb: %s\nhost: %s\nport: %s\nusername: %s\ncharset: %s\ntemplate file: %s\npackage name: %s\nout dir: %s",
+	utils.Green("using\ndriverName: %s\ndb: %s\nhost: %s\nport: %s\nusername: %s\ncharset: %s\ntemplate file: %s\npackage name: %s\nout dir: %s",
+		f.driverName,
 		f.dbName,
 		f.host,
 		f.port,
@@ -86,6 +86,7 @@ func ParseFlag() *Flag {
 	f := &Flag{}
 
 	flag.StringVar(&f.host, "h", "127.0.0.1", "-h: host")
+	flag.StringVar(&f.driverName, "dr", "mysql", "-h: driverName")
 	flag.StringVar(&f.port, "P", "3306", "-P: port")
 	flag.StringVar(&f.userName, "u", "root", "-u: username")
 	flag.StringVar(&f.password, "p", "", "-p: password")

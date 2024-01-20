@@ -10,6 +10,8 @@ type Query interface {
 	Select(columns ...string) Query
 	// From From表达式
 	From(table string) Query
+	// 是否设置了table
+	HasFrom() bool
 	// Where where表达式
 	Where(condition condition.Condition) Query
 	// Group Group表达式
