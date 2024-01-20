@@ -19,7 +19,6 @@ func (p *Pool) Index(ctx context.Context, name string, args ...Arg) (res *result
 		body.WithArgs(args...)
 		resp, err = p.Request(ctx, http.MethodPut, name, body.Marshal(), nil)
 	}
-
 	return result.ToIndex(resp, err)
 }
 
@@ -42,7 +41,6 @@ func (p *Pool) IndexSetting(ctx context.Context, name string, args ...Arg) (res 
 	body.WithArgs(args...)
 
 	resp, err := p.Request(ctx, http.MethodPut, fmt.Sprintf("%s/_settings", name), body.Marshal(), nil)
-
 	return result.ToIndex(resp, err)
 }
 
@@ -60,7 +58,6 @@ func (p *Pool) IndexMapping(ctx context.Context, name string, properties result.
 	body.WithProperties(properties)
 
 	resp, err := p.Request(ctx, http.MethodPut, fmt.Sprintf("%s/_mapping", name), body.Marshal(), nil)
-
 	return result.ToIndex(resp, err)
 }
 
@@ -71,6 +68,5 @@ func (p *Pool) IndexMappingGet(ctx context.Context, target string) (res *result.
 	} else {
 		resp, err = p.Request(ctx, http.MethodGet, fmt.Sprintf("%s/_mapping", target), nil, nil)
 	}
-
 	return result.ToMapping(resp, err)
 }
