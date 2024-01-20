@@ -2,9 +2,10 @@ package elasticsearch
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
+
+	"github.com/grpc-boot/base/v2/elasticsearch/result"
 )
 
 var (
@@ -36,32 +37,34 @@ func TestPool_Index(t *testing.T) {
 		t.Fatalf("want nil, got %v", err)
 	}
 
-	t.Logf("hasErr: %v res: %+v", res.HasError(), res)
+	t.Logf("res: %+v", res)
 
-	properties := Properties{
-		"id": Property{
-			"type": "long",
-		},
-		"name": Property{
-			"type": "keyword",
-		},
-		"remark": Property{
-			"type": "text",
-		},
-		"status": Property{
-			"type": "short",
-		},
-		"created_at": Property{
-			"type":   "date",
-			"format": "yyyy-MM-dd HH:mm:ss||epoch_second",
+	mapping := result.Mapping{
+		Properties: result.MappingProperties{
+			"id": result.MappingProperty{
+				Type: "long",
+			},
+			"name": result.MappingProperty{
+				Type: "keyword",
+			},
+			"remark": result.MappingProperty{
+				Type: "text",
+			},
+			"status": result.MappingProperty{
+				Type: "short",
+			},
+			"created_at": result.MappingProperty{
+				Type:   "date",
+				Format: "yyyy-MM-dd HH:mm:ss||epoch_second",
+			},
 		},
 	}
 
-	res, err = p.IndexMapping(ctx, index, properties)
+	res, err = p.IndexMapping(ctx, index, mapping.Properties)
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
 	}
-	t.Logf("hasErr: %v res: %+v", res.HasError(), res)
+	t.Logf("res: %+v", res)
 
 	res, err = p.IndexSetting(ctx, index, WithArg("index", Property{
 		"max_result_window": 100,
@@ -70,25 +73,25 @@ func TestPool_Index(t *testing.T) {
 		t.Fatalf("want nil, got %v", err)
 	}
 
-	t.Logf("hasErr: %v res: %+v", res.HasError(), res)
+	t.Logf("res: %+v", res)
 
-	properties["updated_at"] = Property{
-		"type":   "date",
-		"format": "yyyy-MM-dd HH:mm:ss||epoch_second",
+	mapping.Properties["updated_at"] = result.MappingProperty{
+		Type:   "date",
+		Format: "yyyy-MM-dd HH:mm:ss||epoch_second",
 	}
 
-	res, err = p.IndexMapping(ctx, index, properties)
+	res, err = p.IndexMapping(ctx, index, mapping.Properties)
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
 	}
-	t.Logf("hasErr: %v res: %+v", res.HasError(), res)
+	t.Logf("res: %+v", res)
 
-	mapping, err := p.IndexMappingGet(ctx, index)
+	gotMapping, err := p.IndexMappingGet(ctx, index)
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
 	}
 
-	t.Logf("error: %v res: %+v", err, mapping)
+	t.Logf("error: %v res: %+v", err, gotMapping)
 
 	resp, err := p.IndexSettingGet(ctx, index)
 	if err != nil {
@@ -105,7 +108,13 @@ func TestPool_DocIndex(t *testing.T) {
 
 	defer cancel()
 
-	res, err := p.DocIndex(ctx, index, Body{
+	res, err := p.DocDel(ctx, index, "empty")
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+	t.Logf("res: %+v", res)
+
+	res, err = p.DocIndex(ctx, index, Body{
 		"id":         1,
 		"name":       time.Now().Format(time.Layout),
 		"remark":     "cool perfect 好的",
@@ -117,29 +126,37 @@ func TestPool_DocIndex(t *testing.T) {
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
 	}
-	t.Logf("error: %+v res: %+v", err, res)
+	t.Logf("res: %+v", res)
 
 	docRes, err := p.DocMGet(ctx, index, res.Id)
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
 	}
-	t.Logf("error: %+v res: %+v", err, docRes)
+	t.Logf("res: %+v", docRes)
 
-	resp, err := p.DocUpdate(ctx, index, res.Id, Body{
-		"script": fmt.Sprintf("ctx._source.id = %d", time.Now().Unix()),
-	})
+	time.Sleep(time.Second)
 
-	t.Logf("status: %d body: %s", resp.GetStatus(), resp.GetBody())
-
-	resp, err = p.DocUpdateWithOptimistic(ctx, index, res.Id, Body{
-		"doc": WithArg("id", time.Now().Unix()),
+	res, err = p.DocUpdateWithOptimistic(ctx, index, res.Id, Setter{
+		"updated_at": time.Now().Unix(),
+		"id":         100,
 	}, res.SeqNo, res.PrimaryTerm)
-
-	t.Logf("status: %d body: %s", resp.GetStatus(), resp.GetBody())
-
-	res, err = p.DocDel(ctx, index, "")
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
 	}
-	t.Logf("error: %+v res: %+v", err, docRes)
+
+	t.Logf("res: %+v", res)
+
+	time.Sleep(time.Second)
+	res, err = p.DocUpdate(ctx, index, res.Id, Setter{
+		"created_at": time.Now().Unix(),
+		"name":       "'s'adf我也是",
+	})
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+
+	t.Logf("res: %+v", res)
+
+	res, err = p.DocFieldIncr(ctx, index, res.Id, "id", 10)
+	t.Logf("res: %+v", res)
 }

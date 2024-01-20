@@ -1,6 +1,8 @@
 package result
 
 import (
+	"errors"
+
 	"github.com/grpc-boot/base/v2/http_client"
 )
 
@@ -14,6 +16,10 @@ type DocIndex struct {
 	PrimaryTerm int64  `json:"_primary_term"`
 }
 
+func (di *DocIndex) IsRes(result string) bool {
+	return di.Res == result
+}
+
 func ToDocIndex(resp *http_client.Response, err error) (*DocIndex, error) {
 	if err != nil {
 		return nil, err
@@ -22,5 +28,9 @@ func ToDocIndex(resp *http_client.Response, err error) (*DocIndex, error) {
 	res := &DocIndex{}
 	res.Status = resp.GetStatus()
 	err = resp.UnmarshalJson(res)
+	if err == nil && res.HasError() {
+		err = errors.New(res.Error.Reason)
+	}
+
 	return res, err
 }

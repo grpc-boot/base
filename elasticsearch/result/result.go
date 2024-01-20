@@ -1,5 +1,12 @@
 package result
 
+const (
+	ResultNotFound = `not_found`
+	ResultCreated  = `created`
+	ResultUpdated  = `updated`
+	ResultDeleted  = `deleted`
+)
+
 type Result struct {
 	Error  *Error `json:"error"`
 	Status int    `json:"status"`

@@ -1,6 +1,10 @@
 package result
 
-import "github.com/grpc-boot/base/v2/http_client"
+import (
+	"errors"
+
+	"github.com/grpc-boot/base/v2/http_client"
+)
 
 type Index struct {
 	Result
@@ -21,5 +25,9 @@ func ToIndex(resp *http_client.Response, err error) (*Index, error) {
 	res.Status = resp.GetStatus()
 
 	err = resp.UnmarshalJson(res)
+	if err == nil && res.HasError() {
+		err = errors.New(res.Error.Reason)
+	}
+
 	return res, err
 }

@@ -14,12 +14,15 @@ type Mappings struct {
 }
 
 type Mapping struct {
-	Properties map[string]Property `json:"properties"`
+	Properties MappingProperties `json:"properties"`
 }
 
-type Property struct {
-	Type   string `json:"type"`
-	Format string `json:"format"`
+type MappingProperties map[string]MappingProperty
+
+type MappingProperty struct {
+	Type     string `json:"type"`
+	Format   string `json:"format,omitempty"`
+	Analyzer string `json:"analyzer,omitempty"`
 }
 
 func ToMapping(resp *http_client.Response, err error) (*IndexMapping, error) {

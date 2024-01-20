@@ -1,10 +1,13 @@
 package elasticsearch
 
-import "github.com/grpc-boot/base/v2/utils"
+import (
+	"github.com/grpc-boot/base/v2/elasticsearch/result"
+	"github.com/grpc-boot/base/v2/utils"
+)
 
 type Body map[string]any
 
-func (b Body) WithProperties(properties Properties) {
+func (b Body) WithProperties(properties result.MappingProperties) {
 	if len(properties) == 0 {
 		return
 	}

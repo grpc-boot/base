@@ -50,7 +50,7 @@ func (p *Pool) IndexSettingGet(ctx context.Context, target string) (response *ht
 	return p.Request(ctx, http.MethodGet, fmt.Sprintf("%s/_settings", target), nil, nil)
 }
 
-func (p *Pool) IndexMapping(ctx context.Context, name string, properties Properties) (res *result.Index, err error) {
+func (p *Pool) IndexMapping(ctx context.Context, name string, properties result.MappingProperties) (res *result.Index, err error) {
 	if len(properties) == 0 {
 		err = ErrPropertiesEmpty
 		return
