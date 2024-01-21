@@ -11,14 +11,14 @@ import (
 
 func (p *Pool) Index(ctx context.Context, name string, args ...Arg) (res *result.Index, err error) {
 	var resp *http_client.Response
-
 	if len(args) == 0 {
-		resp, err = p.Request(ctx, http.MethodPut, fmt.Sprintf("%s", name), nil, nil)
+		resp, err = p.Request(ctx, http.MethodPut, name, nil, nil)
 	} else {
 		body := make(Body, len(args))
 		body.WithArgs(args...)
 		resp, err = p.Request(ctx, http.MethodPut, name, body.Marshal(), nil)
 	}
+
 	return result.ToIndex(resp, err)
 }
 

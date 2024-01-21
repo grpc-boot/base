@@ -13,6 +13,11 @@ func (p *Pool) DocIndex(ctx context.Context, indexName string, body Body) (res *
 	return result.ToDocIndex(resp, err)
 }
 
+func (p *Pool) DocIndexWithId(ctx context.Context, indexName, id string, body Body) (res *result.DocIndex, err error) {
+	resp, err := p.Request(ctx, http.MethodPost, fmt.Sprintf("%s/_doc/%s", indexName, id), body.Marshal(), nil)
+	return result.ToDocIndex(resp, err)
+}
+
 func (p *Pool) DocMGet(ctx context.Context, indexName string, idList ...string) (res *result.Documents, err error) {
 	body := make(Body, 1)
 	body.WithArgs(WithArg("ids", idList))

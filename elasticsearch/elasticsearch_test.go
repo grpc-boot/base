@@ -128,6 +128,19 @@ func TestPool_DocIndex(t *testing.T) {
 	}
 	t.Logf("res: %+v", res)
 
+	res, err = p.DocIndexWithId(ctx, index, res.Id, Body{
+		"name":       time.Now().Format(time.Layout),
+		"remark":     "不好的",
+		"status":     1,
+		"created_at": time.Now().Unix(),
+		"updated_at": time.Now().Format(time.DateTime),
+	})
+
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+	t.Logf("res: %+v", res)
+
 	docRes, err := p.DocMGet(ctx, index, res.Id)
 	if err != nil {
 		t.Fatalf("want nil, got %v", err)
