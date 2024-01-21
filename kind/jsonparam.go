@@ -1,17 +1,6 @@
-package components
-
-import (
-	"github.com/grpc-boot/base/v2/utils"
-)
+package kind
 
 type JsonParam map[string]any
-
-// UnmarshalJsonParam _
-func UnmarshalJsonParam(data []byte) (JsonParam, error) {
-	var jp map[string]any
-	err := utils.JsonUnmarshal(data, &jp)
-	return jp, err
-}
 
 // Exists key是否存在，返回bool值
 func (jp JsonParam) Exists(key string) bool {
@@ -129,10 +118,4 @@ func (jp JsonParam) Uint32Slice(key string) []uint32 {
 func (jp JsonParam) Float64(key string) float64 {
 	value, _ := jp[key].(float64)
 	return value
-}
-
-// JsonMarshal _
-func (jp JsonParam) JsonMarshal() []byte {
-	data, _ := utils.JsonMarshal(jp)
-	return data
 }

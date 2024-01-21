@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/grpc-boot/base/v2/elasticsearch/result"
 	"github.com/grpc-boot/base/v2/http_client"
 	"github.com/grpc-boot/base/v2/internal"
 )
@@ -55,7 +56,7 @@ func (p *Pool) Request(ctx context.Context, method, path string, body []byte, he
 	return p.pool.Request(ctx, method, url, body, headers)
 }
 
-func (p *Pool) SearchBySql(ctx context.Context, size int64, format, sqlStr string, params []any, bodyArgs ...Arg) (response *http_client.Response, err error) {
+func (p *Pool) SearchBySql(ctx context.Context, size int64, format, sqlStr string, params []any, bodyArgs ...Arg) (res *result.Sql, err error) {
 	if format == "" {
 		format = "json"
 	}
@@ -69,15 +70,16 @@ func (p *Pool) SearchBySql(ctx context.Context, size int64, format, sqlStr strin
 	body.WithFetchSize(size)
 	body.WithArgs(bodyArgs...)
 
-	return p.Request(ctx, http.MethodPost, fmt.Sprintf("_sql?format=%s", format), body.Marshal(), nil)
+	resp, err := p.Request(ctx, http.MethodPost, fmt.Sprintf("_sql?format=%s", format), body.Marshal(), nil)
+	return result.ToSql(resp, err)
 }
 
-func (p *Pool) Query(ctx context.Context, query *Query, format string, args ...Arg) (response *http_client.Response, err error) {
+func (p *Pool) Query(ctx context.Context, query *Query, format string, args ...Arg) (res *result.Sql, err error) {
 	querySql, params := query.Sql()
 	return p.SearchBySql(ctx, query.limit, format, querySql, params, args...)
 }
 
-func (p *Pool) QueryWithCursor(ctx context.Context, cursor, format string, args ...Arg) (response *http_client.Response, err error) {
+func (p *Pool) QueryWithCursor(ctx context.Context, cursor, format string, args ...Arg) (res *result.Sql, err error) {
 	if format == "" {
 		format = "json"
 	}
@@ -86,7 +88,8 @@ func (p *Pool) QueryWithCursor(ctx context.Context, cursor, format string, args 
 	body.WithCursor(cursor)
 	body.WithArgs(args...)
 
-	return p.Request(ctx, http.MethodPost, fmt.Sprintf("_sql?format=%s", format), body.Marshal(), nil)
+	resp, err := p.Request(ctx, http.MethodPost, fmt.Sprintf("_sql?format=%s", format), body.Marshal(), nil)
+	return result.ToSql(resp, err)
 }
 
 func (p *Pool) CloseSqlCursor(ctx context.Context, cursor string) (response *http_client.Response, err error) {

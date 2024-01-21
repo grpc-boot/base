@@ -1,11 +1,14 @@
 package components
 
-import "github.com/grpc-boot/base/v2/utils"
+import (
+	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v2/utils"
+)
 
 type Package struct {
-	Id    uint16    `json:"id"`
-	Name  string    `json:"name"`
-	Param JsonParam `json:"param"`
+	Id    uint16         `json:"id"`
+	Name  string         `json:"name"`
+	Param kind.JsonParam `json:"param"`
 }
 
 func (p *Package) Pack() []byte {
