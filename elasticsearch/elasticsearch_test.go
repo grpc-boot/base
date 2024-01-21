@@ -2,6 +2,7 @@ package elasticsearch
 
 import (
 	"context"
+	"golang.org/x/exp/rand"
 	"testing"
 	"time"
 
@@ -98,6 +99,36 @@ func TestPool_Index(t *testing.T) {
 		t.Fatalf("want nil, got %v", err)
 	}
 	t.Logf("status: %d body: %s", resp.GetStatus(), resp.GetBody())
+}
+
+func TestPool_Bulk(t *testing.T) {
+	var (
+		ctx, cancel = context.WithTimeout(context.Background(), time.Second*5)
+		index       = "access_log_2024"
+	)
+
+	defer cancel()
+
+	bi := NewBulkItem()
+	bi.WithCreate(index, "2", Property{
+		"name":       time.Now().Format(time.DateTime),
+		"status":     rand.Intn(10),
+		"created_at": time.Now().Unix() + 10,
+		"updated_at": time.Now().Unix() + 10,
+	}).
+		WithUpdate(index, "2", Updater{
+			Doc: Property{
+				"updated_at": time.Now().Unix() + 15,
+			},
+		}).
+		WithDelete(index, "1").
+		WithDelete(index, "2")
+
+	res, err := p.Bulk(ctx, bi)
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+	t.Logf("res: %+v", res)
 }
 
 func TestPool_DocIndex(t *testing.T) {
