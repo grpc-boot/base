@@ -10,17 +10,17 @@ import (
 var (
 	queryPool = &sync.Pool{
 		New: func() any {
-			return &Query{}
+			return &SqlQuery{}
 		},
 	}
 )
 
 // AcquireQuery 获取mysqlQuery对象
-func AcquireQuery() *Query {
-	return queryPool.Get().(*Query)
+func AcquireQuery() *SqlQuery {
+	return queryPool.Get().(*SqlQuery)
 }
 
-type Query struct {
+type SqlQuery struct {
 	table   string
 	columns string
 	where   condition.Condition
@@ -30,7 +30,7 @@ type Query struct {
 	limit   int64
 }
 
-func (q *Query) reset() *Query {
+func (q *SqlQuery) reset() *SqlQuery {
 	q.table = ""
 	q.columns = ""
 	q.limit = 0
@@ -42,50 +42,50 @@ func (q *Query) reset() *Query {
 	return q
 }
 
-func (q *Query) Select(columns ...string) *Query {
+func (q *SqlQuery) Select(columns ...string) *SqlQuery {
 	q.columns = strings.Join(columns, ",")
 	return q
 }
 
-func (q *Query) From(table string) *Query {
+func (q *SqlQuery) From(table string) *SqlQuery {
 	q.table = table
 	return q
 }
 
-func (q *Query) HasFrom() bool {
+func (q *SqlQuery) HasFrom() bool {
 	return q.table != ""
 }
 
-func (q *Query) Where(condition condition.Condition) *Query {
+func (q *SqlQuery) Where(condition condition.Condition) *SqlQuery {
 	q.where = condition
 	return q
 }
 
-func (q *Query) Group(fields ...string) *Query {
+func (q *SqlQuery) Group(fields ...string) *SqlQuery {
 	q.group = " GROUP BY " + strings.Join(fields, ",")
 	return q
 }
 
-func (q *Query) Having(having string) *Query {
+func (q *SqlQuery) Having(having string) *SqlQuery {
 	q.having = " HAVING " + having
 	return q
 }
 
-func (q *Query) Order(orders ...string) *Query {
+func (q *SqlQuery) Order(orders ...string) *SqlQuery {
 	q.order = " ORDER BY " + strings.Join(orders, ",")
 	return q
 }
 
-func (q *Query) Limit(limit int64) *Query {
+func (q *SqlQuery) Limit(limit int64) *SqlQuery {
 	q.limit = limit
 	return q
 }
 
-func (q *Query) Close() {
+func (q *SqlQuery) Close() {
 	queryPool.Put(q.reset())
 }
 
-func (q *Query) Sql() (sql string, args []any) {
+func (q *SqlQuery) Sql() (sql string, args []any) {
 	var (
 		whereStr  string
 		sqlBuffer strings.Builder
@@ -117,7 +117,7 @@ func (q *Query) Sql() (sql string, args []any) {
 	return sqlBuffer.String(), args
 }
 
-func (q *Query) Count(field string) (sql string, args []any) {
+func (q *SqlQuery) Count(field string) (sql string, args []any) {
 	var (
 		buffer   strings.Builder
 		whereStr string
@@ -147,7 +147,7 @@ func (q *Query) Count(field string) (sql string, args []any) {
 	return buffer.String(), args
 }
 
-func (q *Query) Sum(field string) (sql string, args []any) {
+func (q *SqlQuery) Sum(field string) (sql string, args []any) {
 	var (
 		buffer   strings.Builder
 		whereStr string
@@ -177,7 +177,7 @@ func (q *Query) Sum(field string) (sql string, args []any) {
 	return buffer.String(), args
 }
 
-func (q *Query) Max(field string) (sql string, args []any) {
+func (q *SqlQuery) Max(field string) (sql string, args []any) {
 	var (
 		buffer   strings.Builder
 		whereStr string
@@ -207,7 +207,7 @@ func (q *Query) Max(field string) (sql string, args []any) {
 	return buffer.String(), args
 }
 
-func (q *Query) Min(field string) (sql string, args []any) {
+func (q *SqlQuery) Min(field string) (sql string, args []any) {
 	var (
 		buffer   strings.Builder
 		whereStr string
@@ -237,7 +237,7 @@ func (q *Query) Min(field string) (sql string, args []any) {
 	return buffer.String(), args
 }
 
-func (q *Query) Avg(field string) (sql string, args []any) {
+func (q *SqlQuery) Avg(field string) (sql string, args []any) {
 	var (
 		buffer   strings.Builder
 		whereStr string
