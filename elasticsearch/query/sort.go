@@ -1,12 +1,15 @@
 package query
 
 const (
-	Asc  = `asc`
-	Desc = `desc`
+	SortAsc  = `asc`
+	SortDesc = `desc`
 )
 
-type Sort struct {
-	field  string
+type Sort []SortItem
+
+type SortItem map[string]OrderItem
+
+type OrderItem struct {
 	Order  string `json:"order"`
 	Format string `json:"format,omitempty"`
 	Mode   string `json:"mode,omitempty"`

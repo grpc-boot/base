@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/grpc-boot/base/v2/elasticsearch/query"
 	"github.com/grpc-boot/base/v2/elasticsearch/result"
 )
 
@@ -19,6 +20,31 @@ func init() {
 	p = NewPool(opt)
 }
 
+func TestNewQueryString(t *testing.T) {
+	var (
+		ctx, cancel = context.WithTimeout(context.Background(), time.Second*5)
+		index       = "access_log_2024"
+	)
+
+	defer cancel()
+
+	qs := NewQueryString("created_at:>0")
+	//qs.Source = false
+	qs.Sort = query.Sort{
+		query.SortItem{
+			"id": query.OrderItem{
+				Order: query.SortDesc,
+			},
+		},
+	}
+	qs.SearchAfter = []any{1705754063}
+	res, err := p.QueryWithString(ctx, index, qs)
+	if err != nil {
+		t.Fatalf("want nil, got %v", err)
+	}
+
+	t.Logf("res: %+v", res)
+}
 func TestPool_Index(t *testing.T) {
 	var (
 		ctx, cancel = context.WithTimeout(context.Background(), time.Second*5)
