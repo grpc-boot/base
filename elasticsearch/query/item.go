@@ -78,6 +78,13 @@ func (i *Item) WithOperator(opt string) *Item {
 	return i
 }
 
+func (i *Item) toPrefix() kind.JsonParam {
+	if i.rewrite == "" && !i.caseInsensitive {
+		return nil
+	}
+	return nil
+}
+
 func (i *Item) toTerms() kind.JsonParam {
 	if i.boost == 0 && !i.caseInsensitive {
 		return kind.JsonParam{
