@@ -1,105 +1,51 @@
 package query
 
-import (
-	"github.com/grpc-boot/base/v2/kind"
-	"github.com/grpc-boot/base/v2/utils"
-)
-
 type Filter struct {
-	list []kind.JsonParam
+	list []any
 }
 
-func (f *Filter) Marshal() []byte {
-	data, _ := utils.JsonMarshal(f.list)
-	return data
-}
-
-func (f *Filter) WithIds(ids Ids) *Filter {
-	f.list = append(f.list, kind.JsonParam{
-		"ids": ids,
-	})
+func (f *Filter) WithIds(item IdsItem) *Filter {
+	f.list = append(f.list, NewIds(item))
 
 	return f
 }
 
-func (f *Filter) WithTerm(t Term) *Filter {
-	f.list = append(f.list, kind.JsonParam{
-		"term": kind.JsonParam{
-			t.field: t,
-		},
-	})
+func (f *Filter) WithTerm(field string, item TermItem) *Filter {
+	f.list = append(f.list, NewTerm(field, item))
 	return f
 }
 
-func (f *Filter) WithTerms(ts Terms) *Filter {
-	p := kind.JsonParam{
-		ts.field: ts.values,
-	}
-
-	if ts.Boost != 0 {
-		p["boost"] = ts.Boost
-	}
-
-	f.list = append(f.list, kind.JsonParam{
-		"terms": p,
-	})
+func (f *Filter) WithTerms(field string, item TermsItem) *Filter {
+	f.list = append(f.list, NewTerms(field, item))
 	return f
 }
 
-func (f *Filter) WithRange(r Range) *Filter {
-	f.list = append(f.list, kind.JsonParam{
-		"range": kind.JsonParam{
-			r.field: r,
-		},
-	})
-
+func (f *Filter) WithRange(field string, item RangeItem) *Filter {
+	f.list = append(f.list, NewRange(field, item))
 	return f
 }
 
-func (f *Filter) WithExists(e Exists) *Filter {
-	f.list = append(f.list, kind.JsonParam{
-		"exists": e,
-	})
-
+func (f *Filter) WithExists(item ExistsItem) *Filter {
+	f.list = append(f.list, NewExists(item))
 	return f
 }
 
-func (f *Filter) WithPrefix(p Prefix) *Filter {
-	f.list = append(f.list, kind.JsonParam{
-		"prefix": kind.JsonParam{
-			p.field: p,
-		},
-	})
-
+func (f *Filter) WithPrefix(field string, item PrefixItem) *Filter {
+	f.list = append(f.list, NewPrefix(field, item))
 	return f
 }
 
-func (f *Filter) WithWildcard(w Wildcard) *Filter {
-	f.list = append(f.list, kind.JsonParam{
-		"wildcard": kind.JsonParam{
-			w.field: w,
-		},
-	})
-
+func (f *Filter) WithWildcard(field string, item WildcardItem) *Filter {
+	f.list = append(f.list, NewWildcard(field, item))
 	return f
 }
 
-func (f *Filter) WithRegExp(re RegExp) *Filter {
-	f.list = append(f.list, kind.JsonParam{
-		"regexp": kind.JsonParam{
-			re.field: re,
-		},
-	})
-
+func (f *Filter) WithRegExp(field string, item RegExpItem) *Filter {
+	f.list = append(f.list, NewRegExp(field, item))
 	return f
 }
 
-func (f *Filter) WithFuzzy(fz Fuzzy) *Filter {
-	f.list = append(f.list, kind.JsonParam{
-		"fuzzy": kind.JsonParam{
-			fz.field: fz,
-		},
-	})
-
+func (f *Filter) WithFuzzy(field string, item FuzzyItem) *Filter {
+	f.list = append(f.list, NewFuzzy(field, item))
 	return f
 }

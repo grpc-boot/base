@@ -74,7 +74,7 @@ func (p *Pool) SearchBySql(ctx context.Context, size int64, format, sqlStr strin
 	return result.ToSql(resp, err)
 }
 
-func (p *Pool) Query(ctx context.Context, query *SqlQuery, format string, args ...Arg) (res *result.Sql, err error) {
+func (p *Pool) Query(ctx context.Context, query *QuerySql, format string, args ...Arg) (res *result.Sql, err error) {
 	querySql, params := query.Sql()
 	return p.SearchBySql(ctx, query.limit, format, querySql, params, args...)
 }

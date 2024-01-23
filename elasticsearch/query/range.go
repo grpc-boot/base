@@ -1,7 +1,10 @@
 package query
 
 type Range struct {
-	field    string
+	Range map[string]RangeItem `json:"range"`
+}
+
+type RangeItem struct {
 	Gt       any     `json:"gt,omitempty"`
 	Gte      any     `json:"gte,omitempty"`
 	Lt       any     `json:"lt,omitempty"`
@@ -10,4 +13,12 @@ type Range struct {
 	Format   string  `json:"format,omitempty"`
 	Relation string  `json:"relation,omitempty"`
 	TimeZone string  `json:"time_zone,omitempty"`
+}
+
+func NewRange(field string, item RangeItem) Range {
+	return Range{
+		Range: map[string]RangeItem{
+			field: item,
+		},
+	}
 }
