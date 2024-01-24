@@ -1,19 +1,25 @@
 package query
 
-type Match struct {
-	Match map[string]MatchItem `json:"match"`
-}
+import "github.com/grpc-boot/base/v2/kind"
 
-type MatchItem struct {
+type Match struct {
+	field    string
 	Query    string `json:"query"`
 	Operator string `json:"operator,omitempty"`
 	Analyzer string `json:"analyzer,omitempty"`
 }
 
-func NewMatch(field string, item MatchItem) Match {
-	return Match{
-		Match: map[string]MatchItem{
-			field: item,
+func (m Match) Param() kind.JsonParam {
+	return kind.JsonParam{
+		"match": kind.JsonParam{
+			m.field: m,
 		},
+	}
+}
+
+func NewMatch(field, query string) Match {
+	return Match{
+		field: field,
+		Query: query,
 	}
 }
