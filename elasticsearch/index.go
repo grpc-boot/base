@@ -16,7 +16,13 @@ func (p *Pool) Index(ctx context.Context, name string, args ...Arg) (res *result
 	} else {
 		body := make(Body, len(args))
 		body.WithArgs(args...)
-		resp, err = p.Request(ctx, http.MethodPut, name, body.Marshal(), nil)
+		reqBody, er := body.Marshal()
+		if er != nil {
+			return nil, er
+		}
+		body = nil
+
+		resp, err = p.Request(ctx, http.MethodPut, name, reqBody, nil)
 	}
 
 	return result.ToIndex(resp, err)
@@ -39,8 +45,13 @@ func (p *Pool) IndexSetting(ctx context.Context, name string, args ...Arg) (res 
 
 	body := make(Body, len(args))
 	body.WithArgs(args...)
+	reqBody, er := body.Marshal()
+	if er != nil {
+		return nil, er
+	}
+	body = nil
 
-	resp, err := p.Request(ctx, http.MethodPut, fmt.Sprintf("%s/_settings", name), body.Marshal(), nil)
+	resp, err := p.Request(ctx, http.MethodPut, fmt.Sprintf("%s/_settings", name), reqBody, nil)
 	return result.ToIndex(resp, err)
 }
 
@@ -56,8 +67,13 @@ func (p *Pool) IndexMapping(ctx context.Context, name string, properties result.
 
 	body := make(Body, 1)
 	body.WithProperties(properties)
+	reqBody, er := body.Marshal()
+	if er != nil {
+		return nil, er
+	}
+	body = nil
 
-	resp, err := p.Request(ctx, http.MethodPut, fmt.Sprintf("%s/_mapping", name), body.Marshal(), nil)
+	resp, err := p.Request(ctx, http.MethodPut, fmt.Sprintf("%s/_mapping", name), reqBody, nil)
 	return result.ToIndex(resp, err)
 }
 

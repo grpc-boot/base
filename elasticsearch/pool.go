@@ -70,11 +70,17 @@ func (p *Pool) SearchBySql(ctx context.Context, size int64, format, sqlStr strin
 	body.WithFetchSize(size)
 	body.WithArgs(bodyArgs...)
 
-	resp, err := p.Request(ctx, http.MethodPost, fmt.Sprintf("_sql?format=%s", format), body.Marshal(), nil)
+	reqBody, err := body.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	body = nil
+
+	resp, err := p.Request(ctx, http.MethodPost, fmt.Sprintf("_sql?format=%s", format), reqBody, nil)
 	return result.ToSql(resp, err)
 }
 
-func (p *Pool) Query(ctx context.Context, query *QuerySql, format string, args ...Arg) (res *result.Sql, err error) {
+func (p *Pool) Query(ctx context.Context, query *Query, format string, args ...Arg) (res *result.Sql, err error) {
 	querySql, params := query.Sql()
 	return p.SearchBySql(ctx, query.limit, format, querySql, params, args...)
 }
@@ -88,7 +94,13 @@ func (p *Pool) QueryWithCursor(ctx context.Context, cursor, format string, args 
 	body.WithCursor(cursor)
 	body.WithArgs(args...)
 
-	resp, err := p.Request(ctx, http.MethodPost, fmt.Sprintf("_sql?format=%s", format), body.Marshal(), nil)
+	reqBody, err := body.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	body = nil
+
+	resp, err := p.Request(ctx, http.MethodPost, fmt.Sprintf("_sql?format=%s", format), reqBody, nil)
 	return result.ToSql(resp, err)
 }
 
@@ -96,5 +108,16 @@ func (p *Pool) CloseSqlCursor(ctx context.Context, cursor string) (response *htt
 	body := make(Body, 1)
 	body.WithCursor(cursor)
 
-	return p.Request(ctx, http.MethodPost, "_sql/close", body.Marshal(), nil)
+	reqBody, err := body.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	body = nil
+
+	return p.Request(ctx, http.MethodPost, "_sql/close", reqBody, nil)
+}
+
+func (p *Pool) Bulk(ctx context.Context, bi *BulkItem) (res *result.Bulk, err error) {
+	resp, err := p.Request(ctx, http.MethodPost, "_bulk", bi.Marshal(), nil)
+	return result.ToBulk(resp, err)
 }

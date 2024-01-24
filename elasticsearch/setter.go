@@ -6,9 +6,9 @@ import (
 
 type Setter map[string]any
 
-func (s Setter) ToBody() []byte {
+func (s Setter) ToBody() (setter []byte, err error) {
 	if len(s) == 0 {
-		return nil
+		return nil, ErrSetterEmpty
 	}
 
 	var buf bytes.Buffer

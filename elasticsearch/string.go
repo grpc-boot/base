@@ -1,4 +1,4 @@
-package query
+package elasticsearch
 
 type StringQuery struct {
 	QueryString String `json:"query_string"`

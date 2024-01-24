@@ -2,10 +2,11 @@ package elasticsearch
 
 import (
 	"github.com/grpc-boot/base/v2/elasticsearch/result"
+	"github.com/grpc-boot/base/v2/kind"
 	"github.com/grpc-boot/base/v2/utils"
 )
 
-type Body map[string]any
+type Body kind.JsonParam
 
 func (b Body) WithProperties(properties result.MappingProperties) {
 	if len(properties) == 0 {
@@ -45,7 +46,6 @@ func (b Body) WithArgs(args ...Arg) {
 	}
 }
 
-func (b Body) Marshal() []byte {
-	data, _ := utils.JsonMarshal(b)
-	return data
+func (b Body) Marshal() (body []byte, err error) {
+	return utils.JsonMarshal(b)
 }

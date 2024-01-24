@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/grpc-boot/base/v2/elasticsearch/query"
 	"github.com/grpc-boot/base/v2/elasticsearch/result"
 )
 
@@ -30,10 +29,10 @@ func TestNewQueryString(t *testing.T) {
 
 	qs := NewQueryString("created_at:>0")
 	//qs.Source = false
-	qs.Sort = query.Sort{
-		query.SortItem{
-			"id": query.OrderItem{
-				Order: query.SortDesc,
+	qs.Sort = Sort{
+		SortItem{
+			"id": OrderItem{
+				Order: SortDesc,
 			},
 		},
 	}

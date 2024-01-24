@@ -1,4 +1,4 @@
-package query
+package elasticsearch
 
 const (
 	SortAsc  = `asc`

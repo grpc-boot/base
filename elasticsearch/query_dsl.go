@@ -1,11 +1,30 @@
 package elasticsearch
 
-import "github.com/grpc-boot/base/v2/elasticsearch/query"
+import (
+	"context"
+	"fmt"
+	"net/http"
 
-type Query struct {
-	From        int64      `json:"from"`
-	Size        int64      `json:"size"`
-	Source      any        `json:"_source,omitempty"`
-	Sort        query.Sort `json:"sort,omitempty"`
-	SearchAfter []any      `json:"search_after,omitempty"`
+	"github.com/grpc-boot/base/v2/elasticsearch/result"
+	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v2/utils"
+)
+
+func (p *Pool) QueryWithDsl(ctx context.Context, indexName string, qs *QueryDsl) (*result.Search, error) {
+	body, err := utils.JsonMarshal(qs)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := p.Request(ctx, http.MethodPost, fmt.Sprintf("%s/_search", indexName), body, nil)
+	return result.ToSearch(resp, err)
+}
+
+type QueryDsl struct {
+	Query       kind.JsonParam `json:"query"`
+	From        int64          `json:"from"`
+	Size        int64          `json:"size"`
+	Source      any            `json:"_source,omitempty"`
+	Sort        Sort           `json:"sort,omitempty"`
+	SearchAfter []any          `json:"search_after,omitempty"`
 }

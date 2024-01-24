@@ -2,17 +2,9 @@ package elasticsearch
 
 import (
 	"bytes"
-	"context"
-	"net/http"
 
-	"github.com/grpc-boot/base/v2/elasticsearch/result"
 	"github.com/grpc-boot/base/v2/utils"
 )
-
-func (p *Pool) Bulk(ctx context.Context, bi *BulkItem) (res *result.Bulk, err error) {
-	resp, err := p.Request(ctx, http.MethodPost, "_bulk", bi.Marshal(), nil)
-	return result.ToBulk(resp, err)
-}
 
 type BulkMarshal interface {
 	Marshal() []byte
