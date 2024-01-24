@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/grpc-boot/base/v2/components"
-	"github.com/grpc-boot/base/v2/components/grace"
 	"github.com/grpc-boot/base/v2/gored"
+	"github.com/grpc-boot/base/v2/grace"
 	"github.com/grpc-boot/base/v2/logger"
 	"github.com/grpc-boot/base/v2/monitor"
 	"github.com/grpc-boot/base/v2/utils"

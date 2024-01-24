@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/grpc-boot/base/v2/components/gopool"
+	"github.com/grpc-boot/base/v2/gopool"
 	"github.com/grpc-boot/base/v2/utils"
 )
 

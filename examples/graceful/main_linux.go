@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/grpc-boot/base/v2/components/grace"
+	"github.com/grpc-boot/base/v2/grace"
 	"github.com/grpc-boot/base/v2/logger"
 
 	"github.com/valyala/fasthttp"
