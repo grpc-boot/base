@@ -7,9 +7,9 @@ var (
 		return Options{
 			MaxRetry:        16,
 			FetchCheckSec:   5,
-			FetchTimeoutSec: 100,
-			RetryCheckSec:   10,
-			RetryTimeoutSec: 600,
+			FetchForwardSec: 60,
+			RetryCheckSec:   60,
+			RetryForwardSec: 600,
 		}
 	}
 )
@@ -17,9 +17,9 @@ var (
 type Options struct {
 	MaxRetry        int64 `json:"maxRetry" yaml:"maxRetry"`
 	FetchCheckSec   int64 `json:"fetchCheckSec" yaml:"fetchCheckSec"`
-	FetchTimeoutSec int64 `json:"fetchTimeoutSec" yaml:"fetchTimeoutSec"`
+	FetchForwardSec int64 `json:"fetchForwardSec" yaml:"fetchForwardSec"`
 	RetryCheckSec   int64 `json:"retryCheckSec" yaml:"retryCheckSec"`
-	RetryTimeoutSec int64 `json:"retryTimeoutSec" yaml:"retryTimeoutSec"`
+	RetryForwardSec int64 `json:"retryForwardSec" yaml:"retryForwardSec"`
 }
 
 func (o *Options) RetryCheck() time.Duration {

@@ -3,9 +3,11 @@ package queue
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"strconv"
 	"time"
 
+	"github.com/grpc-boot/base/v2/gopool"
 	"github.com/grpc-boot/base/v2/gored"
 	"github.com/grpc-boot/base/v2/utils"
 
@@ -15,6 +17,7 @@ import (
 type Delay interface {
 	Set(ctx context.Context, item Item) (err error)
 	Done(ctx context.Context, items ...Item) (err error)
+	DeadList(ctx context.Context) (items []Item, err error)
 	RegisterHandler(handler Handler)
 	Start() error
 	Stop(timeout time.Duration) error
@@ -47,11 +50,13 @@ var (
 )
 
 type delayRedis struct {
+	pool        *gopool.Pool
 	key         string
 	retryKey    string
 	opt         Options
 	handler     Handler
-	stop        chan struct{}
+	fetchCh     chan struct{}
+	retryCh     chan struct{}
 	retryTicker *time.Ticker
 	fetchTicker *time.Ticker
 	red         *redis.Client
@@ -63,12 +68,47 @@ func NewDelay(key string, red *redis.Client, opt Options) Delay {
 		retryKey:    key + ":retry",
 		red:         red,
 		opt:         opt,
-		stop:        make(chan struct{}),
+		fetchCh:     make(chan struct{}),
+		retryCh:     make(chan struct{}),
 		fetchTicker: time.NewTicker(opt.FetchCheck()),
 		retryTicker: time.NewTicker(opt.RetryCheck()),
 	}
 
 	return delay
+}
+
+func NewDelayWithGoPool(key string, red *redis.Client, pool *gopool.Pool, opt Options) Delay {
+	delay := &delayRedis{
+		pool:        pool,
+		key:         key,
+		retryKey:    key + ":retry",
+		red:         red,
+		opt:         opt,
+		fetchCh:     make(chan struct{}),
+		retryCh:     make(chan struct{}),
+		fetchTicker: time.NewTicker(opt.FetchCheck()),
+		retryTicker: time.NewTicker(opt.RetryCheck()),
+	}
+
+	return delay
+}
+
+func (dr *delayRedis) submit(items []Item) {
+	start := time.Now()
+	utils.Green("begin submit: %d", start.Unix())
+
+	defer func() {
+		utils.Green("submit cost: %d", time.Since(start))
+	}()
+
+	if dr.pool != nil {
+		_ = dr.pool.Submit(func() {
+			dr.handler(items)
+		})
+		return
+	}
+
+	dr.handler(items)
 }
 
 func (dr *delayRedis) autoRetry() {
@@ -80,16 +120,16 @@ func (dr *delayRedis) autoRetry() {
 				defer cancel()
 
 				start := time.Now()
-				items, _ := dr.retry(ctx, start.Unix(), 100, dr.opt.RetryTimeoutSec)
+				items, _ := dr.retry(ctx, start.Unix(), dr.opt.RetryForwardSec)
 				fmt.Printf("retry items:%v cost %s\n", items, time.Since(start))
 				if len(items) > 0 {
-					dr.handler(items)
+					dr.submit(items)
 				}
 			})
-		case <-dr.stop:
+		case <-dr.retryCh:
 			break
 		default:
-			time.Sleep(time.Millisecond * 10)
+			runtime.Gosched()
 		}
 	}
 }
@@ -103,21 +143,20 @@ func (dr *delayRedis) autoFetch() {
 				defer cancel()
 
 				start := time.Now()
-				items, _ := dr.fetch(ctx, start.Unix(), 100, dr.opt.FetchTimeoutSec)
-				fmt.Printf("fetch items:%v cost %s\n", items, time.Since(start))
+				items, _ := dr.fetch(ctx, start.Unix(), 100, dr.opt.FetchForwardSec)
 				if len(items) > 0 {
-					dr.handler(items)
+					dr.submit(items)
 				}
 			})
-		case <-dr.stop:
+		case <-dr.fetchCh:
 			break
 		default:
-			time.Sleep(time.Millisecond * 10)
+			runtime.Gosched()
 		}
 	}
 }
 
-func (dr *delayRedis) retry(ctx context.Context, now, count, timeoutSec int64) (items []Item, err error) {
+func (dr *delayRedis) retry(ctx context.Context, now, timeoutSec int64) (items []Item, err error) {
 	// lock
 	lockCmd := gored.Acquire(ctx, dr.red, dr.retryKey, 8)
 	err = gored.DealCmdErr(lockCmd)
@@ -129,9 +168,8 @@ func (dr *delayRedis) retry(ctx context.Context, now, count, timeoutSec int64) (
 	var (
 		token = lockCmd.Val()
 		cmd   = dr.red.ZRevRangeByScoreWithScores(ctx, dr.retryKey, &redis.ZRangeBy{
-			Min:   strconv.FormatInt(now-timeoutSec, 10),
-			Max:   strconv.FormatInt(now-2*timeoutSec, 10),
-			Count: count,
+			Min: "1",
+			Max: strconv.FormatInt(now-2*timeoutSec, 10),
 		})
 	)
 	err = gored.DealCmdErr(cmd)
@@ -251,12 +289,41 @@ func (dr *delayRedis) Start() error {
 	return nil
 }
 
+func (dr *delayRedis) DeadList(ctx context.Context) (items []Item, err error) {
+	cmd := dr.red.ZRevRangeByScoreWithScores(ctx, dr.retryKey, &redis.ZRangeBy{
+		Min: "0",
+		Max: "0",
+	})
+
+	err = gored.DealCmdErr(cmd)
+	if err != nil {
+		return
+	}
+
+	values, _ := cmd.Result()
+	if len(values) == 0 {
+		return
+	}
+
+	items = make([]Item, 0, len(values))
+
+	for _, z := range values {
+		var item Item
+		if utils.JsonDecode(z.Member.(string), &item) != nil {
+			continue
+		}
+		items = append(items, item)
+	}
+
+	return
+}
+
 func (dr *delayRedis) Stop(timeout time.Duration) error {
 	return utils.Timeout(timeout, func(args ...any) {
 		dr.retryTicker.Stop()
 		dr.fetchTicker.Stop()
-		dr.stop <- struct{}{}
-		dr.stop <- struct{}{}
+		dr.fetchCh <- struct{}{}
+		dr.retryCh <- struct{}{}
 	})
 }
 

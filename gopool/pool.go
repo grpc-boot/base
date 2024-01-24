@@ -2,6 +2,7 @@ package gopool
 
 import (
 	"errors"
+	"runtime"
 	"time"
 
 	"go.uber.org/atomic"
@@ -112,7 +113,7 @@ func (p *Pool) worker(task func()) {
 
 	p.runTask(task)
 
-	if p.maxIdleTimeout < time.Second {
+	if p.maxIdleTimeout == 0 {
 		for {
 			select {
 			case t, ok := <-p.work:
@@ -121,6 +122,7 @@ func (p *Pool) worker(task func()) {
 					return
 				}
 			default:
+				runtime.Gosched()
 			}
 		}
 	}
@@ -149,6 +151,7 @@ func (p *Pool) worker(task func()) {
 			}
 			working = false
 		default:
+			runtime.Gosched()
 		}
 	}
 }
