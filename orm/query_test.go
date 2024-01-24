@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/grpc-boot/base/v2/condition"
 	"github.com/grpc-boot/base/v2/kind"
 	"github.com/grpc-boot/base/v2/orm/basis"
-	"github.com/grpc-boot/base/v2/orm/condition"
 	"github.com/grpc-boot/base/v2/orm/mysql"
 )
 

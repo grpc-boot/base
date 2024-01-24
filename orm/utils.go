@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/grpc-boot/base/v2/condition"
 	"github.com/grpc-boot/base/v2/logger"
 	"github.com/grpc-boot/base/v2/orm/basis"
-	"github.com/grpc-boot/base/v2/orm/condition"
 	"github.com/grpc-boot/base/v2/orm/mysql"
 
 	"go.uber.org/zap/zapcore"

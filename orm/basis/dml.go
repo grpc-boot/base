@@ -1,6 +1,6 @@
 package basis
 
-import "github.com/grpc-boot/base/v2/orm/condition"
+import "github.com/grpc-boot/base/v2/condition"
 
 type Row []any
 

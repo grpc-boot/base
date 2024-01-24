@@ -80,7 +80,7 @@ func (c *Cache) loadFromLocal() {
 	wg.Add(bucketLen)
 
 	for i := 0; i < bucketLen; i++ {
-		go utils.Recover("", func(args ...any) {
+		go utils.Recover("load cache from local", func(args ...any) {
 			defer func() {
 				args[0].(*sync.WaitGroup).Done()
 			}()

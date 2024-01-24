@@ -1,7 +1,7 @@
 package basis
 
 import (
-	"github.com/grpc-boot/base/v2/orm/condition"
+	"github.com/grpc-boot/base/v2/condition"
 )
 
 // Query Query对象

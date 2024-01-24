@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"github.com/grpc-boot/base/v2/orm/condition"
 	"time"
 
+	"github.com/grpc-boot/base/v2/condition"
 	"github.com/grpc-boot/base/v2/orm"
 	"github.com/grpc-boot/base/v2/orm/basis"
 	"github.com/grpc-boot/base/v2/orm/example/generate/models"

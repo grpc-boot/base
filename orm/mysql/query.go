@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/grpc-boot/base/v2/condition"
 	"github.com/grpc-boot/base/v2/orm/basis"
-	"github.com/grpc-boot/base/v2/orm/condition"
 )
 
 var (

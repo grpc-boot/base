@@ -3,8 +3,8 @@ package sqlite
 import (
 	"strings"
 
+	"github.com/grpc-boot/base/v2/condition"
 	"github.com/grpc-boot/base/v2/orm/basis"
-	"github.com/grpc-boot/base/v2/orm/condition"
 )
 
 func repeatAndJoin(word, sep string, count int) string {
