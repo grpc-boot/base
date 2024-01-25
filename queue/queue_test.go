@@ -12,6 +12,8 @@ import (
 	"github.com/grpc-boot/base/v2/gopool"
 	"github.com/grpc-boot/base/v2/gored"
 	"github.com/grpc-boot/base/v2/utils"
+
+	"github.com/redis/go-redis/v9"
 )
 
 var (
@@ -23,8 +25,8 @@ func init() {
 	o := gored.DefaultOptions()
 	gored.SetRedis("redis", o)
 
-	/*var err error
-	goPool, err = gopool.NewPool(8,
+	var err error
+	goPool, err = gopool.NewPool(32,
 		gopool.WithQueueLength(64),
 		gopool.WithSpawnSize(1),
 		gopool.WithMaxIdleTimeoutSeconds(30),
@@ -37,7 +39,15 @@ func init() {
 
 	if err != nil {
 		panic(err)
-	}*/
+	}
+}
+
+func delayWithGoPool(red *redis.Client, opt Options) Delay {
+	return NewDelayWithGoPool("delay_queue_test", red, goPool, opt)
+}
+
+func delayWithoutGoPool(red *redis.Client, opt Options) Delay {
+	return NewDelay("delay_queue_test", red, opt)
 }
 
 func TestDelayRedis_Fetch(t *testing.T) {
@@ -48,7 +58,7 @@ func TestDelayRedis_Fetch(t *testing.T) {
 		wa       sync.WaitGroup
 	)
 
-	dq := NewDelay("delay_queue_test", red, opt)
+	dq := delayWithoutGoPool(red, opt)
 
 	wa.Add(maxCount)
 
@@ -71,6 +81,7 @@ func TestDelayRedis_Fetch(t *testing.T) {
 
 		for i := 0; i < len(items); i++ {
 			if items[i].RetryCount == 0 && i%2 == 0 {
+				_ = dq.SetDead(ctx, items[i])
 				continue
 			}
 
@@ -86,17 +97,22 @@ func TestDelayRedis_Fetch(t *testing.T) {
 	go func() {
 		ticker := time.NewTicker(time.Second)
 		for range ticker.C {
-			utils.Green("info tick")
 			func() {
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 				defer cancel()
-				list, er := dq.DeadList(ctx)
+				list, er := dq.DeadList(ctx, 0, 100)
 				if er != nil {
-					fmt.Printf("fetch dead list failed with error:%v\n", er)
+					utils.Red("fetch dead list failed with error:%v\n", er)
 					return
 				}
+
+				if len(list) > 0 {
+					// delete dead list
+					_ = dq.Done(ctx, list...)
+				}
+
 				utils.Green("fetch dead list: %+v", list)
-				/*utils.Green("workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", goPool.ActiveWorkerNum(), goPool.QueueLength(), goPool.PendingTaskTotal(), goPool.SuccessTotal(), goPool.FailedTotal(), goPool.HandleTotal())*/
+				utils.Green("workerNum:%d queueLen: %d pendingTaskTotal:%d successTotal:%d failedTotal:%d handleTotal:%d", goPool.ActiveWorkerNum(), goPool.QueueLength(), goPool.PendingTaskTotal(), goPool.SuccessTotal(), goPool.FailedTotal(), goPool.HandleTotal())
 			}()
 		}
 	}()

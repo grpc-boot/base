@@ -14,7 +14,7 @@ func init() {
 }
 
 func main() {
-	pool, err := gopool.NewPool(100,
+	pool, err := gopool.NewPool(32,
 		gopool.WithQueueLength(50),
 		gopool.WithSpawnSize(runtime.NumCPU()),
 		gopool.WithMaxIdleTimeoutSeconds(30),

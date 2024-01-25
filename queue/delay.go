@@ -2,8 +2,6 @@ package queue
 
 import (
 	"context"
-	"fmt"
-	"runtime"
 	"strconv"
 	"time"
 
@@ -16,8 +14,9 @@ import (
 
 type Delay interface {
 	Set(ctx context.Context, item Item) (err error)
+	SetDead(ctx context.Context, item Item) (err error)
 	Done(ctx context.Context, items ...Item) (err error)
-	DeadList(ctx context.Context) (items []Item, err error)
+	DeadList(ctx context.Context, offset, count int64) (items []Item, err error)
 	RegisterHandler(handler Handler)
 	Start() error
 	Stop(timeout time.Duration) error
@@ -63,18 +62,7 @@ type delayRedis struct {
 }
 
 func NewDelay(key string, red *redis.Client, opt Options) Delay {
-	delay := &delayRedis{
-		key:         key,
-		retryKey:    key + ":retry",
-		red:         red,
-		opt:         opt,
-		fetchCh:     make(chan struct{}),
-		retryCh:     make(chan struct{}),
-		fetchTicker: time.NewTicker(opt.FetchCheck()),
-		retryTicker: time.NewTicker(opt.RetryCheck()),
-	}
-
-	return delay
+	return NewDelayWithGoPool(key, red, nil, opt)
 }
 
 func NewDelayWithGoPool(key string, red *redis.Client, pool *gopool.Pool, opt Options) Delay {
@@ -94,13 +82,6 @@ func NewDelayWithGoPool(key string, red *redis.Client, pool *gopool.Pool, opt Op
 }
 
 func (dr *delayRedis) submit(items []Item) {
-	start := time.Now()
-	utils.Green("begin submit: %d", start.Unix())
-
-	defer func() {
-		utils.Green("submit cost: %d", time.Since(start))
-	}()
-
 	if dr.pool != nil {
 		_ = dr.pool.Submit(func() {
 			dr.handler(items)
@@ -120,16 +101,13 @@ func (dr *delayRedis) autoRetry() {
 				defer cancel()
 
 				start := time.Now()
-				items, _ := dr.retry(ctx, start.Unix(), dr.opt.RetryForwardSec)
-				fmt.Printf("retry items:%v cost %s\n", items, time.Since(start))
+				items, _ := dr.retry(ctx, start.Unix())
 				if len(items) > 0 {
 					dr.submit(items)
 				}
 			})
 		case <-dr.retryCh:
 			break
-		default:
-			runtime.Gosched()
 		}
 	}
 }
@@ -142,21 +120,19 @@ func (dr *delayRedis) autoFetch() {
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 				defer cancel()
 
-				start := time.Now()
-				items, _ := dr.fetch(ctx, start.Unix(), 100, dr.opt.FetchForwardSec)
+				start := time.Now().Unix()
+				items, _ := dr.fetch(ctx, start, dr.opt.FetchPerCount)
 				if len(items) > 0 {
 					dr.submit(items)
 				}
 			})
 		case <-dr.fetchCh:
 			break
-		default:
-			runtime.Gosched()
 		}
 	}
 }
 
-func (dr *delayRedis) retry(ctx context.Context, now, timeoutSec int64) (items []Item, err error) {
+func (dr *delayRedis) retry(ctx context.Context, now int64) (items []Item, err error) {
 	// lock
 	lockCmd := gored.Acquire(ctx, dr.red, dr.retryKey, 8)
 	err = gored.DealCmdErr(lockCmd)
@@ -168,8 +144,9 @@ func (dr *delayRedis) retry(ctx context.Context, now, timeoutSec int64) (items [
 	var (
 		token = lockCmd.Val()
 		cmd   = dr.red.ZRevRangeByScoreWithScores(ctx, dr.retryKey, &redis.ZRangeBy{
-			Min: "1",
-			Max: strconv.FormatInt(now-2*timeoutSec, 10),
+			Min:   "1",
+			Max:   strconv.FormatInt(dr.opt.RetryForwardEndAt(now), 10),
+			Count: dr.opt.RetryPerCount,
 		})
 	)
 	err = gored.DealCmdErr(cmd)
@@ -247,9 +224,9 @@ func (dr *delayRedis) retry(ctx context.Context, now, timeoutSec int64) (items [
 	return nil, err
 }
 
-func (dr *delayRedis) fetch(ctx context.Context, now, count, timeoutSec int64) (items []Item, err error) {
+func (dr *delayRedis) fetch(ctx context.Context, now, count int64) (items []Item, err error) {
 	var (
-		cmd = delayQScript.Run(ctx, dr.red, []string{dr.key, dr.retryKey}, now-timeoutSec, now, count, now)
+		cmd = delayQScript.Run(ctx, dr.red, []string{dr.key, dr.retryKey}, dr.opt.FetchForwardBeginAt(now), now, count, now)
 	)
 
 	err = gored.DealCmdErr(cmd)
@@ -289,10 +266,12 @@ func (dr *delayRedis) Start() error {
 	return nil
 }
 
-func (dr *delayRedis) DeadList(ctx context.Context) (items []Item, err error) {
+func (dr *delayRedis) DeadList(ctx context.Context, offset, count int64) (items []Item, err error) {
 	cmd := dr.red.ZRevRangeByScoreWithScores(ctx, dr.retryKey, &redis.ZRangeBy{
-		Min: "0",
-		Max: "0",
+		Min:    "0",
+		Max:    "0",
+		Offset: offset,
+		Count:  count,
 	})
 
 	err = gored.DealCmdErr(cmd)
@@ -341,6 +320,15 @@ func (dr *delayRedis) Done(ctx context.Context, items ...Item) (err error) {
 func (dr *delayRedis) Set(ctx context.Context, item Item) (err error) {
 	cmd := dr.red.ZAdd(ctx, dr.key, redis.Z{
 		Score:  float64(item.At),
+		Member: item.Member(),
+	})
+
+	return gored.DealCmdErr(cmd)
+}
+
+func (dr *delayRedis) SetDead(ctx context.Context, item Item) (err error) {
+	cmd := dr.red.ZAdd(ctx, dr.retryKey, redis.Z{
+		Score:  0,
 		Member: item.Member(),
 	})
 
