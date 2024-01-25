@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/grpc-boot/base/v2/kind/msg"
+	"github.com/grpc-boot/base/v2/utils"
 
 	"github.com/tinylib/msgp/msgp"
 )
@@ -158,26 +159,29 @@ func (b *Bucket) loadFile(fileName string) (loadLength int64, err error) {
 	return int64(len(b.Data)), err
 }
 
-func (b *Bucket) needFlush() bool {
+func (b *Bucket) needFlush(fileName string) bool {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	if len(b.Data) == 0 {
+		if exists, _ := utils.FileExists(fileName); !exists {
+			return false
+		}
+	}
+
 	if time.Now().Unix()-b.latestSync.Load().Unix() > FlushWithoutChangeIntervalSeconds {
 		return true
 	}
-
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
 
 	if b.hasChanged {
 		return true
 	}
 
-	if b.Data == nil {
-		return false
-	}
-	return true
+	return false
 }
 
 func (b *Bucket) flushFile(fileName string) (err error) {
-	if !b.needFlush() {
+	if !b.needFlush(fileName) {
 		return nil
 	}
 

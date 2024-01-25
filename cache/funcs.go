@@ -34,7 +34,7 @@ func Length(c *Cache) int64 {
 	return c.length.Load()
 }
 
-func CommonGet[V msg.Value](c *Cache, key string, timeoutSecond int64, handler msg.Handler[V]) (interface{}, error) {
+func CommonGet[V msg.Value](c *Cache, key string, timeoutSecond int64, handler msg.Handler[V]) any {
 	var (
 		hValue                       V
 		err                          error
@@ -46,17 +46,17 @@ func CommonGet[V msg.Value](c *Cache, key string, timeoutSecond int64, handler m
 		// 第一次访问，初始化缓存
 		hValue, err = handler()
 		if err != nil {
-			return hValue, err
+			return hValue
 		}
 
 		// 更新缓存
 		err = Set(c, key, hValue)
-		return hValue, err
+		return hValue
 	}
 
 	// 缓存是否有效
 	if effective {
-		return val, nil
+		return val
 	}
 
 	// 缓存无效
@@ -65,21 +65,21 @@ func CommonGet[V msg.Value](c *Cache, key string, timeoutSecond int64, handler m
 	token := utils.Acquire(lock, lockTimeout)
 	// 加锁失败
 	if token == 0 {
-		return val, nil
+		return val
 	}
 
 	// 加锁成功，执行耗时操作
 	hValue, err = handler()
 	// 未获取到数据
 	if err != nil {
-		return hValue, err
+		return val
 	}
 
 	// 获取数据成功
 
 	// 更新缓存
 	err = Set(c, key, hValue)
-	return hValue, err
+	return hValue
 }
 
 func InfoCache(c *Cache) Info {

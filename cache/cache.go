@@ -55,7 +55,7 @@ func (c *Cache) index(key string) int {
 	return int(kind.Uint32Hash(utils.String2Bytes(key))) & (bucketLen - 1)
 }
 
-func (c *Cache) SyncLocal() {
+func (c *Cache) Flush() {
 	if c.localDir == "" {
 		return
 	}
@@ -109,6 +109,6 @@ func (c *Cache) autoFlush() {
 
 	tick := time.NewTicker(c.flushInterval)
 	for range tick.C {
-		c.SyncLocal()
+		c.Flush()
 	}
 }

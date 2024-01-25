@@ -39,7 +39,7 @@ func TestCache_CommonMap(t *testing.T) {
 		key          = fmt.Sprintf("user:%d", 10086)
 	)
 
-	mp, err := CommonGet[msg.Map](cache, key, 60, func() (msg.Map, error) {
+	mp := CommonGet[msg.Map](cache, key, 60, func() (msg.Map, error) {
 		time.Sleep(time.Millisecond * time.Duration(rand.Intn(1008)))
 
 		user := User{
@@ -50,10 +50,6 @@ func TestCache_CommonMap(t *testing.T) {
 
 		return user.ToMap(), nil
 	})
-
-	if err != nil {
-		t.Fatalf("want nil, got %v", err)
-	}
 
 	userMap := msg.MsgMap(mp)
 	if userMap.Int("id") != int64(id) {
@@ -165,7 +161,7 @@ func TestCache_Get(t *testing.T) {
 	}
 
 	start = time.Now()
-	cache.SyncLocal()
+	cache.Flush()
 	t.Logf("sync cache to local cost: %s", time.Since(start))
 
 	start = time.Now()
@@ -276,7 +272,7 @@ func TestCache_GetMap(t *testing.T) {
 		t.Fatalf("want nil, got %v", err)
 	}
 
-	cache.SyncLocal()
+	cache.Flush()
 
 	cache = New(localDir, time.Second*3)
 
@@ -366,7 +362,7 @@ func TestCache_SyncLocal(t *testing.T) {
 	}
 
 	start = time.Now()
-	cache.SyncLocal()
+	cache.Flush()
 
 	t.Logf("sync to local cost: %s", time.Since(start))
 
@@ -406,7 +402,7 @@ func BenchmarkCache_CommonMap(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		value, err := CommonGet[msg.Map](cache, key, 10, func() (msg.Map, error) {
+		value := CommonGet[msg.Map](cache, key, 10, func() (msg.Map, error) {
 			time.Sleep(time.Millisecond * 500)
 
 			user := User{
@@ -417,10 +413,6 @@ func BenchmarkCache_CommonMap(b *testing.B) {
 
 			return user.ToMap(), nil
 		})
-
-		if err != nil {
-			b.Fatalf("want nil, got %v", err)
-		}
 
 		user := msg.MsgMap(value)
 
@@ -442,7 +434,7 @@ func BenchmarkCacheParallel_CommonMap(b *testing.B) {
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			value, err := CommonGet[msg.Map](cache, key, 10, func() (msg.Map, error) {
+			value := CommonGet[msg.Map](cache, key, 10, func() (msg.Map, error) {
 				time.Sleep(time.Millisecond * 500)
 
 				user := User{
@@ -453,10 +445,6 @@ func BenchmarkCacheParallel_CommonMap(b *testing.B) {
 
 				return user.ToMap(), nil
 			})
-
-			if err != nil {
-				b.Fatalf("want nil, got %v", err)
-			}
 
 			user := msg.MsgMap(value)
 
