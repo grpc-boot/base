@@ -2,6 +2,9 @@ package gored
 
 import (
 	"context"
+	"github.com/goccy/go-json"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +17,46 @@ import (
 func init() {
 	o := DefaultOptions()
 	SetRedis("redis", o)
+}
+
+func TestData(t *testing.T) {
+	fileName := "/Users/jianghaiqiang/Documents/code/go/base/gored/data.json"
+	data, _ := os.ReadFile(fileName)
+
+	type Item struct {
+		Id              uint32   `json:"id"`
+		Kind            uint8    `json:"kind"`
+		PriceType       uint8    `json:"price_type"`
+		FirstCategory   []string `json:"tag_title_pc_first,omitempty"`
+		SecondCategory  []string `json:"tag_title_pc,omitempty"`
+		First           string   `json:"first"`
+		Second          string   `json:"second"`
+		DownCountLatest int64    `json:"down_count_latest"`
+		DownCount       int64    `json:"down_count"`
+		Labels          []string `json:"label,omitempty"`
+		Label           string   `json:"labels"`
+	}
+
+	type Data struct {
+		Source Item `json:"_source"`
+	}
+
+	dataList := make([]Data, 0)
+	json.Unmarshal(data, &dataList)
+
+	var result = make([]Item, len(dataList))
+	for i, v := range dataList {
+		v.Source.First = strings.Join(v.Source.FirstCategory, ",")
+		v.Source.Second = strings.Join(v.Source.SecondCategory, ",")
+		v.Source.Label = strings.Join(v.Source.Labels, ",")
+		v.Source.FirstCategory = nil
+		v.Source.SecondCategory = nil
+		v.Source.Labels = nil
+		result[i] = v.Source
+	}
+
+	data, _ = json.Marshal(result)
+	os.WriteFile("/Users/jianghaiqiang/Documents/code/go/base/gored/res.json", data, 0766)
 }
 
 func TestConf_Float(t *testing.T) {

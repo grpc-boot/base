@@ -11,6 +11,10 @@ func Id(id int64) zap.Field {
 	return zap.Int64("Id", id)
 }
 
+func Topic(topic string) zap.Field {
+	return zap.String("Topic", topic)
+}
+
 func Pid(pid int) zap.Field {
 	return zap.Int("Pid", pid)
 }
