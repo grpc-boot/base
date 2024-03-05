@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/grpc-boot/base/v2/logger"
 	"golang.org/x/exp/rand"
 	"time"
 
@@ -12,7 +13,10 @@ import (
 )
 
 var (
-	group = `myGroup`
+	// 1709629957787-
+	// 1709629987799-
+	// 1709293904687
+	group = `myGroup-new`
 	topic = `myTopic`
 	red   = redis.NewClient(&redis.Options{
 		Network: "tcp",
@@ -21,6 +25,13 @@ var (
 )
 
 func main() {
+	err := logger.InitZapWithOption(logger.Option{
+		Level: -1,
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	go consume(`consumer1`)
 	go consume(`consumer2`)
 	go consume(`consumer3`)
@@ -61,11 +72,8 @@ func getPending() {
 				return
 			}
 
-			if len(list) == 0 {
-				time.Sleep(time.Second * 3)
-			}
-
 			utils.Red("fetch pending list: %+v", list)
+			time.Sleep(time.Second * 3)
 		}()
 	}
 }
@@ -113,7 +121,7 @@ func consume(consumerName string) {
 		Consumer: consumerName,
 	}, red)
 
-	ch, err := consumer.Consume(topic, 20, time.Second*10)
+	ch, err := consumer.Consume(topic, 20, time.Second*10, mq.Latest)
 	if err != nil {
 		utils.RedFatal("consume failed with error: %v", err)
 	}
@@ -126,6 +134,11 @@ func consume(consumerName string) {
 				func(id string) {
 					ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 					defer cancel()
+
+					if rand.Intn(10) == 9 {
+						return
+					}
+
 					_, err = consumer.Commit(ctx, topic, id)
 					if err != nil {
 						utils.Red("consumer:%s commit[%s] failed with error: %v", consumerName, id, err)

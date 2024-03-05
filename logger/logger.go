@@ -35,14 +35,13 @@ func NewLogger(opt Option, opts ...zap.Option) (logger *Logger, err error) {
 		return nil, err
 	}
 
-	// 定时检测文件是否存在
 	go logger.checkFile()
 
 	return logger, nil
 }
 
 func (l *Logger) checkFile() {
-	if l.opt.TickSecond < 0 {
+	if l.opt.TickSecond < 0 || l.opt.Path == "" {
 		return
 	}
 
@@ -118,13 +117,25 @@ func (l *Logger) tee(flag string) (zapcore.Core, error) {
 	}
 
 	coreList := make([]zapcore.Core, 0, zapcore.FatalLevel-level+1)
-	for ll := level; ll <= zapcore.FatalLevel; ll++ {
-		file, err := l.flagFile(ll.String(), flag)
-		if err != nil {
-			return nil, err
+	if l.opt.Path == "" {
+		ow := zapcore.Lock(os.Stdout)
+		ew := zapcore.Lock(os.Stderr)
+		for ll := level; ll <= zapcore.FatalLevel; ll++ {
+			if ll < zapcore.ErrorLevel {
+				coreList = append(coreList, zapcore.NewCore(l.opt.encoder, ow, l.levelEnabler(ll)))
+				continue
+			}
+			coreList = append(coreList, zapcore.NewCore(l.opt.encoder, ew, l.levelEnabler(ll)))
 		}
+	} else {
+		for ll := level; ll <= zapcore.FatalLevel; ll++ {
+			file, err := l.flagFile(ll.String(), flag)
+			if err != nil {
+				return nil, err
+			}
 
-		coreList = append(coreList, zapcore.NewCore(l.opt.encoder, file, l.levelEnabler(ll)))
+			coreList = append(coreList, zapcore.NewCore(l.opt.encoder, file, l.levelEnabler(ll)))
+		}
 	}
 
 	tee := zapcore.NewTee(coreList...)

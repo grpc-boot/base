@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	defaultPath       = `/tmp`
 	defaultTickSecond = 5
 	defaultMaxDays    = 7
 )
