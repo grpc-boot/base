@@ -7,7 +7,7 @@ var defaultOption = func() Option {
 		ChanSize:            1024,
 		RetryIntervalSecond: 3,
 		MaxLength:           64 * 10000,
-		MsgMinIdleSecond:    30,
+		MsgMinIdleSecond:    60,
 	}
 }
 
