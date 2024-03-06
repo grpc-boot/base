@@ -2,14 +2,19 @@ package mq
 
 import (
 	"context"
+	"go.uber.org/atomic"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 type Mq struct {
-	option Option
-	pool   *redis.Client
+	option      Option
+	pool        *redis.Client
+	done        atomic.Bool
+	balanceDone atomic.Bool
+	readDone    atomic.Bool
+	consumeChan chan []Msg
 }
 
 func NewConsumer(opt Option, pool *redis.Client) (*Mq, error) {
@@ -21,6 +26,10 @@ func NewConsumer(opt Option, pool *redis.Client) (*Mq, error) {
 
 	if option.Consumer == "" {
 		return nil, ErrConsumerEmpty
+	}
+
+	if option.ConsumerTopic == "" {
+		return nil, ErrConsumerTopicEmpty
 	}
 
 	return &Mq{

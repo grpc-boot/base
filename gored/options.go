@@ -19,7 +19,7 @@ var DefaultOptions = func() redis.Options {
 		MinIdleConns:          1,
 		MaxIdleConns:          2,
 		MaxActiveConns:        10,
-		ConnMaxIdleTime:       time.Second * 60,
-		ConnMaxLifetime:       time.Second * 300,
+		ConnMaxIdleTime:       time.Second * 30,
+		ConnMaxLifetime:       time.Second * 120,
 	}
 }

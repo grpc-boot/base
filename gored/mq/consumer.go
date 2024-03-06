@@ -21,16 +21,44 @@ const (
 	noDeliveredId = ">"
 )
 
-func (mq *Mq) Group(ctx context.Context, topic, startId string) (err error) {
-	statusCmd := mq.pool.XGroupCreateMkStream(ctx, topic, mq.option.Group, startId)
+func (mq *Mq) Group(ctx context.Context, startId string) (err error) {
+	statusCmd := mq.pool.XGroupCreateMkStream(ctx, mq.option.ConsumerTopic, mq.option.Group, startId)
 	return statusCmd.Err()
 }
 
-func (mq *Mq) Consume(topic string, maxCount int64, blockTime time.Duration, startId string) (data <-chan []Msg, err error) {
+func (mq *Mq) Close(timeout time.Duration) error {
+	if mq.consumeChan == nil {
+		return nil
+	}
+
+	if !mq.done.CompareAndSwap(false, true) {
+		return nil
+	}
+
+	done := make(chan struct{}, 1)
+	go func() {
+		for !mq.balanceDone.Load() || !mq.readDone.Load() || len(mq.consumeChan) > 0 {
+			time.Sleep(time.Millisecond * 100)
+		}
+		done <- struct{}{}
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-done:
+		return nil
+	}
+}
+
+func (mq *Mq) Consume(maxCount int64, blockTime time.Duration, startId string) (data <-chan []Msg, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	err = mq.Group(ctx, topic, startId)
+	err = mq.Group(ctx, startId)
 	if IsErrBusyGroup(err) {
 		err = nil
 	}
@@ -39,15 +67,20 @@ func (mq *Mq) Consume(topic string, maxCount int64, blockTime time.Duration, sta
 		return
 	}
 
-	dataCh := make(chan []Msg, mq.option.ChanSize)
+	mq.consumeChan = make(chan []Msg, mq.option.ChanSize)
 
 	go func() {
 		id := peddingId
 		for {
+			if mq.done.Load() {
+				mq.readDone.Store(true)
+				return
+			}
+
 			cmd := mq.pool.XReadGroup(context.Background(), &redis.XReadGroupArgs{
 				Group:    mq.option.Group,
 				Consumer: mq.option.Consumer,
-				Streams:  []string{topic, id},
+				Streams:  []string{mq.option.ConsumerTopic, id},
 				Count:    maxCount,
 				Block:    blockTime,
 				NoAck:    mq.option.AutoCommit,
@@ -57,7 +90,7 @@ func (mq *Mq) Consume(topic string, maxCount int64, blockTime time.Duration, sta
 			if er != nil {
 				logger.ZapError("consume failed",
 					logger.Error(er),
-					logger.Topic(topic),
+					logger.Topic(mq.option.ConsumerTopic),
 				)
 
 				time.Sleep(mq.option.RetryDuration())
@@ -84,14 +117,14 @@ func (mq *Mq) Consume(topic string, maxCount int64, blockTime time.Duration, sta
 					}
 				}
 
-				dataCh <- msgList
+				mq.consumeChan <- msgList
 			}
 		}
 	}()
 
-	go mq.autoBalance(topic, dataCh)
+	go mq.autoBalance()
 
-	return dataCh, nil
+	return mq.consumeChan, nil
 }
 
 func (mq *Mq) Commit(ctx context.Context, topic string, idList ...string) (okCount int64, err error) {
@@ -99,22 +132,32 @@ func (mq *Mq) Commit(ctx context.Context, topic string, idList ...string) (okCou
 	return cmd.Result()
 }
 
-func (mq *Mq) autoBalance(topic string, ch chan<- []Msg) {
+func (mq *Mq) autoBalance() {
 	for {
-		time.Sleep(mq.option.MsgMinIdle())
+		if mq.done.Load() {
+			mq.balanceDone.Store(true)
+			return
+		}
 
-		err := mq.balancer(context.Background(), topic, ch)
+		time.Sleep(time.Second * 10)
+
+		if mq.done.Load() {
+			mq.balanceDone.Store(true)
+			return
+		}
+
+		err := mq.balancer(context.Background())
 		if err != nil {
 			logger.ZapError("auto balance failed",
 				logger.Error(err),
-				logger.Topic(topic),
+				logger.Topic(mq.option.ConsumerTopic),
 			)
 		}
 	}
 }
 
-func (mq *Mq) balancer(ctx context.Context, topic string, ch chan<- []Msg) (err error) {
-	list, err := mq.pool.XInfoConsumers(ctx, topic, mq.option.Group).Result()
+func (mq *Mq) balancer(ctx context.Context) (err error) {
+	list, err := mq.pool.XInfoConsumers(ctx, mq.option.ConsumerTopic, mq.option.Group).Result()
 	if err != nil {
 		return err
 	}
@@ -167,7 +210,7 @@ func (mq *Mq) balancer(ctx context.Context, topic string, ch chan<- []Msg) (err 
 			}
 
 			cmd := mq.pool.XAutoClaim(ctx, &redis.XAutoClaimArgs{
-				Stream:   topic,
+				Stream:   mq.option.ConsumerTopic,
 				Group:    mq.option.Group,
 				MinIdle:  mq.option.MsgMinIdle(),
 				Start:    start,
@@ -189,9 +232,9 @@ func (mq *Mq) balancer(ctx context.Context, topic string, ch chan<- []Msg) (err 
 				if len(msgList) > 0 {
 					ml := make([]Msg, len(msgList))
 					for index, m := range msgList {
-						ml[index] = Msg{Topic: topic, XMsg: m}
+						ml[index] = Msg{Topic: mq.option.ConsumerTopic, XMsg: m}
 					}
-					ch <- ml
+					mq.consumeChan <- ml
 				}
 			}
 		}

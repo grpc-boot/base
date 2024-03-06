@@ -14,6 +14,7 @@ var defaultOption = func() Option {
 type Option struct {
 	Group               string `json:"group" yaml:"group"`
 	Consumer            string `json:"consumer" yaml:"consumer"`
+	ConsumerTopic       string `json:"consumerTopic" yaml:"consumerTopic"`
 	ChanSize            int64  `json:"chanSize" yaml:"chanSize"`
 	RetryIntervalSecond int64  `json:"retryIntervalSecond" yaml:"retryIntervalSecond"`
 	AutoCommit          bool   `json:"autoCommit" yaml:"autoCommit"`
@@ -27,6 +28,7 @@ func formatOption(opt Option) Option {
 	defaultOpt.Group = opt.Group
 	defaultOpt.Consumer = opt.Consumer
 	defaultOpt.AutoCommit = opt.AutoCommit
+	defaultOpt.ConsumerTopic = opt.ConsumerTopic
 
 	if opt.ChanSize > 0 {
 		defaultOpt.ChanSize = opt.ChanSize

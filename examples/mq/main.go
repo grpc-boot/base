@@ -2,26 +2,24 @@ package main
 
 import (
 	"context"
-	"github.com/grpc-boot/base/v2/logger"
 	"golang.org/x/exp/rand"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
+	"github.com/grpc-boot/base/v2/gored"
 	"github.com/grpc-boot/base/v2/gored/mq"
+	"github.com/grpc-boot/base/v2/logger"
 	"github.com/grpc-boot/base/v2/utils"
 
 	"github.com/redis/go-redis/v9"
 )
 
 var (
-	// 1709629957787-
-	// 1709629987799-
-	// 1709293904687
 	group = `myGroup-new`
 	topic = `myTopic`
-	red   = redis.NewClient(&redis.Options{
-		Network: "tcp",
-		Addr:    "10.16.49.131:6379",
-	})
+	red   *redis.Client
 )
 
 func main() {
@@ -32,13 +30,47 @@ func main() {
 		panic(err)
 	}
 
-	go consume(`consumer1`)
-	go consume(`consumer2`)
-	go consume(`consumer3`)
+	redOptions := gored.DefaultOptions()
+	redOptions.Addr = "10.16.49.131:6379"
+	red = redis.NewClient(&redOptions)
+
+	consumer1, _ := mq.NewConsumer(mq.Option{
+		Group:         group,
+		Consumer:      `consumer1`,
+		ConsumerTopic: topic,
+	}, red)
+
+	ch1, err := consumer1.Consume(20, time.Second*20, mq.Earliest)
+	//ch1, err := consumer1.Consume(20, time.Second*20, mq.Latest)
+	if err != nil {
+		utils.RedFatal("consume msg failed with error: %s", err)
+	}
+
+	go consume(consumer1, ch1, `consumer1`)
 
 	go getPending()
 
-	produce()
+	go produce()
+
+	var sig = make(chan os.Signal, 1)
+	signal.Notify(sig)
+
+	for {
+		val := <-sig
+		switch val {
+		case syscall.SIGINT:
+			err = consumer1.Close(time.Second * 10)
+			if err != nil {
+				logger.ZapError("close consumer failed",
+					logger.Error(err),
+					logger.Consumer(`consumer1`),
+				)
+			}
+			return
+		default:
+			continue
+		}
+	}
 }
 
 func createMsg() mq.Msg {
@@ -57,8 +89,9 @@ func createMsg() mq.Msg {
 
 func getPending() {
 	consumer, _ := mq.NewConsumer(mq.Option{
-		Group:    group,
-		Consumer: "info",
+		Group:         group,
+		Consumer:      "info",
+		ConsumerTopic: topic,
 	}, red)
 
 	for {
@@ -115,19 +148,8 @@ func produce() {
 	}
 }
 
-func consume(consumerName string) {
-	consumer, _ := mq.NewConsumer(mq.Option{
-		Group:    group,
-		Consumer: consumerName,
-	}, red)
-
-	ch, err := consumer.Consume(topic, 20, time.Second*10, mq.Latest)
-	if err != nil {
-		utils.RedFatal("consume failed with error: %v", err)
-	}
-
-	for {
-		msgList, ok := <-ch
+func consume(consumer *mq.Mq, ch <-chan []mq.Msg, consumerName string) {
+	for msgList := range ch {
 		if len(msgList) > 0 {
 			for _, msg := range msgList {
 				utils.Green("[%s] got msg: %+v", consumerName, msg)
@@ -139,16 +161,14 @@ func consume(consumerName string) {
 						return
 					}
 
-					_, err = consumer.Commit(ctx, topic, id)
+					_, err := consumer.Commit(ctx, topic, id)
 					if err != nil {
 						utils.Red("consumer:%s commit[%s] failed with error: %v", consumerName, id, err)
 					}
 				}(msg.XMsg.ID)
 			}
 		}
-
-		if !ok {
-			break
-		}
 	}
+
+	logger.ZapError("chan has closed")
 }
