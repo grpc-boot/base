@@ -10,6 +10,18 @@ const (
 	autoCreateId = `*`
 )
 
+func (mq *Mq) Trigger(ctx context.Context, topic string, events ...Event) (docIdList []string, err error) {
+	msgList := make([]Msg, len(events))
+	for index, event := range events {
+		msgList[index] = Msg{
+			Topic: topic,
+			XMsg:  event.ToMsg(),
+		}
+	}
+
+	return mq.PipeSend(ctx, msgList...)
+}
+
 func (mq *Mq) Send(ctx context.Context, msg Msg) (docId string, err error) {
 	id := autoCreateId
 	if msg.XMsg.ID != "" {

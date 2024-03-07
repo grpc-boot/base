@@ -54,7 +54,7 @@ func (mq *Mq) Close(timeout time.Duration) error {
 	}
 }
 
-func (mq *Mq) Consume(maxCount int64, blockTime time.Duration, startId string) (data <-chan []Msg, err error) {
+func (mq *Mq) Consume(maxCount int64, blockTime time.Duration, startId string) (msgChan <-chan []Msg, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 

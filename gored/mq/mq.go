@@ -2,10 +2,10 @@ package mq
 
 import (
 	"context"
-	"go.uber.org/atomic"
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/atomic"
 )
 
 type Mq struct {

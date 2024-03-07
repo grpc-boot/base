@@ -1,6 +1,10 @@
 package mq
 
-import "time"
+import (
+	"time"
+
+	"github.com/grpc-boot/base/v2/utils"
+)
 
 var defaultOption = func() Option {
 	return Option{
@@ -19,16 +23,20 @@ type Option struct {
 	RetryIntervalSecond int64  `json:"retryIntervalSecond" yaml:"retryIntervalSecond"`
 	AutoCommit          bool   `json:"autoCommit" yaml:"autoCommit"`
 	MaxLength           int64  `json:"maxLength" yaml:"maxLength"`
-	MaxRetryTimes       int64  `json:"maxRetryTimes" yaml:"maxRetryTimes"`
 	MsgMinIdleSecond    int64  `json:"msgMinIdleSecond" yaml:"msgMinIdleSecond"`
 }
 
 func formatOption(opt Option) Option {
 	defaultOpt := defaultOption()
 	defaultOpt.Group = opt.Group
-	defaultOpt.Consumer = opt.Consumer
 	defaultOpt.AutoCommit = opt.AutoCommit
 	defaultOpt.ConsumerTopic = opt.ConsumerTopic
+
+	if opt.Consumer != "" {
+		defaultOpt.Consumer = opt.Consumer
+	} else {
+		defaultOpt.Consumer, _ = utils.LocalIp()
+	}
 
 	if opt.ChanSize > 0 {
 		defaultOpt.ChanSize = opt.ChanSize
