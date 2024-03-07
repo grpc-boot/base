@@ -28,13 +28,27 @@ func main() {
 	}
 
 	redOptions := gored.DefaultOptions()
-	redOptions.Addr = "10.16.49.131:6379"
+	redOptions.Addr = "127.0.0.1:6379"
 	red = redis.NewClient(&redOptions)
+
+	topic := `base-topic`
 
 	consumer1, _ := mq.NewConsumer(mq.Option{
 		Group:         `myGroup-new`,
-		ConsumerTopic: `base-topic`,
+		ConsumerTopic: topic,
 	}, red)
+
+	go func() {
+		for {
+			time.Sleep(time.Second * 5)
+			info, err := consumer1.FullInfo(context.Background(), topic, 1)
+			if err != nil {
+				utils.Red("get info failed with error: %+v", err)
+			} else {
+				utils.Red("get info: %+v", info)
+			}
+		}
+	}()
 
 	ch1, err := consumer1.Consume(20, time.Second*20, mq.Earliest)
 	// 最新

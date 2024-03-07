@@ -28,7 +28,7 @@ func main() {
 	}
 
 	redOptions := gored.DefaultOptions()
-	redOptions.Addr = "10.16.49.131:6379"
+	redOptions.Addr = "127.0.0.1:6379"
 	red = redis.NewClient(&redOptions)
 
 	producer := mq.NewProducer(mq.Option{
