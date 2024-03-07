@@ -64,6 +64,24 @@ func SetConf[T kind.RedisValue](c *Conf, key string, value T) (isNew bool, err e
 	return
 }
 
+func (c *Conf) GetRemote(timeout time.Duration, key string) (value string, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd := c.red.HGet(ctx, c.key, key)
+	err = DealCmdErr(cmd)
+	value = cmd.String()
+	return
+}
+
+func (c *Conf) GetAllRemote(timeout time.Duration) (value map[string]string, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd := c.red.HGetAll(ctx, c.key)
+	err = DealCmdErr(cmd)
+	value = cmd.Val()
+	return
+}
+
 func (c *Conf) String(key, defaultValue string) string {
 	m, _ := c.value.Load().(map[string]string)
 	value, exists := m[key]
