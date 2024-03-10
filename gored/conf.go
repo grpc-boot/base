@@ -82,6 +82,19 @@ func (c *Conf) GetAllRemote(timeout time.Duration) (value map[string]string, err
 	return
 }
 
+func (c *Conf) HashKey() string {
+	return c.key
+}
+
+func (c *Conf) Del(timeout time.Duration, key string) (delNum int64, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd := c.red.HDel(ctx, c.key, key)
+	err = DealCmdErr(cmd)
+	delNum = cmd.Val()
+	return
+}
+
 func (c *Conf) String(key, defaultValue string) string {
 	m, _ := c.value.Load().(map[string]string)
 	value, exists := m[key]
