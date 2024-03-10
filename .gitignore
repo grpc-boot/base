@@ -14,3 +14,5 @@
 # Ide
 .idea
 .vscode
+
+go.sum
