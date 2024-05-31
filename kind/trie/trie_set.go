@@ -4,18 +4,18 @@ var (
 	setValue = struct{}{}
 )
 
-type TrieSet struct {
+type Set struct {
 	sub    *node
 	length int64
 }
 
-func NewTrieSet() *TrieSet {
-	return &TrieSet{
+func NewTrieSet() *Set {
+	return &Set{
 		sub: &node{},
 	}
 }
 
-func (ts *TrieSet) Add(key string) (isNew bool) {
+func (ts *Set) Add(key string) (isNew bool) {
 	isNew = ts.sub.set(key, setValue)
 	if isNew {
 		ts.length++
@@ -24,12 +24,12 @@ func (ts *TrieSet) Add(key string) (isNew bool) {
 	return
 }
 
-func (ts *TrieSet) Exists(key string) (exists bool) {
+func (ts *Set) Exists(key string) (exists bool) {
 	_, exists = ts.sub.get(key)
 	return
 }
 
-func (ts *TrieSet) HasKey(words string) bool {
+func (ts *Set) HasKey(words string) bool {
 	var (
 		cursor  int
 		start   int
@@ -71,7 +71,7 @@ func (ts *TrieSet) HasKey(words string) bool {
 	return false
 }
 
-func (ts *TrieSet) ReplaceKey(words string, starChar byte) (newWords string) {
+func (ts *Set) ReplaceKey(words string, starChar byte) (newWords string) {
 	var (
 		cursor  int
 		start   int
@@ -120,6 +120,6 @@ func (ts *TrieSet) ReplaceKey(words string, starChar byte) (newWords string) {
 	return string(data)
 }
 
-func (ts *TrieSet) Length() int64 {
+func (ts *Set) Length() int64 {
 	return ts.length
 }

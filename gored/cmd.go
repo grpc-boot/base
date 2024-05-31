@@ -1,6 +1,8 @@
 package gored
 
 import (
+	"errors"
+
 	"github.com/grpc-boot/base/v2/logger"
 	"github.com/redis/go-redis/v9"
 )
@@ -12,7 +14,7 @@ type Cmd interface {
 func DealCmdErr(cmd Cmd) error {
 	err := cmd.Err()
 
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		err = nil
 	}
 

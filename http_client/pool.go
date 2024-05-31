@@ -21,6 +21,8 @@ type Pool struct {
 
 func NewPool(opt Options) *Pool {
 	transport := &http.Transport{
+		Proxy:             http.ProxyFromEnvironment,
+		ForceAttemptHTTP2: true,
 		DialContext: (&net.Dialer{
 			Timeout:   opt.DialTimeout(),
 			KeepAlive: opt.KeepaliveTime(),
