@@ -31,6 +31,8 @@ func NewLogger(opt Option, opts ...zap.Option) (logger *Logger, err error) {
 		optList: opts,
 	}
 
+	go logger.clearDirty()
+
 	if _, err = logger.logger(); err != nil {
 		return nil, err
 	}
