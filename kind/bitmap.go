@@ -32,8 +32,6 @@ type Bitmap interface {
  * 默认实现
  */
 type bitmap struct {
-	Bitmap
-
 	data []byte
 }
 
