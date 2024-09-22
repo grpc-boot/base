@@ -44,7 +44,7 @@ func GetMachineIdByIp() GetMachineId {
 			return 0, err
 		}
 
-		return strconv.ParseInt(ip[strings.LastIndexByte(ip, '.')+1:], 10, 8)
+		return strconv.ParseInt(ip[strings.LastIndexByte(ip, '.')+1:], 10, 9)
 	}
 }
 
