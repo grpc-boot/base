@@ -24,8 +24,8 @@ type Bitmap interface {
 	DelTag(tag int) Bitmap
 	// Data 原始数据
 	Data() (data []byte)
-	// SprinfBinary 二进制打印
-	SprinfBinary() string
+	// SprintfBinary 二进制打印
+	SprintfBinary() string
 }
 
 /**
@@ -109,7 +109,7 @@ func (b *bitmap) Data() (data []byte) {
 	return b.data
 }
 
-func (b *bitmap) SprinfBinary() string {
+func (b *bitmap) SprintfBinary() string {
 	if len(b.data) < 1 {
 		return ""
 	}
