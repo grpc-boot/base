@@ -1,6 +1,7 @@
 package status
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/grpc-boot/base/v3/utils"
