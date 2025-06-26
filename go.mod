@@ -6,7 +6,6 @@ require (
 	github.com/Depado/bfchroma/v2 v2.0.0
 	github.com/alecthomas/chroma/v2 v2.2.0
 	github.com/anthonynsimon/bild v0.13.0
-	github.com/chai2010/webp v1.4.0
 	github.com/goccy/go-json v0.10.2
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/valyala/fasthttp v1.51.0
