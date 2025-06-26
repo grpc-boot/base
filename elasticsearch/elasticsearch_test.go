@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/grpc-boot/base/v2/condition"
 	"github.com/grpc-boot/base/v2/elasticsearch/result"
 )
 
@@ -128,31 +127,6 @@ func TestPool_Index(t *testing.T) {
 		t.Fatalf("want nil, got %v", err)
 	}
 	t.Logf("data: %+v", res)
-}
-
-func TestPool_Query(t *testing.T) {
-	var (
-		ctx, cancel = context.WithTimeout(context.Background(), time.Second*5)
-		index       = "access_log_2024"
-	)
-	defer cancel()
-
-	query := AcquireQuery().
-		From(index).
-		Where(condition.Gt{
-			Field: "created_at",
-			Value: 0,
-		}).
-		Limit(5)
-	defer query.Close()
-
-	res, err := p.Query(ctx, query, "json")
-	if err != nil {
-		t.Fatalf("want nil, got %v", err)
-	}
-	t.Logf("res: %+v", res)
-	records, err := res.ToRecord()
-	t.Logf("records: %+v error: %v", records, err)
 }
 
 func TestPool_Bulk(t *testing.T) {

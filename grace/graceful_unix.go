@@ -1,11 +1,15 @@
+//go:build !windows
+
 package grace
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -15,6 +19,10 @@ import (
 	"github.com/grpc-boot/base/v2/utils"
 
 	"go.uber.org/zap"
+)
+
+var (
+	EnvKey = `BASE_GRACEFUL`
 )
 
 type Graceful struct {
@@ -43,6 +51,19 @@ func New(server Serve, envs []string) *Graceful {
 }
 
 func (g *Graceful) initListener(addr string) error {
+	if os.Getenv(EnvKey) != "" {
+		g.isChild = true
+		f := os.NewFile(uintptr(3), "")
+		l, err := net.FileListener(f)
+		if err != nil {
+			return err
+		}
+
+		g.addr = addr
+		g.listener = l
+		return nil
+	}
+
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
@@ -51,6 +72,56 @@ func (g *Graceful) initListener(addr string) error {
 	g.addr = addr
 	g.listener = l
 	return nil
+}
+
+func (g *Graceful) fork() (err error) {
+	var (
+		args []string
+		env  = append(
+			os.Environ(),
+			fmt.Sprintf("%s=on", EnvKey),
+		)
+		files = make([]*os.File, 1)
+		path  = os.Args[0]
+	)
+
+	if len(os.Args) > 1 {
+		args = os.Args[1:]
+	}
+
+	if len(g.envs) > 0 {
+		env = append(env, g.envs...)
+	}
+
+	listenerFile, err := g.listener.(*net.TCPListener).File()
+	if err != nil {
+		return err
+	}
+
+	files[0] = listenerFile
+
+	cmd := exec.Command(path, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.ExtraFiles = files
+	cmd.Env = env
+
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		if err = cmd.Wait(); err != nil {
+			logger.Error("child process exit",
+				zap.NamedError("Error", err),
+				zap.Int("Pid", cmd.Process.Pid),
+				zap.String("Cmd", cmd.String()),
+			)
+		}
+	}()
+
+	return
 }
 
 func (g *Graceful) initSignals() {
@@ -62,8 +133,7 @@ func (g *Graceful) initSignals() {
 		ok      = true
 	)
 
-	pprofSig := syscall.Signal(10)
-	signal.Notify(sigChan, syscall.SIGHUP, pprofSig, syscall.SIGTERM, syscall.SIGINT)
+	signal.Notify(sigChan, syscall.SIGHUP, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGTERM, syscall.SIGINT, syscall.SIGTSTP)
 
 	for ok {
 		sig, ok = <-sigChan
@@ -73,7 +143,14 @@ func (g *Graceful) initSignals() {
 		)
 
 		switch sig {
-		case pprofSig:
+		case syscall.SIGHUP:
+			if err = g.fork(); err != nil {
+				logger.Error("fork failed",
+					zap.NamedError("Error", err),
+					zap.Int("Pid", pid),
+				)
+			}
+		case syscall.SIGUSR1:
 			if utils.PprofIsRun() {
 				logger.Info("stop pprof",
 					zap.Int("Pid", pid),
@@ -111,7 +188,7 @@ func (g *Graceful) initSignals() {
 					}
 				}()
 			}
-		case syscall.SIGINT, syscall.SIGTERM:
+		case syscall.SIGINT, syscall.SIGTERM, syscall.SIGTSTP:
 			signal.Stop(sigChan)
 			close(sigChan)
 			ok = false
@@ -147,6 +224,14 @@ func (g *Graceful) OnShutdown(handler Handler) {
 
 func (g *Graceful) init(pprofAddr string) {
 	g.pprofAddr = pprofAddr
+
+	if g.isChild {
+		if err := syscall.Kill(syscall.Getppid(), syscall.SIGTERM); err != nil {
+			logger.Error("kill parent process failed",
+				zap.NamedError("Error", err),
+			)
+		}
+	}
 
 	if g.onStart != nil {
 		go func() {

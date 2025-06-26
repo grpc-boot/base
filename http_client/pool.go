@@ -11,7 +11,7 @@ import (
 	"github.com/grpc-boot/base/v2/logger"
 	"github.com/grpc-boot/base/v2/utils"
 
-	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap"
 )
 
 type Pool struct {
@@ -106,22 +106,30 @@ func (c *Pool) Request(ctx context.Context, method, url string, body []byte, hea
 		req   *http.Request
 	)
 
-	if logger.IsLevel(zapcore.DebugLevel) {
-		logger.ZapDebug("http request begin",
-			logger.Uri(url),
-			logger.Method(method),
-			logger.Headers(headers),
-			logger.Params(utils.Bytes2String(body)),
+	if logger.IsDebug() {
+		logger.Debug("http request begin",
+			zap.String("Url", url),
+			zap.String("Method", method),
+			zap.Any("Headers", headers),
+			zap.String("Body", utils.Bytes2String(body)),
 		)
 	}
 
 	if len(body) > 0 {
-		req, err = http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
+		req, err = http.NewRequestWithContext(ctx, method, url, bytes.NewReader(body))
 	} else {
 		req, err = http.NewRequestWithContext(ctx, method, url, nil)
 	}
 
 	if err != nil {
+		logger.Error("create http request failed",
+			zap.String("Url", url),
+			zap.String("Method", method),
+			zap.Any("Headers", headers),
+			zap.String("Body", utils.Bytes2String(body)),
+			zap.Duration("Duration", time.Since(start)),
+			zap.NamedError("Error", err),
+		)
 		return
 	}
 
@@ -137,26 +145,25 @@ func (c *Pool) Request(ctx context.Context, method, url string, body []byte, hea
 	}
 
 	rp, err = c.Do(req)
-
-	if logger.IsLevel(zapcore.DebugLevel) {
-		logger.ZapDebug("http request done",
-			logger.Uri(url),
-			logger.Method(method),
-			logger.Headers(headers),
-			logger.Params(utils.Bytes2String(body)),
-			logger.Duration(time.Since(start)),
-		)
-	}
-
 	if err != nil {
-		logger.ZapDebug("http request",
-			logger.Error(err),
-			logger.Uri(url),
-			logger.Method(method),
-			logger.Headers(headers),
-			logger.Params(utils.Bytes2String(body)),
-			logger.Duration(time.Since(start)),
+		logger.Error("http request failed",
+			zap.String("Url", url),
+			zap.String("Method", method),
+			zap.Any("Headers", headers),
+			zap.String("Body", utils.Bytes2String(body)),
+			zap.Duration("Duration", time.Since(start)),
+			zap.NamedError("Error", err),
 		)
+	} else {
+		if logger.IsDebug() {
+			logger.Debug("http request done",
+				zap.String("Url", url),
+				zap.String("Method", method),
+				zap.Any("Headers", headers),
+				zap.String("Body", utils.Bytes2String(body)),
+				zap.Duration("Duration", time.Since(start)),
+			)
+		}
 	}
 
 	return
@@ -172,6 +179,5 @@ func (c *Pool) Do(req *http.Request) (rp *Response, err error) {
 
 	rp = NewResp(resp.StatusCode)
 	rp.body, err = io.ReadAll(resp.Body)
-
 	return
 }

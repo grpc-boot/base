@@ -1,13 +1,14 @@
 package utils
 
 import (
-	"fmt"
 	"reflect"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/grpc-boot/base/v2/logger"
+
+	"go.uber.org/zap"
 )
 
 func ParallelLoad(loadList ...func() error) {
@@ -15,23 +16,26 @@ func ParallelLoad(loadList ...func() error) {
 		return
 	}
 
-	var wa sync.WaitGroup
+	wa := &sync.WaitGroup{}
 	wa.Add(len(loadList))
 
 	for _, load := range loadList {
 		go func(l func() error) {
-			st := time.Now()
+			defer wa.Done()
 
+			st := time.Now()
 			if err := l(); err != nil {
-				logger.ZapError("init failed",
-					logger.Error(err),
+				logger.Error(
+					"init failed",
+					zap.NamedError("Error", err),
+				)
+			} else {
+				pkg := runtime.FuncForPC(reflect.ValueOf(l).Pointer()).Name()
+				logger.Info("load component success",
+					zap.String("Pkg", pkg),
+					zap.Duration("Duration", time.Since(st)),
 				)
 			}
-
-			pkg := runtime.FuncForPC(reflect.ValueOf(l).Pointer()).Name()
-			fmt.Printf("load %v cost:%v\n", pkg, time.Since(st))
-
-			wa.Done()
 		}(load)
 	}
 

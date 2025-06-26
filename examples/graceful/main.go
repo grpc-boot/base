@@ -10,23 +10,12 @@ import (
 	"github.com/grpc-boot/base/v2/logger"
 
 	"github.com/valyala/fasthttp"
-	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap"
 )
 
 var useFasthttp int
 
 func main() {
-	err := logger.InitZapWithOption(logger.Option{
-		Level:      int8(zapcore.DebugLevel),
-		Path:       "./",
-		TickSecond: 5,
-		MaxDays:    1,
-	})
-
-	if err != nil {
-		panic(err)
-	}
-
 	flag.IntVar(&useFasthttp, "f", 1, "-f")
 	flag.Parse()
 	var (
@@ -34,11 +23,11 @@ func main() {
 	)
 
 	if useFasthttp == 1 {
-		logger.ZapInfo("init with fasthttp server")
+		logger.Info("init with fasthttp server")
 
 		s = fasthttpServer()
 	} else {
-		logger.ZapInfo("init with http server")
+		logger.Info("init with http server")
 
 		s = &grace.Server{
 			httpServer(),
@@ -46,10 +35,10 @@ func main() {
 	}
 
 	g := grace.New(s, nil)
-	err = g.Serve(":8080", ":8090")
+	err := g.Serve(":8080", ":8090")
 	if err != nil {
-		logger.ZapError("serve failed",
-			logger.Error(err),
+		logger.Error("serve failed",
+			zap.NamedError("Error", err),
 		)
 		panic(err)
 	}
