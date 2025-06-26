@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/grpc-boot/base/v2/internal"
-	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v3/internal"
+	"github.com/grpc-boot/base/v3/kind"
 )
 
 // ToString 转为字符串类型

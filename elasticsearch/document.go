@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/grpc-boot/base/v2/elasticsearch/result"
+	"github.com/grpc-boot/base/v3/elasticsearch/result"
 )
 
 func (p *Pool) DocIndex(ctx context.Context, indexName string, body Body) (res *result.DocIndex, err error) {

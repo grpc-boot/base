@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/utils"
 )
 
 func TestAes_CbcDecrypt(t *testing.T) {

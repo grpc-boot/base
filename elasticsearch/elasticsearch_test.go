@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/grpc-boot/base/v2/elasticsearch/result"
+	"github.com/grpc-boot/base/v3/elasticsearch/result"
 )
 
 var (

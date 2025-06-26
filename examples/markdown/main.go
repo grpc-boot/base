@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"net/http"
 
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/utils"
 )
 
 //go:embed example.md

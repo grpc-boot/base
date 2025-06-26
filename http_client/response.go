@@ -1,7 +1,7 @@
 package http_client
 
 import (
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/utils"
 )
 
 type Response struct {

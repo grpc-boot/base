@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/grpc-boot/base/v2/internal"
+	"github.com/grpc-boot/base/v3/internal"
 )
 
 // Bytes2String 字节切片转换为字符串

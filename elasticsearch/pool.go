@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/grpc-boot/base/v2/elasticsearch/result"
-	"github.com/grpc-boot/base/v2/http_client"
-	"github.com/grpc-boot/base/v2/internal"
+	"github.com/grpc-boot/base/v3/elasticsearch/result"
+	"github.com/grpc-boot/base/v3/http_client"
+	"github.com/grpc-boot/base/v3/internal"
 )
 
 type Pool struct {

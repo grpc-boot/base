@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/grpc-boot/base/v2/logger"
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/logger"
+	"github.com/grpc-boot/base/v3/utils"
 
 	"go.uber.org/zap"
 )

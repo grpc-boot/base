@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/grpc-boot/base/v2/elasticsearch/result"
-	"github.com/grpc-boot/base/v2/http_client"
+	"github.com/grpc-boot/base/v3/elasticsearch/result"
+	"github.com/grpc-boot/base/v3/http_client"
 )
 
 func (p *Pool) Index(ctx context.Context, name string, args ...Arg) (res *result.Index, err error) {

@@ -3,7 +3,7 @@ package utils
 import (
 	"strings"
 
-	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v3/kind"
 )
 
 func Join[T kind.Integer](sep string, elems ...T) string {

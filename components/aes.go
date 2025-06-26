@@ -6,7 +6,7 @@ import (
 	"crypto/cipher"
 	"errors"
 
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/utils"
 )
 
 var (

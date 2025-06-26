@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/grpc-boot/base/v2/internal"
-	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v3/internal"
+	"github.com/grpc-boot/base/v3/kind"
 )
 
 // HMac HMac算法

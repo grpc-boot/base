@@ -6,8 +6,8 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/grpc-boot/base/v2/kind"
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/kind"
+	"github.com/grpc-boot/base/v3/utils"
 
 	"go.uber.org/atomic"
 )

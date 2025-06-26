@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/grpc-boot/base/v2/logger"
+	"github.com/grpc-boot/base/v3/logger"
 
 	"go.uber.org/zap"
 )

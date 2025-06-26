@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/grpc-boot/base/v2/internal"
-	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v3/internal"
+	"github.com/grpc-boot/base/v3/kind"
 
 	"go.uber.org/atomic"
 )

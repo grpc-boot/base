@@ -3,7 +3,7 @@ package utils
 import (
 	"math"
 
-	"github.com/grpc-boot/base/v2/kind"
+	"github.com/grpc-boot/base/v3/kind"
 )
 
 func Abs[V kind.Number](value V) V {

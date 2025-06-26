@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/grpc-boot/base/v2/elasticsearch/result"
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/elasticsearch/result"
+	"github.com/grpc-boot/base/v3/utils"
 )
 
 func (p *Pool) QueryWithString(ctx context.Context, indexName string, qs *QueryString) (*result.Search, error) {

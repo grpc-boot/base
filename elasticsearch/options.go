@@ -3,8 +3,8 @@ package elasticsearch
 import (
 	"time"
 
-	"github.com/grpc-boot/base/v2/http_client"
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/http_client"
+	"github.com/grpc-boot/base/v3/utils"
 )
 
 func DefaultOption() Options {

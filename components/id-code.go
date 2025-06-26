@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"math"
 
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/utils"
 )
 
 const (

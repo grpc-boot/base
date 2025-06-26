@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/grpc-boot/base/v2/http_client"
+	"github.com/grpc-boot/base/v3/http_client"
 )
 
 type IndexMapping map[string]Mappings

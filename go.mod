@@ -1,4 +1,4 @@
-module github.com/grpc-boot/base/v2
+module github.com/grpc-boot/base/v3
 
 go 1.21
 

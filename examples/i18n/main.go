@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/grpc-boot/base/v2/components"
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/components"
+	"github.com/grpc-boot/base/v3/utils"
 )
 
 func main() {

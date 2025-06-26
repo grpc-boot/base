@@ -3,7 +3,7 @@ package kind
 import (
 	"math"
 
-	"github.com/grpc-boot/base/v2/internal"
+	"github.com/grpc-boot/base/v3/internal"
 )
 
 type Key interface {

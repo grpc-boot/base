@@ -3,7 +3,7 @@ package result
 import (
 	"errors"
 
-	"github.com/grpc-boot/base/v2/http_client"
+	"github.com/grpc-boot/base/v3/http_client"
 )
 
 type Bulk struct {

@@ -3,7 +3,7 @@ package utils
 import (
 	"os"
 
-	"github.com/grpc-boot/base/v2/internal"
+	"github.com/grpc-boot/base/v3/internal"
 
 	"github.com/goccy/go-json"
 )

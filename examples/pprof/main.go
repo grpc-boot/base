@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/grpc-boot/base/v2/internal"
-	"github.com/grpc-boot/base/v2/utils"
+	"github.com/grpc-boot/base/v3/internal"
+	"github.com/grpc-boot/base/v3/utils"
 )
 
 type router struct {
