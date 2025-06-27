@@ -10,10 +10,11 @@ import (
 
 const (
 	ZhCn = `zh_CN`
+	En   = `en`
 )
 
 var (
-	defaultLan = ZhCn
+	DefaultLang = ZhCn
 )
 
 var (
@@ -24,30 +25,25 @@ var (
 
 // I18n 多语言接口
 type I18n interface {
-	// T 翻译
-	T(key, language string) (msg string)
+	T(key string) (msg string)
+	Tl(key, language string) (msg string)
 }
 
 // NewI18n 实例化多语言
-func NewI18n(defaultLanguage string, msgMap map[string]map[string]string) (i I18n, err error) {
-	if defaultLanguage == "" {
-		defaultLanguage = defaultLan
-	}
-
+func NewI18n(msgMap map[string]map[string]string) (i I18n, err error) {
 	if len(msgMap) < 1 {
 		return nil, ErrMsgMapEmpty
 	}
 
 	i = &i18n{
-		defaultLanguage: defaultLanguage,
-		msgMap:          msgMap,
+		msgMap: msgMap,
 	}
 
 	return i, nil
 }
 
 // NewI18nFromYaml 从Yaml文件配置实例化多语言
-func NewI18nFromYaml(defaultLanguage string, dir string) (i I18n, err error) {
+func NewI18nFromYaml(dir string) (i I18n, err error) {
 	fileList, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
@@ -81,11 +77,11 @@ func NewI18nFromYaml(defaultLanguage string, dir string) (i I18n, err error) {
 		return nil, ErrNoYamlFiles
 	}
 
-	return NewI18n(defaultLanguage, msgMap)
+	return NewI18n(msgMap)
 }
 
 // NewI18nFromJson 从Json文件配置实例化多语言
-func NewI18nFromJson(defaultLanguage string, dir string) (i I18n, err error) {
+func NewI18nFromJson(dir string) (i I18n, err error) {
 	fileList, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
@@ -118,21 +114,27 @@ func NewI18nFromJson(defaultLanguage string, dir string) (i I18n, err error) {
 	if len(msgMap) < 1 {
 		return nil, ErrNoJsonFiles
 	}
-	return NewI18n(defaultLanguage, msgMap)
+	return NewI18n(msgMap)
 }
 
 type i18n struct {
 	I18n
 
-	msgMap          map[string]map[string]string
-	defaultLanguage string
+	msgMap map[string]map[string]string
 }
 
-func (i *i18n) T(key, language string) (msg string) {
+func (i *i18n) T(key string) string {
+	return i.Tl(key, DefaultLang)
+}
+
+func (i *i18n) Tl(key, language string) string {
 	if _, exists := i.msgMap[language]; !exists {
-		language = i.defaultLanguage
+		return key
 	}
 
-	msg, _ = i.msgMap[language][key]
-	return
+	if msg, ok := i.msgMap[language][key]; ok {
+		return msg
+	}
+
+	return key
 }
