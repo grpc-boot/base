@@ -9,7 +9,7 @@ import (
 
 	"github.com/grpc-boot/base/v3/elasticsearch/result"
 	"github.com/grpc-boot/base/v3/http_client"
-	"github.com/grpc-boot/base/v3/internal"
+	"github.com/grpc-boot/base/v3/utils"
 )
 
 type Pool struct {
@@ -28,7 +28,7 @@ func NewPool(opt Options) (pool *Pool) {
 
 	if opt.UserName != "" {
 		auth := opt.UserName + ":" + opt.Password
-		pool.basicAuth = fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString(internal.String2Bytes(auth)))
+		pool.basicAuth = fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString(utils.String2Bytes(auth)))
 	}
 	return
 }
@@ -78,11 +78,6 @@ func (p *Pool) SearchBySql(ctx context.Context, size int64, format, sqlStr strin
 
 	resp, err := p.Request(ctx, http.MethodPost, fmt.Sprintf("_sql?format=%s", format), reqBody, nil)
 	return result.ToSql(resp, err)
-}
-
-func (p *Pool) Query(ctx context.Context, query *Query, format string, args ...Arg) (res *result.Sql, err error) {
-	querySql, params := query.Sql()
-	return p.SearchBySql(ctx, query.limit, format, querySql, params, args...)
 }
 
 func (p *Pool) QueryWithCursor(ctx context.Context, cursor, format string, args ...Arg) (res *result.Sql, err error) {

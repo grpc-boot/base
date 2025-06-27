@@ -1,4 +1,4 @@
-package internal
+package utils
 
 import (
 	"os"
@@ -12,8 +12,8 @@ func FileTime(fileName string) (createTime, lastAccessTime, lastWriteTime int64,
 	}
 
 	attr := info.Sys().(*syscall.Stat_t)
-	createTime = attr.Ctim.Sec
-	lastAccessTime = attr.Atim.Sec
-	lastWriteTime = attr.Mtim.Sec
+	createTime = attr.Ctimespec.Sec
+	lastAccessTime = attr.Atimespec.Sec
+	lastWriteTime = attr.Mtimespec.Sec
 	return
 }

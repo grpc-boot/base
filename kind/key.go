@@ -2,8 +2,6 @@ package kind
 
 import (
 	"math"
-
-	"github.com/grpc-boot/base/v3/internal"
 )
 
 type Key interface {
@@ -33,7 +31,7 @@ func KeyHash(key interface{}) uint32 {
 	case uint64:
 		return uint32(value) & math.MaxUint32
 	case string:
-		return Uint32Hash(internal.String2Bytes(value))
+		return Uint32Hash(string2Bytes(value))
 	}
 	return 0
 }

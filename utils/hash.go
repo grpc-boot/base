@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/grpc-boot/base/v3/internal"
 	"github.com/grpc-boot/base/v3/kind"
 )
 
@@ -82,12 +81,12 @@ func HashValue(key any) uint32 {
 	case float32:
 		return uint32(v)
 	case string:
-		return kind.Uint32Hash(internal.String2Bytes(v))
+		return kind.Uint32Hash(String2Bytes(v))
 	case []byte:
 		return kind.Uint32Hash(v)
 	}
 
-	return kind.Uint32Hash(internal.String2Bytes(fmt.Sprintf("%v", key)))
+	return kind.Uint32Hash(String2Bytes(fmt.Sprintf("%v", key)))
 }
 
 // Index4Bit 索引路由方法，值范围为uint32

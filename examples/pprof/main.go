@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/grpc-boot/base/v3/internal"
 	"github.com/grpc-boot/base/v3/utils"
 )
 
@@ -17,7 +16,7 @@ type router struct {
 }
 
 func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	_, _ = w.Write(internal.String2Bytes(`ok`))
+	_, _ = w.Write(utils.String2Bytes(`ok`))
 }
 
 func main() {

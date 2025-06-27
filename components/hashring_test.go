@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/grpc-boot/base/v3/internal"
 	"github.com/grpc-boot/base/v3/kind"
+	"github.com/grpc-boot/base/v3/utils"
 
 	"go.uber.org/atomic"
 )
@@ -68,7 +68,7 @@ type Data struct {
 }
 
 func (d *Data) HashCode() (hashValue uint32) {
-	return kind.Uint32Hash(internal.String2Bytes(d.id))
+	return kind.Uint32Hash(utils.String2Bytes(d.id))
 }
 
 type Group struct {
@@ -116,7 +116,7 @@ func BenchmarkHashRing_Get(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, err := hashGroup.ring.Get(internal.String2Bytes(strconv.FormatUint(val.Add(1), 10)))
+		_, err := hashGroup.ring.Get(utils.String2Bytes(strconv.FormatUint(val.Add(1), 10)))
 		if err != nil {
 			b.Fatal(err.Error())
 		}

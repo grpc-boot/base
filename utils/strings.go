@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/grpc-boot/base/v3/internal"
 	"github.com/grpc-boot/base/v3/kind"
 )
 
@@ -16,7 +15,7 @@ func ToString(val any) string {
 	case string:
 		return v
 	case []byte:
-		return internal.Bytes2String(v)
+		return Bytes2String(v)
 	case int:
 		return strconv.Itoa(v)
 	case int8:
@@ -55,11 +54,15 @@ func StringInteger[T kind.Integer](value T) string {
 }
 
 func LcFirst(str string) string {
-	return internal.LcFirst(str)
+	strBytes := []byte(str)
+	strBytes[0] = bytes.ToLower(strBytes[:1])[0]
+	return Bytes2String(strBytes)
 }
 
 func UcFirst(str string) string {
-	return internal.UcFirst(str)
+	strBytes := []byte(str)
+	strBytes[0] = bytes.ToUpper(strBytes[:1])[0]
+	return Bytes2String(strBytes)
 }
 
 func SmallCamelByChar(str string, char byte) string {
