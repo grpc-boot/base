@@ -18,48 +18,48 @@ const (
 )
 
 var (
-	defaultAlphanumeric = []byte("M0Q1EK4aFzPcZeUgAfXi3SjTkYmnGpqrJstD6uLv9xy7bB5CHNR8VhW2wdI")
-	defaultIdCode, _    = NewIdCode(defaultAlphanumeric, defaultSalt6, defaultSalt8)
+	DefaultAlphanumeric = []byte("M0Q1EK4aFzPcZeUgAfXi3SjTkYmnGpqrJstD6uLv9xy7bB5CHNR8VhW2wdI")
+	DefaultIdCode, _    = NewIdCode(DefaultAlphanumeric, defaultSalt6, defaultSalt8)
 )
 
 func Max6() int64 {
-	return defaultIdCode.Max6()
+	return DefaultIdCode.Max6()
 }
 
 func Max8() int64 {
-	return defaultIdCode.Max8()
+	return DefaultIdCode.Max8()
 }
 
 func Code6(id int64) (code []byte, err error) {
-	return defaultIdCode.Code6(id)
+	return DefaultIdCode.Code6(id)
 }
 
 func Code6String(id int64) (code string, err error) {
-	return defaultIdCode.Code6String(id)
+	return DefaultIdCode.Code6String(id)
 }
 
 func Code8(id int64) (code []byte, err error) {
-	return defaultIdCode.Code8(id)
+	return DefaultIdCode.Code8(id)
 }
 
 func Code8String(id int64) (code string, err error) {
-	return defaultIdCode.Code8String(id)
+	return DefaultIdCode.Code8String(id)
 }
 
 func Code2Id(code []byte) (id int64, err error) {
-	return defaultIdCode.Code2Id(code)
+	return DefaultIdCode.Code2Id(code)
 }
 
 func CodeString2Id(code string) (id int64, err error) {
-	return defaultIdCode.CodeString2Id(code)
+	return DefaultIdCode.CodeString2Id(code)
 }
 
 func Code6To8(code6 []byte) (code8 []byte, err error) {
-	return defaultIdCode.Code6To8(code6)
+	return DefaultIdCode.Code6To8(code6)
 }
 
 func CodeString6To8(code6 string) (code8 string, err error) {
-	return defaultIdCode.CodeString6To8(code6)
+	return DefaultIdCode.CodeString6To8(code6)
 }
 
 type IdCode struct {
@@ -82,7 +82,7 @@ func NewIdCode(alphanumericSet []byte, salt6, salt8 int64) (*IdCode, error) {
 	}
 
 	if len(alphanumericSet) == 0 {
-		alphanumericSet = defaultAlphanumeric
+		alphanumericSet = DefaultAlphanumeric
 	}
 
 	ic := &IdCode{
