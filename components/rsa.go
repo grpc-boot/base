@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"encoding/pem"
+	"hash"
 )
 
 var (
@@ -162,6 +163,69 @@ func (r *Rsa) Decrypt(secretData []byte) ([]byte, error) {
 		}
 
 		chunk, err := rsa.DecryptPKCS1v15(rand.Reader, r.privateKey, secretData[start:end])
+		if err != nil {
+			return nil, err
+		}
+		buffer.Write(chunk)
+	}
+	return buffer.Bytes(), nil
+}
+
+// EncryptOAEP 加密
+func (r *Rsa) EncryptOAEP(data []byte, hash hash.Hash, label []byte) ([]byte, error) {
+	blockLength := r.publicKey.N.BitLen()/8 - 2*hash.Size() - 2
+	if len(data) <= blockLength {
+		return rsa.EncryptOAEP(hash, rand.Reader, r.publicKey, data, label)
+	}
+
+	buffer := bytes.NewBufferString("")
+
+	pages := len(data) / blockLength
+
+	for index := 0; index <= pages; index++ {
+		start := index * blockLength
+		end := (index + 1) * blockLength
+		if index == pages {
+			if start == len(data) {
+				continue
+			}
+			end = len(data)
+		}
+
+		chunk, err := rsa.EncryptOAEP(hash, rand.Reader, r.publicKey, data[start:end], label)
+		if err != nil {
+			return nil, err
+		}
+		buffer.Write(chunk)
+	}
+	return buffer.Bytes(), nil
+}
+
+// DecryptOAEP 解密
+func (r *Rsa) DecryptOAEP(secretData []byte, hash hash.Hash, label []byte) ([]byte, error) {
+	if r.publicKey == nil {
+		return rsa.DecryptOAEP(hash, rand.Reader, r.privateKey, secretData, label)
+	}
+
+	blockLength := r.publicKey.N.BitLen() / 8
+	if len(secretData) <= blockLength {
+		return rsa.DecryptOAEP(hash, rand.Reader, r.privateKey, secretData, label)
+	}
+
+	buffer := bytes.NewBufferString("")
+
+	pages := len(secretData) / blockLength
+	for index := 0; index <= pages; index++ {
+		start := index * blockLength
+		end := (index + 1) * blockLength
+		if index == pages {
+			if start == len(secretData) {
+				continue
+			}
+			end = len(secretData)
+		}
+
+		chunk, err := rsa.DecryptOAEP(hash, rand.Reader, r.privateKey, secretData[start:end], label)
 		if err != nil {
 			return nil, err
 		}
