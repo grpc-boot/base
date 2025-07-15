@@ -6,81 +6,70 @@ import (
 	"time"
 )
 
-func TestCode2Id(t *testing.T) {
+func TestCode12(t *testing.T) {
 	var (
-		num = 50
+		id  uint64
+		num = 150
 	)
 
 	rand.Seed(uint64(time.Now().Unix()))
 
-	t.Logf("max6:%d max8:%d", Max6(), Max8())
-
-	for i := 1; i < num; i++ {
-		id := int64(rand.Uint32())
-
-		code6, _ := Code6(id)
-		decode6Id, _ := Code2Id(code6)
-
-		if id != decode6Id {
-			t.Fatalf("id:%d code:%s decodeId:%d", id, code6, decode6Id)
+	for j := uint64(1); j < 123; j++ {
+		code6, _ := DefaultIdCode.Id2Code32(uint32(j))
+		decode6Id, _ := DefaultIdCode.Code2Id(code6)
+		if j != decode6Id {
+			t.Fatalf("id:%d code:%s decodeId:%d", j, code6, decode6Id)
 		}
 
-		code8, _ := Code8(id)
-		decode8Id, _ := Code2Id(code8)
-
-		if id != decode8Id {
-			t.Fatalf("id:%d code:%s decodeId:%d", id, code8, decode8Id)
+		code12, _ := DefaultIdCode.Id2Code64(j)
+		decode12Id, _ := DefaultIdCode.Code2Id(code12)
+		if j != decode12Id {
+			t.Fatalf("id:%d code:%s decodeId:%d", j, code12, decode12Id)
 		}
 
-		t.Logf("id: %d 6:%s 8:%s", id, code6, code8)
+		t.Logf("id: %d 6:%s 12:%s", j, code6, code12)
+	}
+
+	for i := 0; i < num; i++ {
+		id = rand.Uint64()
+		code12, _ := DefaultIdCode.Id2Code64(id)
+		decode12Id, _ := DefaultIdCode.Code2Id(code12)
+		if id != decode12Id {
+			t.Fatalf("id:%d code:%s decodeId:%d", id, code12, decode12Id)
+		}
+
+		t.Logf("id: %d 12:%s", id, code12)
 	}
 }
 
-// BenchmarkId2Code6-8   	 7852514	       146.3 ns/op
-func BenchmarkId2Code6(b *testing.B) {
+// BenchmarkId2Code32-11    	21275890	        56.12 ns/op
+func BenchmarkId2Code32(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		id := int64(rand.Uint32())
-		code, err := Code6(id)
-
-		if err != nil {
-			b.Fatalf("id:%d code:%s", id, code)
-		}
-	}
-}
-
-// BenchmarkCode2Id-8   	 2015258	       608.7 ns/op
-func BenchmarkCode2Id(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		id := int64(rand.Uint32())
-		code, err := Code6(id)
+		id := rand.Uint32()
+		code, err := DefaultIdCode.Id2Code32(id)
 
 		if err != nil {
 			b.Fatalf("id:%d code:%s", id, code)
 		}
 
-		decodeId, _ := Code2Id(code)
-		if id != decodeId {
+		decodeId, _ := DefaultIdCode.Code2Id(code)
+		if id != uint32(decodeId) {
 			b.Fatalf("id:%d decodeId:%d code:%s", id, decodeId, code)
 		}
 	}
 }
 
-// BenchmarkIdCode_Code2Id-8   	 2647532	       468.5 ns/op
-func BenchmarkIdCode_Code2Id(b *testing.B) {
-	alphanumeric := []byte("D6uLv9xy7bB5AfCHNR8VK4aFzPcZeUghIM0Q1EXi3SjTkYmnGpqrJst")
-	ic, _ := NewIdCode(alphanumeric, defaultSalt6-1000, defaultSalt8-20000)
-
-	b.Logf("max6:%d max8:%d", ic.Max6(), ic.Max8())
-
+// BenchmarkId2Code64-11    	10593519	        95.92 ns/op
+func BenchmarkId2Code64(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		id := int64(rand.Uint32())
-		code, err := ic.Code6(id)
+		id := rand.Uint64()
+		code, err := DefaultIdCode.Id2Code64(id)
 
 		if err != nil {
 			b.Fatalf("id:%d code:%s", id, code)
 		}
 
-		decodeId, _ := ic.Code2Id(code)
+		decodeId, _ := DefaultIdCode.Code2Id(code)
 		if id != decodeId {
 			b.Fatalf("id:%d decodeId:%d code:%s", id, decodeId, code)
 		}

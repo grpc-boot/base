@@ -79,6 +79,7 @@ func TestRsa_DecryptOAEP(t *testing.T) {
 
 	privateKey, publicKey = CreatePkcs8Keys(2048)
 	rsa, _ = NewRsa(publicKey, privateKey)
+	t.Logf("privateKey:%s publicKey:%s", privateKey, publicKey)
 
 	data = []byte(strings.Repeat("阿斯顿发的sadfaasdfasdfasdfsfd", 128))
 	secretData, err = rsa.EncryptOAEP(data, sha1.New(), nil)
