@@ -1,5 +1,7 @@
 package components
 
+import "github.com/grpc-boot/base/v3/kind"
+
 type EventManager struct {
 	events map[string]*Chain
 }
@@ -69,10 +71,27 @@ type Event struct {
 	data any
 }
 
+func NewEvent(name string, data any) *Event {
+	return &Event{
+		name: name,
+		data: data,
+	}
+}
+
 func (e *Event) Name() string {
 	return e.name
 }
 
 func (e *Event) Data() any {
 	return e.data
+}
+
+func (e *Event) ParamData() kind.JsonParam {
+	if p, ok := e.data.(kind.JsonParam); ok {
+		return p
+	}
+
+	p, _ := e.data.(map[string]any)
+
+	return p
 }
