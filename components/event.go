@@ -45,6 +45,25 @@ func (em *EventManager) Trigger(name string, data any) {
 	chain.RunWithCtx(ctx)
 }
 
+func (em *EventManager) TriggerWithCtx(name string, ctx *Context) {
+	chain, exists := em.events[name]
+	if !exists {
+		return
+	}
+
+	if len(chain.handlers) == 0 {
+		return
+	}
+
+	if event := ctx.Event(); event == nil {
+		ctx.SetEvent(&Event{
+			name: name,
+		})
+	}
+
+	chain.RunWithCtx(ctx)
+}
+
 type Event struct {
 	name string
 	data any
