@@ -6,6 +6,19 @@ import (
 	"time"
 )
 
+func TestSnowFlake(t *testing.T) {
+	defaultSFBegin, _ = time.Parse(time.DateTime, "2023-01-01 00:00:00")
+	DefaultSF, _ = NewSFByIp(ModeWait, defaultSFBegin.Unix())
+	id, err := DefaultSF.Id()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("id: %d", id)
+
+	ts, mid, index := DefaultSF.Info(id)
+	t.Logf("timeBegin: %s ts: %d, mid: %d, index: %d", DefaultSF.TimeBegin().Format(time.DateTime), ts, mid, index)
+}
+
 func TestSnowFlake_Id(t *testing.T) {
 	begin, _ := time.ParseInLocation("2006-01-02", `2023-01-01`, time.Local)
 	sf, err := NewSFByIp(ModeWait, begin.Unix())

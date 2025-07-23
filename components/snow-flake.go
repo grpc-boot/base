@@ -25,12 +25,19 @@ const (
 	maxMachine = 0xff   // 2^8 - 1
 )
 
+var (
+	defaultSFBegin, _ = time.Parse(time.DateTime, "2025-01-01 00:00:00")
+	DefaultSF, _      = NewSFByIp(ModeWait, defaultSFBegin.Unix())
+)
+
 // SnowFlake 雪花算法接口，1位0，41位毫秒时间戳，8位机器码，14位递增值
 type SnowFlake interface {
 	// Id 生成id
 	Id() (int64, error)
 	// Info 根据id获取信息
 	Info(id int64) (timestamp int64, machineId uint8, index int16)
+	// TimeBegin 时间戳起点
+	TimeBegin() time.Time
 }
 
 // GetMachineId 获取机器Id
@@ -94,7 +101,7 @@ func NewSF(mode uint8, id uint8, beginSeconds int64) (sfl SnowFlake, err error) 
 
 	sf := &snowFlake{
 		mode:           mode,
-		lastTimeStamp:  time.Now().UnixNano() / 1e6,
+		lastTimeStamp:  time.Now().UnixMilli(),
 		timeStampBegin: beginSeconds * 1000,
 		machId:         int64(id) << 14,
 	}
@@ -133,13 +140,17 @@ func (sf *snowFlake) Info(id int64) (milliTimestamp int64, machineId uint8, inde
 	return
 }
 
+func (sf *snowFlake) TimeBegin() time.Time {
+	return time.Unix(sf.timeStampBegin/1000, 0)
+}
+
 func (sf *snowFlake) wait(current time.Time) (err error) {
-	curTimeStamp := current.UnixNano() / 1e6
+	curTimeStamp := current.UnixMilli()
 
 	//时钟回拨等待处理
 	for curTimeStamp < sf.lastTimeStamp {
 		time.Sleep(time.Millisecond * 5)
-		curTimeStamp = time.Now().UnixNano() / 1e6
+		curTimeStamp = time.Now().UnixMilli()
 	}
 
 	if curTimeStamp == sf.lastTimeStamp {
@@ -155,7 +166,7 @@ func (sf *snowFlake) wait(current time.Time) (err error) {
 }
 
 func (sf *snowFlake) max(current time.Time) (err error) {
-	curTimeStamp := current.UnixNano() / 1e6
+	curTimeStamp := current.UnixMilli()
 
 	//时钟回拨使用最大时间
 	if curTimeStamp < sf.lastTimeStamp {
@@ -175,7 +186,7 @@ func (sf *snowFlake) max(current time.Time) (err error) {
 }
 
 func (sf *snowFlake) err(current time.Time) (err error) {
-	curTimeStamp := current.UnixNano() / 1e6
+	curTimeStamp := current.UnixMilli()
 	//时钟回拨直接抛出异常
 	if curTimeStamp < sf.lastTimeStamp {
 		return ErrTimeBack
