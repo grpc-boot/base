@@ -14,6 +14,7 @@ require (
 	golang.org/x/exp v0.0.0-20190121172915-509febef88a4
 	golang.org/x/image v0.13.0
 	google.golang.org/grpc v1.64.1
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
