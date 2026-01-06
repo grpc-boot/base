@@ -15,8 +15,8 @@ func HexDecode(src []byte) (dst []byte, err error) {
 	}
 
 	dst = make([]byte, hex.DecodedLen(len(src)))
-	_, err = hex.Decode(dst, src)
-	return
+	n, err := hex.Decode(dst, src)
+	return dst[:n], err
 }
 
 func HexEncode2String(src []byte) string {
